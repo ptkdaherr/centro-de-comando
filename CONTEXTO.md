@@ -52,6 +52,24 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 
 **Nenhuma persistência implementada ainda** — os dados são state em memória e resetam ao recarregar a página. Isso é a lacuna mais importante antes de qualquer release.
 
+## O que falta implementar (verificado lendo o código em 2026-06-17)
+
+**Crítico:**
+- **Zero persistência.** Nada de `localStorage`/arquivo/SQLite — confirmado, não existe nenhuma chamada de storage no arquivo. Tudo é `state` em memória; F5 reseta tudo.
+- **Assistente é decorativo.** `chatSend`/`chatInputKeyDown` só empurram a mensagem do usuário pra lista (`chatExtra`) — não existe nenhuma resposta gerada, nem mock com delay, nem chamada de API. O "chat" nunca responde nada.
+- **Bug: lançamento e ideia não salvam.** Os botões "Registrar lançamento" e "Capturar ideia" abrem o drawer (`openDrawerLancamento`/`openDrawerIdeia`), mostram o toast de "sucesso" — mas o `submitDrawer` só tem `if/else if` pra `demanda`, `cliente` e `prospecto`. Pra `lancamento` e `ideia` ele fecha o drawer e finge que salvou, mas **não adiciona nada aos arrays** `lancamentos`/`ideias`. Precisa implementar esses dois branches.
+
+**Importante:**
+- **Sem edição/exclusão de nada.** Só existe fluxo de *criar* (demanda, cliente, prospecto). Não há como editar ou apagar uma demanda, cliente, prospecto, lançamento ou ideia depois de criada.
+- **Kanban sem drag-and-drop.** Nenhum atributo `draggable`/handler de drag no código — mover card de coluna é só visual hoje (não dá pra arrastar de fato).
+- **Busca ⌘K é só um badge.** Aparece visualmente no topo (linha ~50) mas não tem listener nenhum atrás — não abre busca nenhuma.
+- **Empacotamento pro .exe:** nenhuma config ainda (sem `package.json`, sem Electron/Tauri/NW.js).
+
+**Bom ter / Fase 2+:**
+- Conectar o Assistente a uma IA de fato (Gemini, conforme já decidido no projeto irmão).
+- Editar/mover nós do Workflow (hoje só dá pra adicionar um nó novo via `addWfNode`, sem posição definida).
+- Notificação de cliente atrasado (mencionada no briefing original, não vista implementada aqui).
+
 ## Roadmap até o .exe
 
 Opções consideradas (nenhuma decidida ainda):
@@ -79,3 +97,4 @@ Pendências antes do .exe:
 ## Changelog
 
 - **2026-06-17** — Repositório git inicializado (branch `main`), `.gitignore` criado, este `CONTEXTO.md` criado, commit inicial com o estado atual do projeto como baseline.
+- **2026-06-17** — Lida a fundo a lógica do `.dc.html` e mapeados os gaps reais (seção "O que falta implementar" acima): zero persistência, assistente decorativo, bug no save de lançamento/ideia, sem editar/excluir, sem drag-and-drop no kanban, ⌘K decorativo.
