@@ -39,7 +39,7 @@ function loadEnv(envPath) {
 const env = loadEnv(path.join(__dirname, '.env'));
 const APP_PASSWORD_HASH = env.APP_PASSWORD_HASH;
 const GEMINI_API_KEY = env.GEMINI_API_KEY;
-const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-3.5-flash';
+const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 if (!APP_PASSWORD_HASH) {
   console.error('\n  Nenhuma senha configurada ainda.\n  Rode primeiro: npm run setup\n');

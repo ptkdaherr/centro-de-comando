@@ -144,7 +144,9 @@ server/
   index.mjs       + POST /api/chat, POST /api/chat/resolve, GET /api/audit, rate limit do chat
 ```
 
-**Modelo:** `gemini-3.5-flash` (configurável via `GEMINI_MODEL` no `.env`, sem alterar código). Auth via header `x-goog-api-key` (não na URL). Sem SDK — só `fetch` nativo do Node, mantendo a filosofia zero-dependências da 3a.
+**Modelo:** `gemini-2.5-flash` (configurável via `GEMINI_MODEL` no `.env`, sem alterar código). Auth via header `x-goog-api-key` (não na URL). Sem SDK — só `fetch` nativo do Node, mantendo a filosofia zero-dependências da 3a.
+
+**Histórico da escolha do modelo (2026-06-17):** inicialmente usei `gemini-3.5-flash` (mais novo, encontrado na documentação oficial). No teste em produção com a chave real do usuário, esse modelo retornou erro 503 ("sobrecarregado") de forma consistente — testei direto contra a API do Google com 4 nomes de modelo diferentes e só `gemini-2.5-flash` respondeu 200 de forma estável. Voltei o padrão pra `gemini-2.5-flash` (que é, aliás, o modelo do plano original) e confirmei com testes reais: resposta de texto simples, function calling resolvendo nome→id corretamente ("cliente Luso" → `clientId` certo), e o guard-rail contra invenção de id (perguntou "Padaria do Zé" inexistente → modelo pediu confirmação em vez de inventar um id). Se no futuro `gemini-3.5-flash` se estabilizar, é só trocar `GEMINI_MODEL` no `.env`, sem mexer em código.
 
 **Anti-alucinação:** o `systemInstruction` envia o JSON completo do estado atual e instrui explicitamente "nunca invente um id que não apareça nos dados — se não tiver certeza, pergunte". Vale revisar na prática (pedir uma ação citando cliente/id inexistente) e ajustar esse texto se o modelo inventar algo.
 
