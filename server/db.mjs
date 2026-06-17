@@ -24,6 +24,37 @@ db.exec(`
   );
 `);
 
+// Histórico de ações propostas/aplicadas/canceladas pelo Assistente IA (Fase 3b)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL,
+    tool TEXT NOT NULL,
+    args TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    status TEXT NOT NULL
+  );
+`);
+
+const insertActionStmt = db.prepare(`
+  INSERT INTO audit_log (created_at, tool, args, summary, status) VALUES (?, ?, ?, ?, 'proposed')
+`);
+const updateActionStmt = db.prepare('UPDATE audit_log SET status = ? WHERE id = ?');
+const listActionsStmt = db.prepare('SELECT id, created_at, tool, args, summary, status FROM audit_log ORDER BY id DESC LIMIT ?');
+
+export function logAction(tool, args, summary) {
+  const result = insertActionStmt.run(new Date().toISOString(), tool, JSON.stringify(args), summary);
+  return Number(result.lastInsertRowid);
+}
+
+export function updateActionStatus(id, status) {
+  updateActionStmt.run(status, id);
+}
+
+export function listActions(limit = 50) {
+  return listActionsStmt.all(limit).map(row => ({ ...row, args: JSON.parse(row.args) }));
+}
+
 // Mesmas chaves que hoje compõem o snapshot salvo no localStorage
 // (_persistKeys em "Centro de Comando.dc.html").
 export const STATE_KEYS = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];

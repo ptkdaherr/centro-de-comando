@@ -9,12 +9,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exec } from 'node:child_process';
-import { getState, saveState } from './db.mjs';
+import { getState, saveState, logAction, updateActionStatus, listActions } from './db.mjs';
 import {
   verifyPassword, createSession, isValidSession, destroySession,
   isLocked, recordFailure, recordSuccess, parseCookies,
   SESSION_COOKIE, buildSessionCookie, buildClearCookie,
 } from './auth.mjs';
+import { askGemini } from './gemini.mjs';
+import { summarizeAction } from './tools.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -36,6 +38,8 @@ function loadEnv(envPath) {
 
 const env = loadEnv(path.join(__dirname, '.env'));
 const APP_PASSWORD_HASH = env.APP_PASSWORD_HASH;
+const GEMINI_API_KEY = env.GEMINI_API_KEY;
+const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-3.5-flash';
 
 if (!APP_PASSWORD_HASH) {
   console.error('\n  Nenhuma senha configurada ainda.\n  Rode primeiro: npm run setup\n');
@@ -104,6 +108,21 @@ function requireAuth(req, res) {
   return true;
 }
 
+// ---- rate limit simples do chat IA: no máx. 50 mensagens/hora por IP,
+// pra não estourar a cota grátis do Gemini por engano ----
+const CHAT_LIMIT = 50;
+const CHAT_WINDOW_MS = 60 * 60 * 1000;
+const chatHits = new Map();
+
+function chatRateLimited(ip) {
+  const now = Date.now();
+  const hits = (chatHits.get(ip) || []).filter((t) => now - t < CHAT_WINDOW_MS);
+  if (hits.length >= CHAT_LIMIT) { chatHits.set(ip, hits); return true; }
+  hits.push(now);
+  chatHits.set(ip, hits);
+  return false;
+}
+
 async function handleApi(req, res, url) {
   const ip = req.socket.remoteAddress || 'unknown';
 
@@ -140,6 +159,54 @@ async function handleApi(req, res, url) {
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     saveState(body);
     return sendJson(res, 200, { ok: true });
+  }
+
+  if (url === '/api/chat' && req.method === 'POST') {
+    if (!requireAuth(req, res)) return;
+    if (chatRateLimited(ip)) return sendJson(res, 429, { error: 'muitas mensagens nessa hora — aguarde um pouco' });
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
+    const history = Array.isArray(body.history) ? body.history.slice(-30) : [];
+
+    if (!GEMINI_API_KEY) {
+      return sendJson(res, 200, {
+        reply: 'O assistente ainda não está configurado — falta colocar a chave do Gemini no servidor (GEMINI_API_KEY no server/.env). Rode "npm run setup" pra cadastrar uma chave grátis.',
+        pendingAction: null,
+      });
+    }
+
+    const currentState = getState();
+    let result;
+    try {
+      result = await askGemini({ history, currentState, apiKey: GEMINI_API_KEY, model: GEMINI_MODEL });
+    } catch (e) {
+      return sendJson(res, 200, { reply: `Não consegui falar com o Gemini agora: ${e.message}`, pendingAction: null });
+    }
+
+    let pendingAction = null;
+    if (result.functionCall) {
+      const { name, args } = result.functionCall;
+      const summary = summarizeAction(name, args, currentState);
+      const id = logAction(name, args, summary);
+      pendingAction = { id, tool: name, args, summary };
+    }
+    return sendJson(res, 200, { reply: result.text, pendingAction });
+  }
+
+  if (url === '/api/chat/resolve' && req.method === 'POST') {
+    if (!requireAuth(req, res)) return;
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
+    if (!Number.isInteger(body.id) || !['applied', 'rejected'].includes(body.status)) {
+      return sendJson(res, 400, { error: 'parâmetros inválidos' });
+    }
+    updateActionStatus(body.id, body.status);
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (url === '/api/audit' && req.method === 'GET') {
+    if (!requireAuth(req, res)) return;
+    return sendJson(res, 200, { items: listActions(50) });
   }
 
   sendJson(res, 404, { error: 'rota não encontrada' });

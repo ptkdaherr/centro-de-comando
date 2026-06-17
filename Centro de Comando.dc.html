@@ -961,6 +961,24 @@
                   <button onClick="{{ sug.onClick }}" style="text-align:left; padding:9px 11px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:12px; cursor:pointer; line-height:1.4;" style-hover="color:var(--text); border-color:var(--border-2)">{{ sug.label }}</button>
                 </sc-for>
               </div>
+              <div style="height:1px; background:var(--border);"></div>
+              <button onClick="{{ toggleAiHistory }}" style="display:flex; align-items:center; justify-content:space-between; padding:9px 11px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">
+                <span>Histórico de ações</span>
+                <span style="color:var(--text-3);">{{ aiHistoryToggleLabel }}</span>
+              </button>
+              <sc-if value="{{ showAiHistory }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto;">
+                  <sc-for list="{{ aiHistoryView }}" as="h" hint-placeholder-count="3">
+                    <div style="padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:11.5px; line-height:1.4;">
+                      <div style="color:var(--text-2);">{{ h.summary }}</div>
+                      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
+                        <span style="color:var(--text-3);">{{ h.when }}</span>
+                        <span style="color:{{ h.statusColor }}; font-weight:600;">{{ h.statusText }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
             </div>
             <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
               <div style="padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;">
@@ -973,7 +991,27 @@
                     <sc-if value="{{ msg.isAi }}" hint-placeholder-val="{{ false }}">
                       <div style="width:28px; height:28px; border-radius:8px; background:var(--accent-weak); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:var(--accent);">{{ iconSpark }}</div>
                     </sc-if>
-                    <div style="max-width:72%; padding:12px 15px; border-radius:{{ msg.radius }}; background:{{ msg.bg }}; border:{{ msg.border }}; font-size:13.5px; line-height:1.55; color:var(--text); white-space:pre-line;">{{ msg.text }}</div>
+                    <sc-if value="{{ msg.isText }}" hint-placeholder-val="{{ true }}">
+                      <div style="max-width:72%; padding:12px 15px; border-radius:{{ msg.radius }}; background:{{ msg.bg }}; border:{{ msg.border }}; font-size:13.5px; line-height:1.55; color:var(--text); white-space:pre-line;">{{ msg.text }}</div>
+                    </sc-if>
+                    <sc-if value="{{ msg.isAction }}" hint-placeholder-val="{{ false }}">
+                      <div style="max-width:72%; padding:13px 15px; border-radius:12px 12px 12px 3px; background:var(--surface); border:1px solid var(--accent); font-size:13px; line-height:1.5; color:var(--text); display:flex; flex-direction:column; gap:10px;">
+                        <div style="font-size:10.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--accent);">Ação proposta</div>
+                        <div>{{ msg.actionSummary }}</div>
+                        <sc-if value="{{ msg.actionPending }}" hint-placeholder-val="{{ true }}">
+                          <div style="display:flex; gap:8px;">
+                            <button onClick="{{ msg.onConfirm }}" style="flex:1; height:30px; border:none; background:var(--accent); color:#fff; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)">Confirmar</button>
+                            <button onClick="{{ msg.onReject }}" style="flex:1; height:30px; border:1px solid var(--border-2); background:transparent; color:var(--text-2); border-radius:7px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ msg.actionApplied }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:12px; color:var(--ok); font-weight:600;">✅ Aplicado</div>
+                        </sc-if>
+                        <sc-if value="{{ msg.actionRejected }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:12px; color:var(--text-3); font-weight:600;">Cancelado</div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
                   </div>
                 </sc-for>
               </div>
@@ -1248,7 +1286,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginPassword: '', loginError: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginPassword: '', loginError: '' };
 
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
@@ -1413,6 +1451,8 @@ class Component extends DCLogic {
 
   renderVals() {
     const C = { luso: '#5285f0', flam: '#d7796b', bistro: '#cea052', studio: '#4fa890', dra: '#8a7ff0' };
+    const palette = ['#5285f0','#d7796b','#cea052','#4fa890','#8a7ff0','#57a87d','#e07b5a'];
+    const catColors = { Pessoal:['var(--accent)','var(--accent-weak)'], Produto:['var(--ok)','var(--ok-weak)'], Conteúdo:['var(--text-2)','var(--surface-3)'], Cliente:['var(--info)','var(--info-weak)'] };
     const s = this.state;
     const nav = this.navData();
     const stubMap = {
@@ -1715,6 +1755,100 @@ class Component extends DCLogic {
     const wfNodes = [...wfNodesBase, ...(s.wfNodesExtra||[]).map((n,i)=>({ left:(1150+i*220)+'px', top:'148px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'TAREFA', typeColor:'var(--text-3)', title:n.title||'Novo nó', statusLabel:'A fazer', statusColor:'var(--text-3)' }))];
 
     // ---- ASSISTENTE ----
+    // Aplica de fato uma ação que o Gemini propôs (após confirmação do usuário no chat).
+    // Lê this.state na hora, não as consts já desestruturadas acima — entre o usuário pedir
+    // a ação e confirmar pode dar tempo de outras mudanças acontecerem, então não dá pra
+    // confiar no snapshot capturado quando a mensagem chegou.
+    const aiApplyAction = (tool, args) => {
+      const sep = tool.indexOf('_');
+      const action = tool.slice(0, sep); // create | edit | delete
+      const entity = tool.slice(sep + 1); // demanda | cliente | prospecto | lancamento | ideia
+      if (entity === 'demanda') {
+        const list = this.state.demands || demands;
+        if (action === 'create') this.setState({ demands: [...list, { id:Date.now(), title:args.title||'Nova demanda', clientId: args.clientId ?? null, status:'todo', type:args.type||'image', due:'Sem prazo', flag: args.priority==='alta'?'high':null }] });
+        else if (action === 'edit') this.setState({ demands: list.map(d => d.id===args.id ? { ...d, title: args.title ?? d.title, clientId: args.clientId !== undefined ? args.clientId : d.clientId, type: args.type || d.type, flag: args.priority ? (args.priority==='alta'?'high':null) : d.flag } : d) });
+        else if (action === 'delete') this.setState({ demands: list.filter(d => d.id !== args.id) });
+      } else if (entity === 'cliente') {
+        const list = this.state.clients || clients;
+        if (action === 'create') {
+          const nome = args.nome || 'Novo cliente';
+          const words = nome.trim().split(/\s+/);
+          const initials = words.length>=2 ? (words[0][0]+words[words.length-1][0]).toUpperCase() : nome.slice(0,2).toUpperCase();
+          const color = palette[list.length % palette.length];
+          this.setState({ clients: [...list, { id:Date.now(), nome, initials, color, tipo:args.tipo||'fixo', valor:String(args.valor ?? '0'), pagDia:String(args.pagDia ?? '5'), servico:args.servico||'', since:'Jun 2026' }] });
+        } else if (action === 'edit') {
+          this.setState({ clients: list.map(cl => cl.id===args.id ? { ...cl, nome: args.nome ?? cl.nome, tipo: args.tipo || cl.tipo, valor: args.valor !== undefined ? String(args.valor) : cl.valor, pagDia: args.pagDia !== undefined ? String(args.pagDia) : cl.pagDia, servico: args.servico ?? cl.servico } : cl) });
+        } else if (action === 'delete') {
+          this.setState({ clients: list.filter(cl => cl.id !== args.id) });
+        }
+      } else if (entity === 'prospecto') {
+        const list = this.state.prospectos || prospectos;
+        if (action === 'create') this.setState({ prospectos: [...list, { id:Date.now(), nome:args.nome||'Prospecto', segmento:args.segmento||'', obs:args.obs||'', etapa:'Prospecção' }] });
+        else if (action === 'edit') this.setState({ prospectos: list.map(p => p.id===args.id ? { ...p, nome: args.nome ?? p.nome, segmento: args.segmento ?? p.segmento, obs: args.obs ?? p.obs } : p) });
+        else if (action === 'delete') this.setState({ prospectos: list.filter(p => p.id !== args.id) });
+      } else if (entity === 'lancamento') {
+        const list = this.state.lancamentos || lancamentos;
+        if (action === 'create') this.setState({ lancamentos: [buildLancamento(Date.now(), args.desc, args.tipo||'receita', args.valor, args.data), ...list] });
+        else if (action === 'edit') this.setState({ lancamentos: list.map(t => t.id===args.id ? buildLancamento(args.id, args.desc ?? t.label, args.tipo || t.tipo, args.valor !== undefined ? args.valor : t.valorRaw, args.data !== undefined ? args.data : t.dataRaw) : t) });
+        else if (action === 'delete') this.setState({ lancamentos: list.filter(t => t.id !== args.id) });
+      } else if (entity === 'ideia') {
+        const list = this.state.ideias || ideias;
+        if (action === 'create') {
+          const cat = args.categoria || 'Pessoal';
+          const [tc, tbg] = catColors[cat] || catColors.Pessoal;
+          this.setState({ ideias: [{ id:Date.now(), title:args.titulo||'Nova ideia', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'agora', obs:args.obs||'', tags:[{ label:cat, color:tc, bg:tbg, border:'transparent' }] }, ...list] });
+        } else if (action === 'edit') {
+          this.setState({ ideias: list.map(idea => { if (idea.id !== args.id) return idea; const cat = args.categoria || (idea.tags && idea.tags[0] && idea.tags[0].label) || 'Pessoal'; const [tc, tbg] = catColors[cat] || catColors.Pessoal; return { ...idea, title: args.titulo ?? idea.title, obs: args.obs ?? idea.obs, tags:[{ label:cat, color:tc, bg:tbg, border:'transparent' }] }; }) });
+        } else if (action === 'delete') {
+          this.setState({ ideias: list.filter(idea => idea.id !== args.id) });
+        }
+      }
+    };
+    const aiConfirmAction = (id) => {
+      const cur = this.state.chatExtra || [];
+      const msg = cur.find(m => m.isAction && m.actionId === id);
+      if (!msg) return;
+      aiApplyAction(msg.actionTool, msg.actionArgs);
+      this.setState({ chatExtra: cur.map(m => (m.isAction && m.actionId === id) ? { ...m, actionPending:false, actionApplied:true } : m) });
+      fetch('/api/chat/resolve', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id, status:'applied' }) }).catch(() => {});
+    };
+    const aiRejectAction = (id) => {
+      const cur = this.state.chatExtra || [];
+      this.setState({ chatExtra: cur.map(m => (m.isAction && m.actionId === id) ? { ...m, actionPending:false, actionRejected:true } : m) });
+      fetch('/api/chat/resolve', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id, status:'rejected' }) }).catch(() => {});
+    };
+    const aiSendMessage = (text) => {
+      const userBubble = { isAi:false, isAction:false, isText:true, flex:'row-reverse', text, bg:'var(--accent)', border:'none', radius:'12px 12px 3px 12px' };
+      const history = [...(this.state.chatExtra||[]), userBubble].filter(m => !m.isAction).map(m => ({ role: m.isAi ? 'model' : 'user', text: m.text }));
+      this.setState({ chatExtra: [...(this.state.chatExtra||[]), userBubble], chatInput:'', chatLoading:true });
+      fetch('/api/chat', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ history }) })
+        .then(r => r.json())
+        .then(data => {
+          const extra = [...(this.state.chatExtra||[])];
+          extra.push({ isAi:true, isAction:false, isText:true, flex:'row', text: data.reply || '...', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' });
+          if (data.pendingAction) {
+            const pa = data.pendingAction;
+            extra.push({ isAi:true, isAction:true, isText:false, flex:'row', actionId:pa.id, actionTool:pa.tool, actionArgs:pa.args, actionSummary:pa.summary, actionPending:true, actionApplied:false, actionRejected:false, onConfirm:() => aiConfirmAction(pa.id), onReject:() => aiRejectAction(pa.id) });
+          }
+          this.setState({ chatExtra: extra, chatLoading:false });
+        })
+        .catch(() => {
+          const extra = [...(this.state.chatExtra||[])];
+          extra.push({ isAi:true, isAction:false, isText:true, flex:'row', text:'Não consegui falar com o servidor agora. Tente de novo em alguns segundos.', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' });
+          this.setState({ chatExtra: extra, chatLoading:false });
+        });
+    };
+    const toggleAiHistory = () => {
+      if (!s.showAiHistory) {
+        fetch('/api/audit', { credentials:'include' }).then(r => r.json()).then(data => this.setState({ aiHistoryItems: data.items||[], showAiHistory:true })).catch(() => this.setState({ showAiHistory:true }));
+      } else {
+        this.setState({ showAiHistory:false });
+      }
+    };
+    const auditStatusLabel = { proposed:'Pendente', applied:'Aplicado', rejected:'Cancelado' };
+    const auditStatusColor = { proposed:'var(--warn)', applied:'var(--ok)', rejected:'var(--text-3)' };
+    const aiHistoryView = (s.aiHistoryItems||[]).map(it => ({ summary: it.summary, when: new Date(it.created_at).toLocaleString('pt-BR'), statusText: auditStatusLabel[it.status]||it.status, statusColor: auditStatusColor[it.status]||'var(--text-3)' }));
+
     const chatSuggestions = [
       { label:'Organizar minha tarde', onClick:()=> this.setState({ chatInput: 'Organizar minha tarde' }) },
       { label:'Escrever legenda para o Reels do Flamenguismo', onClick:()=> this.setState({ chatInput: 'Escrever legenda para o Reels do Flamenguismo' }) },
@@ -1722,11 +1856,11 @@ class Component extends DCLogic {
       { label:'Resumo financeiro do mês', onClick:()=> this.setState({ chatInput: 'Resumo financeiro do mês' }) },
     ];
     const baseChatMessages = [
-      { isAi:true, flex:'row', text:'Boa tarde, Rafael. São 15h de terça-feira.\n\nVocê tem 4 demandas hoje — o Reels do Flamenguismo vence em 1 hora. Recomendo começar por ele.', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' },
-      { isAi:false, flex:'row-reverse', text:'Escreve a legenda do Reels do gol histórico 90+', bg:'var(--accent)', border:'none', radius:'12px 12px 3px 12px' },
-      { isAi:true, flex:'row', text:'Aqui vai uma sugestão de legenda:\n\n"Que momento histórico. O gol que parou o Maracanã em 1990 — sentiu o frio na barriga? Se você viveu isso, comenta aqui! Salva pro seu amigo mais flamenguista."\n\nHashtags sugeridas: #Flamengo #GolHistórico #Flamenguismo1990 #MengoNaCopa', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' },
+      { isAi:true, isAction:false, isText:true, flex:'row', text:'Boa tarde, Rafael. São 15h de terça-feira.\n\nVocê tem 4 demandas hoje — o Reels do Flamenguismo vence em 1 hora. Recomendo começar por ele.', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' },
+      { isAi:false, isAction:false, isText:true, flex:'row-reverse', text:'Escreve a legenda do Reels do gol histórico 90+', bg:'var(--accent)', border:'none', radius:'12px 12px 3px 12px' },
+      { isAi:true, isAction:false, isText:true, flex:'row', text:'Aqui vai uma sugestão de legenda:\n\n"Que momento histórico. O gol que parou o Maracanã em 1990 — sentiu o frio na barriga? Se você viveu isso, comenta aqui! Salva pro seu amigo mais flamenguista."\n\nHashtags sugeridas: #Flamengo #GolHistórico #Flamenguismo1990 #MengoNaCopa', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' },
     ];
-    const chatMessages = [...baseChatMessages, ...(s.chatExtra||[])];
+    const chatMessages = [...baseChatMessages, ...(s.chatExtra||[]), ...(s.chatLoading ? [{ isAi:true, isAction:false, isText:true, flex:'row', text:'Pensando…', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' }] : [])];
 
     const bv = s.boardView || 'cliente';
 
@@ -1825,7 +1959,6 @@ class Component extends DCLogic {
           } else {
             const words = nome.trim().split(/\s+/);
             const initials = words.length>=2?(words[0][0]+words[words.length-1][0]).toUpperCase():nome.slice(0,2).toUpperCase();
-            const palette = ['#5285f0','#d7796b','#cea052','#4fa890','#8a7ff0','#57a87d','#e07b5a'];
             const color = palette[clients.length % palette.length];
             updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', since:'Jun 2026' }];
           }
@@ -1846,7 +1979,6 @@ class Component extends DCLogic {
           }
           updates.lancDesc = ''; updates.lancValor = ''; updates.lancData = ''; updates.lancTipo = 'receita';
         } else if (mode === 'ideia') {
-          const catColors = { Pessoal:['var(--accent)','var(--accent-weak)'], Produto:['var(--ok)','var(--ok-weak)'], Conteúdo:['var(--text-2)','var(--surface-3)'], Cliente:['var(--info)','var(--info-weak)'] };
           const cat = s.ideiaCategoria||'Pessoal';
           const [tc, tbg] = catColors[cat] || catColors.Pessoal;
           if (editId) {
@@ -1963,6 +2095,10 @@ class Component extends DCLogic {
       wfNodes,
       isAssistente: s.screen === 'assistente',
       chatMessages, chatSuggestions,
+      showAiHistory: !!s.showAiHistory,
+      toggleAiHistory,
+      aiHistoryToggleLabel: s.showAiHistory ? 'Ocultar' : 'Ver',
+      aiHistoryView,
       iconSpark: this.icon('spark', 14, 1.7),
       iconSend: this.icon('chevR', 14, 1.8),
       isByClient: bv === 'cliente',
@@ -2019,8 +2155,8 @@ class Component extends DCLogic {
       // ---- CHAT ----
       chatInput: s.chatInput || '',
       chatInputChange: (e) => this.setState({ chatInput: e.target.value }),
-      chatInputKeyDown: (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); const inp=(s.chatInput||'').trim(); if(!inp) return; const extra=[...(s.chatExtra||[]), {isAi:false,flex:'row-reverse',text:inp,bg:'var(--accent)',border:'none',radius:'12px 12px 3px 12px'}]; this.setState({ chatExtra:extra, chatInput:'' }); } },
-      chatSend: () => { const inp=(s.chatInput||'').trim(); if(!inp) return; const extra=[...(s.chatExtra||[]), {isAi:false,flex:'row-reverse',text:inp,bg:'var(--accent)',border:'none',radius:'12px 12px 3px 12px'}]; this.setState({ chatExtra:extra, chatInput:'' }); },
+      chatInputKeyDown: (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); const inp=(s.chatInput||'').trim(); if(!inp || s.chatLoading) return; aiSendMessage(inp); } },
+      chatSend: () => { const inp=(s.chatInput||'').trim(); if(!inp || s.chatLoading) return; aiSendMessage(inp); },
     };
   }
 }

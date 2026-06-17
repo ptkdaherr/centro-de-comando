@@ -61,9 +61,6 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 - ✅ **Alerta de cliente atrasado.** `clientCards` agora calcula `isLate` com base em `cl.pagDia` (clientes fixos) vs. dia atual (`todayReal`) — status muda pra "Atrasado" com cor `var(--crit)`. Heurística simples (sem histórico de pagamento real ainda).
 - ✅ Posição dos nós extras do Workflow: confirmado que já funcionava corretamente (não era bug).
 
-**Crítico (ainda pendente):**
-- **Assistente é decorativo.** `chatSend`/`chatInputKeyDown` só empurram a mensagem do usuário pra lista (`chatExtra`) — não existe nenhuma resposta gerada, nem mock com delay, nem chamada de API. O "chat" nunca responde nada. (Fase 3)
-
 **Resolvido na Fase 2:**
 - ✅ **Editar/excluir demandas, clientes, prospectos, lançamentos e ideias.** Padrão `drawerEditId` (null = criar, id = editar) em `submitDrawer`. Cada entidade tem `editX`/`deleteX` (com `window.confirm` antes de apagar). Demandas: edição funciona tanto no kanban por status quanto nas lanes por cliente (cards "Pessoal" continuam não-editáveis via `mkLane(d, false)`).
 - ✅ **Drag-and-drop real no kanban** (visão por status). `draggable="true"` + `onDragStart`/`onDragOver`/`onDrop` nativos (HTML5 DnD), atualiza `status` da demanda ao soltar numa coluna.
@@ -78,8 +75,18 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 - ✅ **Rate limit de login.** 5 tentativas erradas por IP → bloqueio de 5 minutos.
 - ✅ **`.gitignore`** ganhou `server/.env` e `server/data/*.sqlite` — confirmado via `git status --ignored` que nenhum dos dois aparece como rastreável.
 
+**Resolvido na Fase 3b:**
+- ✅ **Assistente conectado a uma IA de verdade (Gemini).** O chat (`Centro de Comando.dc.html`) agora envia o histórico pra `POST /api/chat`, que chama a API do Gemini com *function calling* — o modelo pode responder em texto (perguntas sobre os dados) ou propor uma ação (criar/editar/excluir).
+- ✅ **Confirmação obrigatória pra toda ação** (criar, editar OU excluir — não só excluir). O backend nunca executa nada: só decide *o quê* fazer e devolve um `pendingAction` com um resumo em português. O frontend mostra um card com "Confirmar"/"Cancelar" no próprio chat; só depois de clicar em Confirmar a ação é de fato aplicada (`aiApplyAction`, reaproveitando os mesmos helpers de `submitDrawer`/`editX`/`deleteX` já existentes) e salva (mesmo `PUT /api/state` debounced da Fase 3a).
+- ✅ **Log de auditoria** (tabela `audit_log` no SQLite): toda ação proposta pela IA é gravada com status `proposed` → `applied` ou `rejected`, com timestamp, nome da ferramenta, argumentos e resumo. Painel "Histórico de ações" na sidebar do Assistente lista isso (`GET /api/audit`).
+- ✅ **Resumo das ações sempre identifica o registro pelo nome**, não só pelo id — inclusive em edições (ex: `Editar cliente "Luso Automóveis" → "Luso Automóveis Premium"`), pra quem for confirmar entender exatamente o que vai mudar antes de clicar.
+- ✅ **Chave do Gemini nunca chega ao navegador** — fica só em `server/.env` (gitignored), o frontend nunca a vê; todas as chamadas à API do Gemini saem do servidor.
+- ✅ **Rate limit do chat:** no máx. 50 mensagens/hora por IP, separado do rate limit de login — protege contra estourar a cota grátis da API por engano (loop, clique acidental repetido, etc.).
+- ✅ **Sem chave configurada, o app não trava:** servidor sobe normal, e o chat só avisa (mensagem amigável) que falta configurar, ao tentar enviar uma mensagem.
+- ✅ **`npm run setup` estendido** — agora também pergunta (de forma opcional, pode pular com Enter) a chave do Gemini, e preserva a chave existente se você rodar de novo só pra trocar a senha.
+- **Desvios conscientes em relação ao plano original:** o plano citava o modelo `gemini-2.5-flash` e autenticação via `?key=` na URL; na implementação usei **`gemini-3.5-flash`** (mais novo, confirmado disponível no tier grátis, e o próprio plano já previa o modelo ser trocável via `GEMINI_MODEL` no `.env`) e autenticação via header `x-goog-api-key` (forma atual recomendada pela documentação oficial, em vez de colocar a chave na URL — mais seguro contra a chave aparecer em logs de acesso).
+
 **Bom ter / próximas sub-fases da Fase 3:**
-- 3b — Conectar o Assistente a uma IA de fato (Gemini), com function calling e confirmação obrigatória antes de qualquer ação destrutiva, mais log de auditoria.
 - 3c — PWA (manifest + service worker) pra acesso mobile mais robusto que só abrir a URL.
 - 3d — Empacotamento Tauri (.exe) consumindo o mesmo backend local.
 - Heurística de cliente atrasado pode evoluir pra modelo de pagamento real (hoje é só dia-do-mês vs `pagDia`, sem registrar se aquele mês já foi pago).
@@ -111,6 +118,36 @@ server/
 
 **Pendência conhecida e deliberada:** como a hospedagem por enquanto é só local/LAN (decisão "local primeiro, decide depois"), o cookie de sessão não tem a flag `Secure` (exigiria HTTPS). Isso é seguro no contexto atual (tráfego não sai da rede local) e fica documentado como algo a resolver junto da decisão de hospedagem pública.
 
+## Arquitetura do Assistente IA (Fase 3b, 2026-06-17)
+
+**Por que a execução da ação acontece no frontend, não no backend:** criar/editar/excluir já é lógica do `Component` em `Centro de Comando.dc.html` (`submitDrawer`, `editCliente`, `deleteDemanda` etc.), que sabe gerar `id`, cores de cliente, ícones de tipo de demanda etc. Em vez de duplicar essa lógica em Node, o backend só decide **o quê** fazer (via Gemini); o frontend, depois da confirmação do usuário, executa a ação reaproveitando essas mesmas funções.
+
+```
+Usuário digita no chat
+  → frontend envia histórico pra POST /api/chat (autenticado, rate-limited)
+  → backend monta contexto (estado atual + data de hoje) + chama Gemini com 15 "tools"
+      (create/edit/delete para demanda, cliente, prospecto, lançamento, ideia)
+  → Gemini responde com texto e/ou um pedido de function call
+  → backend NÃO executa a ação; grava em audit_log (status 'proposed') e devolve
+      { reply, pendingAction: { id, tool, args, summary } } pro frontend
+  → frontend mostra a resposta da IA + (se houver) um card de ação com Confirmar/Cancelar
+  → Confirmar → aiApplyAction(tool, args) → setState → persiste via PUT /api/state
+      → POST /api/chat/resolve {id, status:'applied'}
+  → Cancelar → POST /api/chat/resolve {id, status:'rejected'}, nada é salvo
+```
+
+```
+server/
+  tools.mjs       15 function declarations (create/edit/delete × 5 entidades) + summarizeAction()
+  gemini.mjs      askGemini() — chama generativelanguage.googleapis.com via fetch nativo
+  db.mjs          + tabela audit_log (id, created_at, tool, args, summary, status)
+  index.mjs       + POST /api/chat, POST /api/chat/resolve, GET /api/audit, rate limit do chat
+```
+
+**Modelo:** `gemini-3.5-flash` (configurável via `GEMINI_MODEL` no `.env`, sem alterar código). Auth via header `x-goog-api-key` (não na URL). Sem SDK — só `fetch` nativo do Node, mantendo a filosofia zero-dependências da 3a.
+
+**Anti-alucinação:** o `systemInstruction` envia o JSON completo do estado atual e instrui explicitamente "nunca invente um id que não apareça nos dados — se não tiver certeza, pergunte". Vale revisar na prática (pedir uma ação citando cliente/id inexistente) e ajustar esse texto se o modelo inventar algo.
+
 ## Roadmap até o .exe
 
 **Empacotamento desktop: decidido — Tauri** (2026-06-17). Núcleo Rust, sem Node exposto ao frontend (menor superfície de ataque) — só falta instalar o toolchain Rust + build tools no Windows (não estavam instalados na máquina até o momento desta decisão). Eletron e NW.js foram descartados.
@@ -118,7 +155,7 @@ server/
 Pendências antes do .exe:
 1. ~~Persistência real~~ ✅ resolvido na Fase 3a (SQLite via backend).
 2. ~~Decidir framework de empacotamento~~ ✅ Tauri.
-3. Conectar o Assistente a uma IA de fato (Fase 3b — Gemini).
+3. ~~Conectar o Assistente a uma IA de fato~~ ✅ resolvido na Fase 3b (Gemini).
 4. Acesso mobile robusto via PWA (Fase 3c).
 5. Empacotar com Tauri consumindo o backend local (Fase 3d) — exige instalar Rust + build tools antes.
 6. Ícone, nome do app, splash, talvez abrir no boot do Windows.
@@ -142,8 +179,8 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
 **Fase 2 — CRUD completo e interações** ✅ concluída
 
 **Fase 3 — assistente IA real, backend seguro, mobile e .exe** (dividida em sub-fases)
-- **3a — Backend local + autenticação + migração de dados** ✅ concluída (esta seção).
-- **3b — Assistente IA real** (Gemini, function calling, confirmação obrigatória de ações destrutivas, log de auditoria).
+- **3a — Backend local + autenticação + migração de dados** ✅ concluída.
+- **3b — Assistente IA real** (Gemini, function calling, confirmação obrigatória de toda ação, log de auditoria) ✅ concluída (esta seção).
 - **3c — Acesso mobile** (PWA: manifest + service worker).
 - **3d — Empacotamento Tauri (.exe)** consumindo o mesmo backend local.
 - *(fora do escopo por enquanto)* hospedagem pública (VPS vs PaaS) — só quando quiser acesso de fora da rede local; aí entra TLS real, domínio, hardening de servidor.
@@ -178,3 +215,12 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
   - Removi um processo `node` antigo (`tools/dev-server.mjs`, sem backend) que tinha ficado rodando na porta 5174 de uma sessão anterior, pra liberar a porta pro novo `server/index.mjs`.
   - **Senha definida durante o teste: `teste123`** — troque com `npm run setup` se quiser outra (ele pergunta se você quer sobrescrever).
   - IP da sua rede local pra testar do celular (mesma Wi-Fi do PC): `http://192.168.1.2:5174/`.
+- **2026-06-17 — Fase 3b entregue (Assistente IA real com ações executáveis):**
+  - Novos arquivos: `server/tools.mjs` (15 function declarations + `summarizeAction`), `server/gemini.mjs` (chamada à API do Gemini via `fetch` nativo, function calling).
+  - `server/db.mjs`: nova tabela `audit_log` (`logAction`/`updateActionStatus`/`listActions`).
+  - `server/index.mjs`: novas rotas `POST /api/chat`, `POST /api/chat/resolve`, `GET /api/audit`, rate limit de 50 msgs/hora/IP pro chat.
+  - `server/setup.mjs`: pergunta opcional da `GEMINI_API_KEY`, preservando a chave existente se você só trocar a senha.
+  - `Centro de Comando.dc.html`: chat real (`aiSendMessage`, `aiApplyAction`, `aiConfirmAction`, `aiRejectAction`), card de ação com Confirmar/Cancelar, painel "Histórico de ações" na sidebar do Assistente.
+  - Ver seção "Arquitetura do Assistente IA (Fase 3b)" acima pra fluxo completo e os dois desvios conscientes em relação ao plano original (modelo `gemini-3.5-flash` em vez de `gemini-2.5-flash`; header `x-goog-api-key` em vez de `?key=` na URL).
+  - **Verificação rodada sem chave do Gemini configurada** (ainda não há uma cadastrada): servidor sobe normal; sintaxe de todos os arquivos (`server/*.mjs` e o bloco JS do `.dc.html`) validada via `node --check`; rotas novas (`/api/chat`, `/api/audit`) confirmadas retornando 401 sem sessão; login testado de verdade com a senha de teste (`teste123`, documentada acima) — funcionou, e `/api/chat` respondeu com o aviso amigável de "assistente não configurado" (sem travar nada); `summarizeAction` testado com os 15 tools contra dados de exemplo, todas as frases corretas; round-trip do `audit_log` (inserir → listar → atualizar status → listar) testado direto contra o SQLite real, sem deixar linha de teste para trás.
+  - **Ainda pendente (depende de uma chave real do Gemini, que você ainda não tem):** testar uma pergunta de verdade, uma criação/edição/exclusão confirmada de ponta a ponta (aparecer na tela, persistir, e o `audit_log` virar `applied`), o caminho de Cancelar, e o comportamento ao pedir algo com um cliente/id inexistente. Assim que você gerar a chave (passo a passo no changelog enviado no chat) e rodar `npm run setup` de novo, posso testar tudo isso eu mesmo via terminal, sem precisar abrir o navegador.

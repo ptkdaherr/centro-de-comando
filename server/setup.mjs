@@ -17,7 +17,22 @@ function ask(question) {
   return new Promise((resolve) => rl.question(question, (answer) => { rl.close(); resolve(answer); }));
 }
 
-if (fs.existsSync(ENV_PATH)) {
+function loadEnv(envPath) {
+  const out = {};
+  if (!fs.existsSync(envPath)) return out;
+  for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const i = t.indexOf('=');
+    if (i === -1) continue;
+    out[t.slice(0, i)] = t.slice(i + 1);
+  }
+  return out;
+}
+
+const existing = loadEnv(ENV_PATH);
+
+if (existing.APP_PASSWORD_HASH) {
   const overwrite = await ask('Já existe uma senha configurada (server/.env). Trocar a senha? (s/N) ');
   if (overwrite.trim().toLowerCase() !== 's') {
     console.log('Mantida a configuração atual.');
@@ -32,7 +47,18 @@ if (!password || password.length < 6) {
 }
 
 const hash = hashPassword(password);
-fs.writeFileSync(ENV_PATH, `APP_PASSWORD_HASH=${hash}\n`);
+
+const geminiPrompt = existing.GEMINI_API_KEY
+  ? 'Chave do Gemini (Assistente IA) já configurada — cole uma nova pra trocar, ou aperte Enter para manter: '
+  : 'Chave do Gemini (Assistente IA, opcional — Enter para pular e configurar depois): ';
+const geminiInput = (await ask(geminiPrompt)).trim();
+const geminiKey = geminiInput || existing.GEMINI_API_KEY || '';
+
+let envContent = `APP_PASSWORD_HASH=${hash}\n`;
+if (geminiKey) envContent += `GEMINI_API_KEY=${geminiKey}\n`;
+fs.writeFileSync(ENV_PATH, envContent);
 
 console.log('\nSenha configurada — o hash foi salvo em server/.env (não vai pro git).');
+if (geminiKey) console.log('Chave do Gemini salva — o Assistente IA já pode responder e propor ações.');
+else console.log('Nenhuma chave do Gemini configurada ainda — o Assistente vai avisar isso no chat até você rodar "npm run setup" de novo com uma chave.');
 console.log('Agora rode: npm run server\n');
