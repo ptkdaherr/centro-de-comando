@@ -1,0 +1,15 @@
+# Arquivo solto, não pertence ao projeto
+Timed out questions defaults.zip
+
+# Lixo de sistema
+.thumbnail
+Thumbs.db
+.DS_Store
+
+# Futuro empacotamento (Electron/Tauri/NW.js)
+node_modules/
+dist/
+build/
+target/
+out/
+*.log
