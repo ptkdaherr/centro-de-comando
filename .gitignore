@@ -13,3 +13,7 @@ build/
 target/
 out/
 *.log
+
+# Backend (Fase 3a) — segredos e dados locais, nunca versionar
+server/.env
+server/data/*.sqlite

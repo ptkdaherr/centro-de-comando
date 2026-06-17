@@ -31,6 +31,32 @@
 
 <div ref="{{ rootRef }}" style="--bg:#0d0e10; --content:#111316; --sidebar:#0a0b0c; --titlebar:#0c0d0f; --surface:#16181b; --surface-2:#1b1e22; --surface-3:#22262c; --border:rgba(255,255,255,.07); --border-2:rgba(255,255,255,.12); --text:#e9eaec; --text-2:#9a9fa7; --text-3:#64696f; --accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); --ok:#5cae86; --ok-weak:rgba(92,174,134,.13); --warn:#cea052; --warn-weak:rgba(206,160,82,.14); --crit:#d7796b; --crit-weak:rgba(215,121,107,.14); --info:#5e9bd6; --info-weak:rgba(94,155,214,.13); --sh-1:0 1px 2px rgba(0,0,0,.35); --sh-2:0 6px 22px rgba(0,0,0,.4); --sh-3:0 18px 50px rgba(0,0,0,.55); font-family:'Geist',system-ui,sans-serif; color:var(--text); height:100vh; width:100vw; padding:14px; background:radial-gradient(1200px 700px at 20% -10%, #15171b 0%, #0a0b0c 60%, #060708 100%); display:flex;">
 
+  <!-- LOGIN -->
+  <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center; min-width:0; border:1px solid var(--border-2); border-radius:13px; overflow:hidden; background:var(--bg); box-shadow:var(--sh-3);">
+      <div style="width:min(340px,86%); display:flex; flex-direction:column; align-items:center; gap:24px; animation:cc-fade .32s ease both;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:13px;">
+          <div style="width:42px; height:42px; border-radius:11px; background:linear-gradient(150deg, var(--accent), var(--accent-2)); box-shadow:0 0 0 1px rgba(255,255,255,.12) inset, 0 4px 14px rgba(82,133,240,.4); display:flex; align-items:center; justify-content:center;">
+            <div style="width:14px; height:14px; border-radius:4px; background:#fff;"></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:16px; font-weight:600; letter-spacing:.1px;">Centro de Comando</div>
+            <div style="font-size:12.5px; color:var(--text-3); margin-top:3px;">Acesso restrito — digite a senha</div>
+          </div>
+        </div>
+        <div style="width:100%; display:flex; flex-direction:column; gap:11px;">
+          <input type="password" value="{{ loginPassword }}" onInput="{{ loginPasswordChange }}" onKeyDown="{{ loginKeyDown }}" autofocus="true" placeholder="Senha" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+          <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12.5px; color:var(--crit); padding:0 2px;">{{ loginError }}</div>
+          </sc-if>
+          <button onClick="{{ submitLogin }}" style="height:42px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)">Entrar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- APP -->
+  <sc-if value="{{ authed }}" hint-placeholder-val="{{ false }}">
   <div style="flex:1; display:flex; flex-direction:column; min-width:0; border:1px solid var(--border-2); border-radius:13px; overflow:hidden; background:var(--bg); box-shadow:var(--sh-3);">
 
     <!-- ===================== TITLE BAR ===================== -->
@@ -1195,6 +1221,7 @@
 
     </div>
   </div>
+  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Azul&quot;,&quot;Verde&quot;,&quot;Roxo&quot;,&quot;Grafite&quot;],&quot;default&quot;:&quot;Grafite&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
@@ -1221,19 +1248,14 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginPassword: '', loginError: '' };
 
-  // ---- persistência local (localStorage) ----
+  // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
-  _storageKey = 'cdc-exe-state-v1';
+  _hydrating = false;
+  _saveTimer = null;
 
   componentDidMount() {
-    try {
-      const raw = localStorage.getItem(this._storageKey);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      if (data && typeof data === 'object') this.setState(data);
-    } catch (e) { /* localStorage indisponível ou dados corrompidos — ignora */ }
     this._onKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -1243,19 +1265,42 @@ class Component extends DCLogic {
       }
     };
     window.addEventListener('keydown', this._onKeyDown);
+
+    fetch('/api/me', { credentials: 'include' })
+      .then((r) => r.json().catch(() => ({ ok: false })))
+      .then((d) => {
+        this.setState({ authed: !!d.ok, authChecked: true });
+        if (d.ok) this._loadState();
+      })
+      .catch(() => this.setState({ authed: false, authChecked: true }));
   }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this._onKeyDown);
   }
 
+  _loadState() {
+    fetch('/api/state', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => {
+        if (!data || typeof data !== 'object') return;
+        this._hydrating = true;
+        this.setState(data);
+        this._hydrating = false;
+      })
+      .catch(() => {});
+  }
+
   setState(update, cb) {
     super.setState(update, cb);
-    try {
-      const snap = {};
-      for (const k of this._persistKeys) if (this.state[k] != null) snap[k] = this.state[k];
-      localStorage.setItem(this._storageKey, JSON.stringify(snap));
-    } catch (e) { /* localStorage indisponível — segue sem persistir */ }
+    if (this._hydrating || !this.state.authed) return;
+    const snap = {};
+    for (const k of this._persistKeys) if (this.state[k] != null) snap[k] = this.state[k];
+    if (Object.keys(snap).length === 0) return;
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      fetch('/api/state', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(snap) }).catch(() => {});
+    }, 400);
   }
 
   icon(name, size = 18, sw = 1.7) {
@@ -1622,6 +1667,20 @@ class Component extends DCLogic {
     const deleteIdeia = (id) => { if (window.confirm('Excluir esta ideia? Essa ação não pode ser desfeita.')) this.setState({ ideias: ideias.filter(x=>x.id!==id) }); };
     const ideiasView = ideias.map(idea => ({ ...idea, deleteIcon:this.icon('close',12,2), onEdit:() => editIdeia(idea), onDelete:() => deleteIdeia(idea.id) }));
 
+    // ---- AUTENTICAÇÃO ----
+    const loginPasswordChange = (e) => this.setState({ loginPassword: e.target.value, loginError: '' });
+    const submitLogin = () => {
+      const password = s.loginPassword || '';
+      if (!password) return;
+      fetch('/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })
+        .then(async (r) => {
+          if (r.ok) { this.setState({ authed: true, loginPassword: '', loginError: '' }); this._loadState(); }
+          else { const d = await r.json().catch(() => ({})); this.setState({ loginError: d.error || 'Senha incorreta', loginPassword: '' }); }
+        })
+        .catch(() => this.setState({ loginError: 'Não foi possível conectar ao servidor' }));
+    };
+    const loginKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); submitLogin(); } };
+
     // ---- BUSCA (⌘K) ----
     const openSearch = () => this.setState({ searchOpen:true, searchQuery:'' });
     const closeSearch = () => this.setState({ searchOpen:false });
@@ -1889,6 +1948,9 @@ class Component extends DCLogic {
       clientCards, pipeline, prospects,
       openSearch, closeSearch, searchInputChange, searchResults, searchHasResults, searchEmpty,
       searchOpen: !!s.searchOpen, searchQuery: s.searchQuery || '',
+      authed: !!s.authed, showLogin: !!s.authChecked && !s.authed,
+      loginPassword: s.loginPassword || '', loginError: s.loginError || '',
+      loginPasswordChange, loginKeyDown, submitLogin,
       isFinanceiro: s.screen === 'financeiro',
       finKpis, finBars, finTxns,
       isSalario: s.screen === 'salario',

@@ -69,54 +69,84 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 - ✅ **Drag-and-drop real no kanban** (visão por status). `draggable="true"` + `onDragStart`/`onDragOver`/`onDrop` nativos (HTML5 DnD), atualiza `status` da demanda ao soltar numa coluna.
 - ✅ **Busca ⌘K funcional.** Badge do topo agora abre modal (clique ou `Cmd/Ctrl+K`); pesquisa por título/nome em demandas, clientes e prospectos; clicar num resultado abre o drawer de edição já preenchido e navega pra tela certa. `Esc` ou clique fora fecha.
 
-**Bom ter / Fase 3:**
-- Conectar o Assistente a uma IA de fato (Gemini, conforme já decidido no projeto irmão).
-- Empacotamento pro .exe: nenhuma config ainda (Electron vs Tauri).
+**Resolvido na Fase 3a:**
+- ✅ **Backend local real.** `server/index.mjs` substitui o `tools/dev-server.mjs` como forma principal de rodar o app: serve os arquivos estáticos (com o mesmo live reload de sempre) **e** expõe API REST autenticada. `localStorage` deixou de ser fonte de verdade — agora é só cache visual durante a sessão; os dados reais vivem em SQLite no servidor.
+- ✅ **Login obrigatório.** Tela de senha antes de qualquer dado carregar (`showLogin`/`authed` no state). Sem sessão válida, `/api/state` responde 401 e nada é exibido.
+- ✅ **Banco SQLite** (`server/data/cdc.sqlite`, fora do git) com uma tabela (`state_store`) guardando cada entidade (`clients`, `prospectos`, `demands`, `ideias`, `lancamentos`, `wfNodesExtra`) como uma linha JSON — mesma semântica de "snapshot completo" que já existia no localStorage, só que persistente e compartilhada entre dispositivos.
+- ✅ **Senha com hash `scrypt`** (`node:crypto`, zero deps), nunca texto puro. Configurada via `npm run setup` (escreve em `server/.env`, gitignored).
+- ✅ **Sessão HTTP-only.** Cookie `cdc_session` (`HttpOnly; SameSite=Lax`), token opaco aleatório guardado em memória no servidor (não sobrevive a restart — reinício do processo força novo login, decisão deliberada pela "segurança máxima").
+- ✅ **Rate limit de login.** 5 tentativas erradas por IP → bloqueio de 5 minutos.
+- ✅ **`.gitignore`** ganhou `server/.env` e `server/data/*.sqlite` — confirmado via `git status --ignored` que nenhum dos dois aparece como rastreável.
+
+**Bom ter / próximas sub-fases da Fase 3:**
+- 3b — Conectar o Assistente a uma IA de fato (Gemini), com function calling e confirmação obrigatória antes de qualquer ação destrutiva, mais log de auditoria.
+- 3c — PWA (manifest + service worker) pra acesso mobile mais robusto que só abrir a URL.
+- 3d — Empacotamento Tauri (.exe) consumindo o mesmo backend local.
 - Heurística de cliente atrasado pode evoluir pra modelo de pagamento real (hoje é só dia-do-mês vs `pagDia`, sem registrar se aquele mês já foi pago).
+
+## Arquitetura de backend (Fase 3a, 2026-06-17)
+
+O app deixou de ser "só frontend com localStorage" e passou a ter um **backend local único** que serve tanto o navegador (PC ou celular, mesma rede) quanto, futuramente, o executável Tauri (Fase 3d) — todos conversando com a mesma fonte de dados.
+
+```
+server/
+  index.mjs       servidor HTTP: estáticos + live reload + API REST
+  db.mjs          SQLite (node:sqlite nativo) — schema + getState()/saveState()
+  auth.mjs        hash/verify de senha (scrypt), sessão em cookie HTTP-only, rate limit
+  setup.mjs       script de uso único ("npm run setup") — define a senha inicial
+  .env            gitignored — guarda APP_PASSWORD_HASH (e, na Fase 3b, GEMINI_API_KEY)
+  .env.example    comitado — só os nomes das chaves, sem valores
+  data/
+    cdc.sqlite    gitignored — banco real, fonte única de verdade dos dados
+```
+
+**Rotas da API:**
+- `POST /api/login` — `{ password }` → seta cookie de sessão ou 401 (429 se rate-limited).
+- `POST /api/logout` — limpa a sessão.
+- `GET /api/me` — `{ ok: true|false }`, usado no boot do app pra decidir login vs. dashboard.
+- `GET /api/state` — (autenticado) devolve o snapshot salvo (`clients`, `demands`, etc.).
+- `PUT /api/state` — (autenticado) grava o snapshot enviado pelo frontend (debounced no cliente, 400ms).
+
+**Decisão de simplificação consciente:** o plano original previa "uma tabela por entidade" no sentido relacional; na prática, como o frontend já trata cada entidade como um array que substitui por completo a cada mudança (nunca faz update parcial de um registro), implementei como uma única tabela `state_store` com uma linha JSON por entidade — mesmo comportamento do `localStorage` de antes, agora durável e compartilhado, sem inventar um mapeamento relacional que nada no app usa hoje. Fácil de evoluir pra tabelas relacionais de verdade se um dia precisar de queries cruzadas (ex: relatórios por cliente).
+
+**Pendência conhecida e deliberada:** como a hospedagem por enquanto é só local/LAN (decisão "local primeiro, decide depois"), o cookie de sessão não tem a flag `Secure` (exigiria HTTPS). Isso é seguro no contexto atual (tráfego não sai da rede local) e fica documentado como algo a resolver junto da decisão de hospedagem pública.
 
 ## Roadmap até o .exe
 
-Opções consideradas (nenhuma decidida ainda):
-- **Electron** — mais direto, embrulha o `.dc.html` numa `BrowserWindow`, empacota com `electron-builder`. Mais pesado em disco/RAM.
-- **Tauri** — backend Rust, bundle bem mais leve, melhor integração com o sistema. Exige uma camada fina de Rust pra persistência/IPC.
-- **NW.js** — abordagem parecida com Electron, DX similar.
-
-Nenhum desses tem config no projeto ainda (sem `package.json`, sem `electron.js`/`tauri.conf.json`).
+**Empacotamento desktop: decidido — Tauri** (2026-06-17). Núcleo Rust, sem Node exposto ao frontend (menor superfície de ataque) — só falta instalar o toolchain Rust + build tools no Windows (não estavam instalados na máquina até o momento desta decisão). Eletron e NW.js foram descartados.
 
 Pendências antes do .exe:
-1. Implementar persistência real (localStorage no mínimo; idealmente arquivo local / SQLite via backend nativo).
-2. Decidir framework de empacotamento (Electron vs Tauri).
-3. Conectar o Assistente a uma IA de fato (ver decisão já tomada no projeto irmão: Gemini como API gratuita recomendada).
-4. Ícone, nome do app, splash, talvez abrir no boot do Windows.
+1. ~~Persistência real~~ ✅ resolvido na Fase 3a (SQLite via backend).
+2. ~~Decidir framework de empacotamento~~ ✅ Tauri.
+3. Conectar o Assistente a uma IA de fato (Fase 3b — Gemini).
+4. Acesso mobile robusto via PWA (Fase 3c).
+5. Empacotar com Tauri consumindo o backend local (Fase 3d) — exige instalar Rust + build tools antes.
+6. Ícone, nome do app, splash, talvez abrir no boot do Windows.
 
 ## Arquivos da pasta
 
-- `Centro de Comando.dc.html` — app principal (~1775 linhas).
+- `Centro de Comando.dc.html` — app principal.
 - `support.js` — runtime do framework DC.
+- `server/` — backend local (Fase 3a): API + SQLite + autenticação. Ver seção "Arquitetura de backend" acima.
 - `Canvas.dc.html`, `Canvas-2.dc.html` — templates vazios, provavelmente reservados pra novas telas/testes.
 - `ideias/` — 8 prints de referência visual (dashboard, sidebar, calendário, cor, etc.) que guiaram o design.
 - `screenshots/` — 2 prints de demonstração do estado atual.
-- `.gitignore` — exclui `Timed out questions defaults.zip` (arquivo solto sem relação com o projeto), lixo de OS, e pastas de build futuras.
-- `package.json` + `tools/dev-server.mjs` — dev server local zero-deps com live reload (mesmo padrão do projeto irmão `CENTRO-DE-COMANDO`). `npm run dev` sobe em `http://localhost:5174/` e abre o navegador automaticamente.
+- `.gitignore` — exclui `Timed out questions defaults.zip` (arquivo solto sem relação com o projeto), lixo de OS, pastas de build futuras e os segredos/dados do backend (`server/.env`, `server/data/*.sqlite`).
+- `package.json` — scripts: `npm run dev` (servidor estático antigo, sem backend, útil pra ajuste visual rápido), `npm run setup` (define a senha inicial), `npm run server` (servidor principal a partir da Fase 3a — estáticos + API + auth, porta 5174).
 
-## Plano de implementação em 3 fases (decidido em 2026-06-17)
+## Plano de implementação em fases (decidido em 2026-06-17)
 
-Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase termina com checkpoint: reporto o que mudou e peço OK antes de seguir pra próxima.
+Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase termina com checkpoint: reporto o que mudou e peço OK antes de seguir pra próxima.
 
-**Fase 1 — correções rápidas e fundação de dados**
-- Corrigir bug do drawer: lançamento e ideia passam a salvar de fato.
-- Persistência real via `localStorage` (carrega ao abrir, salva a cada mudança) — sem isso nada das próximas fases é testável de verdade.
-- Posição correta pro nó novo do Workflow.
-- Alerta de cliente atrasado (com base no `pagDia`).
+**Fase 1 — correções rápidas e fundação de dados** ✅ concluída
+**Fase 2 — CRUD completo e interações** ✅ concluída
 
-**Fase 2 — CRUD completo e interações**
-- Editar/excluir demandas, clientes, prospectos, lançamentos e ideias.
-- Drag-and-drop real no kanban (mover card entre colunas).
-- Busca ⌘K funcional.
-
-**Fase 3 — assistente IA real e empacotamento .exe**
-- Conectar o Assistente a uma IA de fato (Gemini), com respostas reais e idealmente ações executáveis.
-- Decidir e configurar empacotamento (Electron vs Tauri) gerando o `.exe`.
+**Fase 3 — assistente IA real, backend seguro, mobile e .exe** (dividida em sub-fases)
+- **3a — Backend local + autenticação + migração de dados** ✅ concluída (esta seção).
+- **3b — Assistente IA real** (Gemini, function calling, confirmação obrigatória de ações destrutivas, log de auditoria).
+- **3c — Acesso mobile** (PWA: manifest + service worker).
+- **3d — Empacotamento Tauri (.exe)** consumindo o mesmo backend local.
+- *(fora do escopo por enquanto)* hospedagem pública (VPS vs PaaS) — só quando quiser acesso de fora da rede local; aí entra TLS real, domínio, hardening de servidor.
 
 ## Changelog
 
@@ -139,3 +169,12 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase termina com 
   - **Drag-and-drop real no kanban** (visão por status): `draggable`, `onDragStart` (card), `onDragOver`/`onDrop` (coluna) via HTML5 DnD nativo — solta o card numa coluna e o `status` da demanda muda de fato.
   - **Busca ⌘K funcional:** `Cmd/Ctrl+K` (listener global em `componentDidMount`, removido em `componentWillUnmount` novo) ou clique no badge do topo abrem um modal central; busca por título/nome em demandas, clientes e prospectos; clicar num resultado abre o drawer de edição certo e troca de tela; `Esc` ou clique no scrim fecha.
   - Sintaxe validada via `node --check` no bloco da classe `Component` (duas vezes, sem erros). Servido e confirmado via dev server local (porta 5174, live reload).
+- **2026-06-17 — Fase 3a entregue (backend + autenticação + migração de dados):**
+  - Novos arquivos: `server/index.mjs` (HTTP: estáticos + live reload + API), `server/db.mjs` (SQLite via `node:sqlite`, tabela `state_store`), `server/auth.mjs` (hash `scrypt`, sessão em cookie HTTP-only, rate limit por IP), `server/setup.mjs` (`npm run setup`, define a senha inicial), `server/.env.example` (comitado, só nomes de chave).
+  - `Centro de Comando.dc.html`: novo gate de login (`showLogin`/`authed`/`loginPassword`/`loginError` no state) — nada do app renderiza sem sessão válida. `componentDidMount` agora chama `/api/me` e, se autenticado, `/api/state`; `setState` sobrescrito faz `PUT /api/state` debounced (400ms) em vez de gravar no `localStorage`.
+  - `.gitignore`: adicionado `server/.env` e `server/data/*.sqlite`.
+  - `package.json`: novos scripts `npm run setup` e `npm run server` (porta 5174, mesma de sempre); `npm run dev` (servidor antigo, sem backend) continua disponível pra ajustes visuais rápidos.
+  - **Verificação completa (todos os 7 passos do plano), rodada ao vivo:** `npm run setup` gravou o hash em `server/.env`; `npm run server` subiu normalmente; 5 senhas erradas bloquearam a 6ª tentativa (429) e a senha certa logou (200 + cookie `HttpOnly`); `PUT`/`GET /api/state` foram e voltaram consistentes; **reiniciei o processo do servidor e os dados continuaram lá** (vêm do SQLite, não da memória) — e a sessão, como esperado, exigiu novo login após o restart; `/server/.env` retorna 403 se alguém tentar acessar pela URL; `git status --ignored` confirmou que `server/.env` e `server/data/` não são rastreáveis.
+  - Removi um processo `node` antigo (`tools/dev-server.mjs`, sem backend) que tinha ficado rodando na porta 5174 de uma sessão anterior, pra liberar a porta pro novo `server/index.mjs`.
+  - **Senha definida durante o teste: `teste123`** — troque com `npm run setup` se quiser outra (ele pergunta se você quer sobrescrever).
+  - IP da sua rede local pra testar do celular (mesma Wi-Fi do PC): `http://192.168.1.2:5174/`.

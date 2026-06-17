@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node tools/dev-server.mjs"
+    "dev": "node tools/dev-server.mjs",
+    "setup": "node server/setup.mjs",
+    "server": "node server/index.mjs"
   }
 }
