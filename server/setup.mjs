@@ -32,21 +32,28 @@ function loadEnv(envPath) {
 
 const existing = loadEnv(ENV_PATH);
 
-if (existing.APP_PASSWORD_HASH) {
+let hash = existing.APP_PASSWORD_HASH;
+
+if (hash) {
   const overwrite = await ask('Já existe uma senha configurada (server/.env). Trocar a senha? (s/N) ');
-  if (overwrite.trim().toLowerCase() !== 's') {
-    console.log('Mantida a configuração atual.');
-    process.exit(0);
+  if (overwrite.trim().toLowerCase() === 's') {
+    const password = await ask('Defina a nova senha de acesso ao Centro de Comando: ');
+    if (!password || password.length < 6) {
+      console.error('\nSenha precisa ter pelo menos 6 caracteres. Rode "npm run setup" novamente.');
+      process.exit(1);
+    }
+    hash = hashPassword(password);
+  } else {
+    console.log('Mantida a senha atual.');
   }
+} else {
+  const password = await ask('Defina a senha de acesso ao Centro de Comando: ');
+  if (!password || password.length < 6) {
+    console.error('\nSenha precisa ter pelo menos 6 caracteres. Rode "npm run setup" novamente.');
+    process.exit(1);
+  }
+  hash = hashPassword(password);
 }
-
-const password = await ask('Defina a senha de acesso ao Centro de Comando: ');
-if (!password || password.length < 6) {
-  console.error('\nSenha precisa ter pelo menos 6 caracteres. Rode "npm run setup" novamente.');
-  process.exit(1);
-}
-
-const hash = hashPassword(password);
 
 const geminiPrompt = existing.GEMINI_API_KEY
   ? 'Chave do Gemini (Assistente IA) já configurada — cole uma nova pra trocar, ou aperte Enter para manter: '
@@ -58,7 +65,7 @@ let envContent = `APP_PASSWORD_HASH=${hash}\n`;
 if (geminiKey) envContent += `GEMINI_API_KEY=${geminiKey}\n`;
 fs.writeFileSync(ENV_PATH, envContent);
 
-console.log('\nSenha configurada — o hash foi salvo em server/.env (não vai pro git).');
+console.log('\nConfiguração salva em server/.env (não vai pro git).');
 if (geminiKey) console.log('Chave do Gemini salva — o Assistente IA já pode responder e propor ações.');
 else console.log('Nenhuma chave do Gemini configurada ainda — o Assistente vai avisar isso no chat até você rodar "npm run setup" de novo com uma chave.');
 console.log('Agora rode: npm run server\n');
