@@ -52,23 +52,27 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 
 **Nenhuma persistência implementada ainda** — os dados são state em memória e resetam ao recarregar a página. Isso é a lacuna mais importante antes de qualquer release.
 
-## O que falta implementar (verificado lendo o código em 2026-06-17)
+## O que falta implementar (atualizado em 2026-06-17 — pós Fase 1)
 
-**Crítico:**
-- **Zero persistência.** Nada de `localStorage`/arquivo/SQLite — confirmado, não existe nenhuma chamada de storage no arquivo. Tudo é `state` em memória; F5 reseta tudo.
-- **Assistente é decorativo.** `chatSend`/`chatInputKeyDown` só empurram a mensagem do usuário pra lista (`chatExtra`) — não existe nenhuma resposta gerada, nem mock com delay, nem chamada de API. O "chat" nunca responde nada.
-- **Bug: lançamento e ideia não salvam.** Os botões "Registrar lançamento" e "Capturar ideia" abrem o drawer (`openDrawerLancamento`/`openDrawerIdeia`), mostram o toast de "sucesso" — mas o `submitDrawer` só tem `if/else if` pra `demanda`, `cliente` e `prospecto`. Pra `lancamento` e `ideia` ele fecha o drawer e finge que salvou, mas **não adiciona nada aos arrays** `lancamentos`/`ideias`. Precisa implementar esses dois branches.
+**Resolvido na Fase 1:**
+- ✅ **Persistência via `localStorage`.** `_persistKeys`/`_storageKey` + `componentDidMount` (restaura) e `setState` sobrescrito (salva a cada mudança). Chave `cdc-exe-state-v1`. Cobre `clients`, `prospectos`, `demands`, `ideias`, `lancamentos`, `wfNodesExtra`.
+- ✅ **Bug do drawer corrigido.** `submitDrawer` agora tem branches `lancamento` e `ideia` que de fato adicionam aos arrays `lancamentos`/`ideias` (antes só fechava o drawer e mostrava toast falso).
+- ✅ **Ideias com formulário funcional.** Campos título/categoria/observações do drawer de ideia agora têm `value`/`onInput`/`onClick` ligados a state real (antes eram inputs soltos, sem handler nenhum).
+- ✅ **Alerta de cliente atrasado.** `clientCards` agora calcula `isLate` com base em `cl.pagDia` (clientes fixos) vs. dia atual (`todayReal`) — status muda pra "Atrasado" com cor `var(--crit)`. Heurística simples (sem histórico de pagamento real ainda).
+- ✅ Posição dos nós extras do Workflow: confirmado que já funcionava corretamente (não era bug).
 
-**Importante:**
-- **Sem edição/exclusão de nada.** Só existe fluxo de *criar* (demanda, cliente, prospecto). Não há como editar ou apagar uma demanda, cliente, prospecto, lançamento ou ideia depois de criada.
+**Crítico (ainda pendente):**
+- **Assistente é decorativo.** `chatSend`/`chatInputKeyDown` só empurram a mensagem do usuário pra lista (`chatExtra`) — não existe nenhuma resposta gerada, nem mock com delay, nem chamada de API. O "chat" nunca responde nada. (Fase 3)
+
+**Importante (Fase 2):**
+- **Sem edição/exclusão de nada.** Só existe fluxo de *criar* (demanda, cliente, prospecto, lançamento, ideia). Não há como editar ou apagar nada depois de criado.
 - **Kanban sem drag-and-drop.** Nenhum atributo `draggable`/handler de drag no código — mover card de coluna é só visual hoje (não dá pra arrastar de fato).
 - **Busca ⌘K é só um badge.** Aparece visualmente no topo (linha ~50) mas não tem listener nenhum atrás — não abre busca nenhuma.
-- **Empacotamento pro .exe:** nenhuma config ainda (sem `package.json`, sem Electron/Tauri/NW.js).
 
-**Bom ter / Fase 2+:**
+**Bom ter / Fase 3:**
 - Conectar o Assistente a uma IA de fato (Gemini, conforme já decidido no projeto irmão).
-- Editar/mover nós do Workflow (hoje só dá pra adicionar um nó novo via `addWfNode`, sem posição definida).
-- Notificação de cliente atrasado (mencionada no briefing original, não vista implementada aqui).
+- Empacotamento pro .exe: nenhuma config ainda (Electron vs Tauri).
+- Heurística de cliente atrasado pode evoluir pra modelo de pagamento real (hoje é só dia-do-mês vs `pagDia`, sem registrar se aquele mês já foi pago).
 
 ## Roadmap até o .exe
 
@@ -93,8 +97,37 @@ Pendências antes do .exe:
 - `ideias/` — 8 prints de referência visual (dashboard, sidebar, calendário, cor, etc.) que guiaram o design.
 - `screenshots/` — 2 prints de demonstração do estado atual.
 - `.gitignore` — exclui `Timed out questions defaults.zip` (arquivo solto sem relação com o projeto), lixo de OS, e pastas de build futuras.
+- `package.json` + `tools/dev-server.mjs` — dev server local zero-deps com live reload (mesmo padrão do projeto irmão `CENTRO-DE-COMANDO`). `npm run dev` sobe em `http://localhost:5174/` e abre o navegador automaticamente.
+
+## Plano de implementação em 3 fases (decidido em 2026-06-17)
+
+Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase termina com checkpoint: reporto o que mudou e peço OK antes de seguir pra próxima.
+
+**Fase 1 — correções rápidas e fundação de dados**
+- Corrigir bug do drawer: lançamento e ideia passam a salvar de fato.
+- Persistência real via `localStorage` (carrega ao abrir, salva a cada mudança) — sem isso nada das próximas fases é testável de verdade.
+- Posição correta pro nó novo do Workflow.
+- Alerta de cliente atrasado (com base no `pagDia`).
+
+**Fase 2 — CRUD completo e interações**
+- Editar/excluir demandas, clientes, prospectos, lançamentos e ideias.
+- Drag-and-drop real no kanban (mover card entre colunas).
+- Busca ⌘K funcional.
+
+**Fase 3 — assistente IA real e empacotamento .exe**
+- Conectar o Assistente a uma IA de fato (Gemini), com respostas reais e idealmente ações executáveis.
+- Decidir e configurar empacotamento (Electron vs Tauri) gerando o `.exe`.
 
 ## Changelog
 
 - **2026-06-17** — Repositório git inicializado (branch `main`), `.gitignore` criado, este `CONTEXTO.md` criado, commit inicial com o estado atual do projeto como baseline.
 - **2026-06-17** — Lida a fundo a lógica do `.dc.html` e mapeados os gaps reais (seção "O que falta implementar" acima): zero persistência, assistente decorativo, bug no save de lançamento/ideia, sem editar/excluir, sem drag-and-drop no kanban, ⌘K decorativo.
+- **2026-06-17** — Dev server local criado (`npm run dev`, porta 5174, live reload) e plano de implementação em 3 fases definido.
+- **2026-06-17 — Fase 1 entregue:**
+  - Persistência via `localStorage` (chave `cdc-exe-state-v1`): restaura estado ao abrir, salva a cada `setState`. Cobre clientes, prospectos, demandas, ideias, lançamentos e nós extras do workflow.
+  - `lancamentos` e `ideias` migrados pro padrão `state` com fallback (`s.X || xDefault`), igual já era feito com `clients`/`demands`/`prospectos`.
+  - `submitDrawer` ganhou os branches `lancamento` e `ideia` (antes só fechavam o drawer e mentiam que salvaram). Lançamento calcula label/cor/ícone pelo tipo (receita/despesa); ideia usa a categoria escolhida pra colorir a tag.
+  - Drawer de ideia: título, categoria (chips Pessoal/Produto/Conteúdo/Cliente) e observações agora têm handlers reais (`ideiaTituloChange`, `ideiaObsChange`, `ideiaCatSetX`) — antes eram inputs sem `value`/`onInput`.
+  - Botões "Nova ideia"/"Capturar ideia" corrigidos pra chamar `openDrawerIdeia` (antes chamavam `openDrawer`, abrindo no modo errado).
+  - `clientCards` ganhou alerta de cliente atrasado: clientes fixos com `pagDia` vencido no mês (dia atual > `pagDia`) mostram status "Atrasado" em vermelho (`var(--crit)`).
+  - Sintaxe do bloco JS validada via `new Function(...)` sem erros; testado rodando no dev server local (`npm run dev`, porta 5174) com live reload.

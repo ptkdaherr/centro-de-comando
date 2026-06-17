@@ -1,0 +1,8 @@
+{
+  "name": "centro-de-comando-exe",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node tools/dev-server.mjs"
+  }
+}

@@ -835,7 +835,7 @@
             <div style="padding:22px 28px 14px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-shrink:0;">
               <div><h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Ideias</h1><p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">Banco de ideias — capture qualquer coisa, refine depois</p></div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}<span>Nova ideia</span></button>
+                <button onClick="{{ openDrawerIdeia }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}<span>Nova ideia</span></button>
               </div>
             </div>
             <div style="flex:1; overflow-y:auto; padding:0 28px 32px;">
@@ -859,7 +859,7 @@
                     </div>
                   </div>
                 </sc-for>
-                <button onClick="{{ openDrawer }}" style="min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px dashed var(--border-2); background:transparent; color:var(--text-3); border-radius:12px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text-2); border-color:var(--text-3)">{{ iconPlusSm }}<span>Capturar ideia</span></button>
+                <button onClick="{{ openDrawerIdeia }}" style="min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px dashed var(--border-2); background:transparent; color:var(--text-3); border-radius:12px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text-2); border-color:var(--text-3)">{{ iconPlusSm }}<span>Capturar ideia</span></button>
               </div>
             </div>
           </div>
@@ -1122,20 +1122,20 @@
           <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px;">
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Título da ideia</label>
-              <input placeholder="Ex: Série bastidores da agência — ep. 1 ao 6" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+              <input value="{{ ideiaTitulo }}" onInput="{{ ideiaTituloChange }}" placeholder="Ex: Série bastidores da agência — ep. 1 ao 6" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
             </div>
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Categoria</label>
               <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                <span style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid var(--accent); background:var(--accent-weak); color:var(--accent); border-radius:7px; font-size:12px; font-weight:500; cursor:pointer;">Pessoal</span>
-                <span style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid var(--border-2); background:transparent; color:var(--text-3); border-radius:7px; font-size:12px; cursor:pointer;">Produto</span>
-                <span style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid var(--border-2); background:transparent; color:var(--text-3); border-radius:7px; font-size:12px; cursor:pointer;">Conteúdo</span>
-                <span style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid var(--border-2); background:transparent; color:var(--text-3); border-radius:7px; font-size:12px; cursor:pointer;">Cliente</span>
+                <span onClick="{{ ideiaCatSetPessoal }}" style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid {{ ideiaCatPessoalBorder }}; background:{{ ideiaCatPessoalBg }}; color:{{ ideiaCatPessoalC }}; border-radius:7px; font-size:12px; font-weight:{{ ideiaCatPessoalW }}; cursor:pointer;">Pessoal</span>
+                <span onClick="{{ ideiaCatSetProduto }}" style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid {{ ideiaCatProdutoBorder }}; background:{{ ideiaCatProdutoBg }}; color:{{ ideiaCatProdutoC }}; border-radius:7px; font-size:12px; font-weight:{{ ideiaCatProdutoW }}; cursor:pointer;">Produto</span>
+                <span onClick="{{ ideiaCatSetConteudo }}" style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid {{ ideiaCatConteudoBorder }}; background:{{ ideiaCatConteudoBg }}; color:{{ ideiaCatConteudoC }}; border-radius:7px; font-size:12px; font-weight:{{ ideiaCatConteudoW }}; cursor:pointer;">Conteúdo</span>
+                <span onClick="{{ ideiaCatSetCliente }}" style="display:inline-flex; align-items:center; height:28px; padding:0 11px; border:1px solid {{ ideiaCatClienteBorder }}; background:{{ ideiaCatClienteBg }}; color:{{ ideiaCatClienteC }}; border-radius:7px; font-size:12px; font-weight:{{ ideiaCatClienteW }}; cursor:pointer;">Cliente</span>
               </div>
             </div>
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Observações</label>
-              <textarea placeholder="Anote tudo que vier à cabeça…" style="width:100%; min-height:100px; padding:11px 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13px; line-height:1.6; resize:vertical; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)"></textarea>
+              <textarea value="{{ ideiaObs }}" onInput="{{ ideiaObsChange }}" placeholder="Anote tudo que vier à cabeça…" style="width:100%; min-height:100px; padding:11px 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13px; line-height:1.6; resize:vertical; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)"></textarea>
             </div>
           </div>
           </sc-if>
@@ -1183,7 +1183,29 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '' };
+
+  // ---- persistência local (localStorage) ----
+  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
+  _storageKey = 'cdc-exe-state-v1';
+
+  componentDidMount() {
+    try {
+      const raw = localStorage.getItem(this._storageKey);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && typeof data === 'object') this.setState(data);
+    } catch (e) { /* localStorage indisponível ou dados corrompidos — ignora */ }
+  }
+
+  setState(update, cb) {
+    super.setState(update, cb);
+    try {
+      const snap = {};
+      for (const k of this._persistKeys) if (this.state[k] != null) snap[k] = this.state[k];
+      localStorage.setItem(this._storageKey, JSON.stringify(snap));
+    } catch (e) { /* localStorage indisponível — segue sem persistir */ }
+  }
 
   icon(name, size = 18, sw = 1.7) {
     const P = {
@@ -1445,7 +1467,9 @@ class Component extends DCLogic {
       const clD = demands.filter(d => d.clientId === cl.id);
       const openD = clD.filter(d => d.status !== 'done');
       const first = openD[0];
-      return { name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:'Ativo', statusColor:'var(--ok)', statusBg:'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026' };
+      const pagDia = parseInt(cl.pagDia, 10) || null;
+      const isLate = cl.tipo === 'fixo' && pagDia && todayReal.getDate() > pagDia;
+      return { name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026' };
     });
     const pipeline = [
       { label:'Prospecção', color:'var(--text-3)', bg:'transparent', count:prospectos.filter(p=>p.etapa==='Prospecção').length.toString(), names:prospectos.filter(p=>p.etapa==='Prospecção').map(p=>p.nome) },
@@ -1465,12 +1489,14 @@ class Component extends DCLogic {
     const finBarsRaw = [{l:'Jan',v:3200},{l:'Fev',v:3200},{l:'Mar',v:4600},{l:'Abr',v:4200},{l:'Mai',v:5100},{l:'Jun',v:2250}];
     const finMax = Math.max(...finBarsRaw.map(b=>b.v));
     const finBars = finBarsRaw.map((b,i) => ({ label:b.l, val:'R$'+Math.round(b.v/1000)+'k', h:Math.round(b.v/finMax*100)+'%', fill: i===5 ? 'var(--accent)' : 'var(--surface-3)', delay: (i*70)+'ms' }));
-    const finTxns = [
+    const finTxnsDefault = [
       { label:'Luso Automóveis — junho', meta:'Recebido · 14 jun', amount:'+ '+this.brl(1800), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)' },
       { label:'Flamenguismo — Reels avulso', meta:'Recebido · 12 jun', amount:'+ '+this.brl(450), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)' },
       { label:'Adobe Creative Cloud', meta:'Assinatura · 10 jun', amount:'− '+this.brl(124.90), amountColor:'var(--text-2)', ic:'wallet', color:'var(--text-2)', bg:'var(--surface-3)' },
       { label:'Flamenguismo — pacote jul', meta:'Pendente · vence 25 jun', amount:this.brl(2200), amountColor:'var(--warn)', ic:'clock', color:'var(--warn)', bg:'var(--warn-weak)' },
-    ].map(t => ({ ...t, iconEl: this.icon(t.ic,15,1.8) }));
+    ];
+    const lancamentos = s.lancamentos || finTxnsDefault;
+    const finTxns = lancamentos.map(t => ({ ...t, iconEl: this.icon(t.ic,15,1.8) }));
 
     // ---- SALÁRIO ----
     const salBreakdown = [
@@ -1494,7 +1520,7 @@ class Component extends DCLogic {
 
     // ---- IDEIAS ----
     const mkTag = (l,c,bg,b) => ({label:l,color:c,bg:bg,border:b||'transparent'});
-    const ideias = [
+    const ideiasDefault = [
       { title:'Série: bastidores da agência solo — ep. 1 ao 6', status:'Refinando', statusColor:'var(--info)', statusBg:'var(--info-weak)', date:'há 2 dias', tags:[mkTag('Pessoal','var(--accent)','var(--accent-weak)'),mkTag('Conteúdo','var(--text-2)','var(--surface-3)')] },
       { title:'Reels nos bastidores do test-drive Luso', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 3 dias', tags:[mkTag('Luso','#5285f0','rgba(82,133,240,.13)'),mkTag('Vídeo','var(--text-2)','var(--surface-3)')] },
       { title:'Campanha dia dos pais — Luso Automóveis', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 5 dias', tags:[mkTag('Luso','#5285f0','rgba(82,133,240,.13)'),mkTag('Campanha','var(--text-2)','var(--surface-3)')] },
@@ -1502,6 +1528,7 @@ class Component extends DCLogic {
       { title:'Guia: como precificar edição de vídeo freelance', status:'Refinando', statusColor:'var(--info)', statusBg:'var(--info-weak)', date:'há 1 sem', tags:[mkTag('Produto','var(--ok)','var(--ok-weak)'),mkTag('Conteúdo','var(--text-2)','var(--surface-3)')] },
       { title:'Filtro exclusivo de câmera — paleta Mengão', status:'Virou projeto', statusColor:'var(--ok)', statusBg:'var(--ok-weak)', date:'há 2 sem', tags:[mkTag('Flamengo','#d7796b','rgba(215,121,107,.13)'),mkTag('Produto','var(--ok)','var(--ok-weak)')] },
     ];
+    const ideias = s.ideias || ideiasDefault;
 
     // ---- WORKFLOW NODES ----
     const wfNodesBase = [
@@ -1593,7 +1620,7 @@ class Component extends DCLogic {
       openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
       openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
       openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
-      openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia' }),
+      openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia', ideiaTitulo:'', ideiaCategoria:'Pessoal', ideiaObs:'' }),
       closeDrawer: () => this.setState({ drawer: false }),
       submitDrawer: () => {
         const mode = s.drawerMode||'demanda';
@@ -1622,6 +1649,23 @@ class Component extends DCLogic {
         } else if (mode === 'prospecto') {
           updates.prospectos = [...prospectos, { id:Date.now(), nome:s.prospectoNome||'Prospecto', segmento:s.prospectoSegmento||'', obs:s.prospectoObs||'', etapa:'Prospecção' }];
           updates.prospectoNome = ''; updates.prospectoSegmento = ''; updates.prospectoObs = '';
+        } else if (mode === 'lancamento') {
+          const tipo = s.lancTipo||'receita';
+          const val = parseFloat((s.lancValor||'0').replace(',','.')) || 0;
+          let dataFmt = '—';
+          if (s.lancData) {
+            const [y,m,d] = s.lancData.split('-');
+            const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+            dataFmt = d+' '+(meses[parseInt(m,10)-1]||'');
+          }
+          updates.lancamentos = [{ id:Date.now(), label:s.lancDesc||(tipo==='receita'?'Receita':'Despesa'), meta:(tipo==='receita'?'Recebido':'Pago')+' · '+dataFmt, amount:(tipo==='receita'?'+ ':'− ')+this.brl(val), amountColor: tipo==='receita'?'var(--ok)':'var(--text-2)', ic: tipo==='receita'?'dollar':'wallet', color: tipo==='receita'?'var(--ok)':'var(--text-2)', bg: tipo==='receita'?'var(--ok-weak)':'var(--surface-3)' }, ...lancamentos];
+          updates.lancDesc = ''; updates.lancValor = ''; updates.lancData = ''; updates.lancTipo = 'receita';
+        } else if (mode === 'ideia') {
+          const catColors = { Pessoal:['var(--accent)','var(--accent-weak)'], Produto:['var(--ok)','var(--ok-weak)'], Conteúdo:['var(--text-2)','var(--surface-3)'], Cliente:['var(--info)','var(--info-weak)'] };
+          const cat = s.ideiaCategoria||'Pessoal';
+          const [tc, tbg] = catColors[cat] || catColors.Pessoal;
+          updates.ideias = [{ id:Date.now(), title:s.ideiaTitulo||'Nova ideia', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'agora', obs:s.ideiaObs||'', tags:[{ label:cat, color:tc, bg:tbg, border:'transparent' }] }, ...ideias];
+          updates.ideiaTitulo = ''; updates.ideiaCategoria = 'Pessoal'; updates.ideiaObs = '';
         }
         this.setState(updates);
         clearTimeout(this._t);
@@ -1657,6 +1701,18 @@ class Component extends DCLogic {
       ...(()=>{ const lt = s.lancTipo||'receita'; return {
         lancTipoReceitaW: lt==='receita'?'600':'500', lancTipoReceitaC: lt==='receita'?'var(--ok)':'var(--text-3)', lancTipoReceitaBg: lt==='receita'?'var(--ok-weak)':'var(--surface)', lancTipoReceitaBorder: lt==='receita'?'var(--ok)':'var(--border-2)',
         lancTipoDespesaW: lt==='despesa'?'600':'500', lancTipoDespesaC: lt==='despesa'?'var(--crit)':'var(--text-3)', lancTipoDespesaBg: lt==='despesa'?'var(--crit-weak)':'var(--surface)', lancTipoDespesaBorder: lt==='despesa'?'var(--crit)':'var(--border-2)',
+      }; })(),
+      ideiaTituloChange: (e) => this.setState({ ideiaTitulo: e.target.value }),
+      ideiaObsChange: (e) => this.setState({ ideiaObs: e.target.value }),
+      ideiaCatSetPessoal: () => this.setState({ ideiaCategoria: 'Pessoal' }),
+      ideiaCatSetProduto: () => this.setState({ ideiaCategoria: 'Produto' }),
+      ideiaCatSetConteudo: () => this.setState({ ideiaCategoria: 'Conteúdo' }),
+      ideiaCatSetCliente: () => this.setState({ ideiaCategoria: 'Cliente' }),
+      ...(()=>{ const ic = s.ideiaCategoria||'Pessoal'; return {
+        ideiaCatPessoalW: ic==='Pessoal'?'600':'500', ideiaCatPessoalC: ic==='Pessoal'?'var(--accent)':'var(--text-3)', ideiaCatPessoalBg: ic==='Pessoal'?'var(--accent-weak)':'var(--surface)', ideiaCatPessoalBorder: ic==='Pessoal'?'var(--accent)':'var(--border-2)',
+        ideiaCatProdutoW: ic==='Produto'?'600':'500', ideiaCatProdutoC: ic==='Produto'?'var(--ok)':'var(--text-3)', ideiaCatProdutoBg: ic==='Produto'?'var(--ok-weak)':'var(--surface)', ideiaCatProdutoBorder: ic==='Produto'?'var(--ok)':'var(--border-2)',
+        ideiaCatConteudoW: ic==='Conteúdo'?'600':'500', ideiaCatConteudoC: ic==='Conteúdo'?'var(--text-2)':'var(--text-3)', ideiaCatConteudoBg: ic==='Conteúdo'?'var(--surface-3)':'var(--surface)', ideiaCatConteudoBorder: ic==='Conteúdo'?'var(--text-2)':'var(--border-2)',
+        ideiaCatClienteW: ic==='Cliente'?'600':'500', ideiaCatClienteC: ic==='Cliente'?'var(--info)':'var(--text-3)', ideiaCatClienteBg: ic==='Cliente'?'var(--info-weak)':'var(--surface)', ideiaCatClienteBorder: ic==='Cliente'?'var(--info)':'var(--border-2)',
       }; })(),
       drawer: s.drawer,
       toast: s.toast,
