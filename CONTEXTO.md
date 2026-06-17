@@ -64,10 +64,10 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 **Crítico (ainda pendente):**
 - **Assistente é decorativo.** `chatSend`/`chatInputKeyDown` só empurram a mensagem do usuário pra lista (`chatExtra`) — não existe nenhuma resposta gerada, nem mock com delay, nem chamada de API. O "chat" nunca responde nada. (Fase 3)
 
-**Importante (Fase 2):**
-- **Sem edição/exclusão de nada.** Só existe fluxo de *criar* (demanda, cliente, prospecto, lançamento, ideia). Não há como editar ou apagar nada depois de criado.
-- **Kanban sem drag-and-drop.** Nenhum atributo `draggable`/handler de drag no código — mover card de coluna é só visual hoje (não dá pra arrastar de fato).
-- **Busca ⌘K é só um badge.** Aparece visualmente no topo (linha ~50) mas não tem listener nenhum atrás — não abre busca nenhuma.
+**Resolvido na Fase 2:**
+- ✅ **Editar/excluir demandas, clientes, prospectos, lançamentos e ideias.** Padrão `drawerEditId` (null = criar, id = editar) em `submitDrawer`. Cada entidade tem `editX`/`deleteX` (com `window.confirm` antes de apagar). Demandas: edição funciona tanto no kanban por status quanto nas lanes por cliente (cards "Pessoal" continuam não-editáveis via `mkLane(d, false)`).
+- ✅ **Drag-and-drop real no kanban** (visão por status). `draggable="true"` + `onDragStart`/`onDragOver`/`onDrop` nativos (HTML5 DnD), atualiza `status` da demanda ao soltar numa coluna.
+- ✅ **Busca ⌘K funcional.** Badge do topo agora abre modal (clique ou `Cmd/Ctrl+K`); pesquisa por título/nome em demandas, clientes e prospectos; clicar num resultado abre o drawer de edição já preenchido e navega pra tela certa. `Esc` ou clique fora fecha.
 
 **Bom ter / Fase 3:**
 - Conectar o Assistente a uma IA de fato (Gemini, conforme já decidido no projeto irmão).
@@ -131,3 +131,11 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase termina com 
   - Botões "Nova ideia"/"Capturar ideia" corrigidos pra chamar `openDrawerIdeia` (antes chamavam `openDrawer`, abrindo no modo errado).
   - `clientCards` ganhou alerta de cliente atrasado: clientes fixos com `pagDia` vencido no mês (dia atual > `pagDia`) mostram status "Atrasado" em vermelho (`var(--crit)`).
   - Sintaxe do bloco JS validada via `new Function(...)` sem erros; testado rodando no dev server local (`npm run dev`, porta 5174) com live reload.
+- **2026-06-17 — Fase 2 entregue:**
+  - **Editar/excluir** em todas as 5 entidades (demanda, cliente, prospecto, lançamento, ideia). Novo campo `drawerEditId` no state: `null` = criando, `id` = editando — `submitDrawer` ramifica update vs. create pra cada modo. Cada card/linha ganhou botão de excluir (ícone X reaproveitado, sem ícone de lixeira no kit) com `window.confirm(...)` antes de remover.
+  - **Demandas:** clicar num card (kanban por status ou lanes por cliente) abre o drawer já preenchido pra editar. Cards fixos da tela "Pessoal" (não fazem parte do state real) ficam não-editáveis via segundo parâmetro `mkLane(d, false)`.
+  - **Lançamentos:** seed ganhou `id`/`tipo`/`valorRaw`/`dataRaw`; novo `buildLancamento(...)` compartilhado entre criar/editar evita parsear texto já formatado.
+  - **Ideias:** seed ganhou `id`/`obs`; nova `ideiasView` (derivada de `ideias`) injeta os handlers de editar/excluir no template.
+  - **Drag-and-drop real no kanban** (visão por status): `draggable`, `onDragStart` (card), `onDragOver`/`onDrop` (coluna) via HTML5 DnD nativo — solta o card numa coluna e o `status` da demanda muda de fato.
+  - **Busca ⌘K funcional:** `Cmd/Ctrl+K` (listener global em `componentDidMount`, removido em `componentWillUnmount` novo) ou clique no badge do topo abrem um modal central; busca por título/nome em demandas, clientes e prospectos; clicar num resultado abre o drawer de edição certo e troca de tela; `Esc` ou clique no scrim fecha.
+  - Sintaxe validada via `node --check` no bloco da classe `Component` (duas vezes, sem erros). Servido e confirmado via dev server local (porta 5174, live reload).

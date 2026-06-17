@@ -44,7 +44,7 @@
       <button onClick="{{ toggleSidebar }}" title="Recolher barra lateral" style="margin-left:4px; -webkit-app-region:no-drag; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border:none; background:transparent; color:var(--text-3); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text-2)">{{ iconSidebar }}</button>
 
       <div style="flex:1; display:flex; justify-content:center; -webkit-app-region:no-drag;">
-        <div style="display:flex; align-items:center; gap:8px; width:min(440px,46%); height:27px; padding:0 11px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text-3);">
+        <div onClick="{{ openSearch }}" style="display:flex; align-items:center; gap:8px; width:min(440px,46%); height:27px; padding:0 11px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text-3); cursor:pointer; transition:border-color .12s;" style-hover="border-color:var(--border-2)">
           {{ iconSearch }}
           <span style="font-size:12.5px; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Buscar demandas, clientes…</span>
           <span style="margin-left:auto; font-size:11px; font-family:'Geist Mono',monospace; color:var(--text-3); border:1px solid var(--border); border-radius:5px; padding:1px 5px;">⌘K</span>
@@ -249,10 +249,13 @@
                 <div style="flex:1; min-height:0; overflow-y:auto; padding:18px 28px 30px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(228px,1fr)); gap:12px;">
                     <sc-for list="{{ activeClientCards }}" as="c" hint-placeholder-count="4">
-                      <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                      <div onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                           <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ c.statusColor }}; background:{{ c.statusBg }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ c.statusColor }};"></span>{{ c.status }}</span>
-                          <sc-if value="{{ c.flagged }}" hint-placeholder-val="{{ false }}"><span style="display:flex; color:{{ c.flagColor }};">{{ c.flagEl }}</span></sc-if>
+                          <div style="display:flex; align-items:center; gap:7px;">
+                            <sc-if value="{{ c.flagged }}" hint-placeholder-val="{{ false }}"><span style="display:flex; color:{{ c.flagColor }};">{{ c.flagEl }}</span></sc-if>
+                            <sc-if value="{{ c.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ c.deleteIcon }}</button></sc-if>
+                          </div>
                         </div>
                         <div style="font-size:13.5px; font-weight:500; line-height:1.35; margin-bottom:13px; min-height:36px;">{{ c.title }}</div>
                         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:11px; border-top:1px solid var(--border);">
@@ -279,12 +282,15 @@
                         <span style="font-size:11.5px; font-family:'Geist Mono',monospace; color:var(--text-3);">{{ col.count }}</span>
                         <button onClick="{{ openDrawer }}" style="margin-left:auto; display:flex; align-items:center; justify-content:center; width:24px; height:24px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text-2)">{{ iconPlusSm }}</button>
                       </div>
-                      <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px;">
+                      <div onDragOver="{{ col.onDragOver }}" onDrop="{{ col.onDrop }}" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px;">
                         <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
-                          <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                          <div draggable="true" onDragStart="{{ c.onDragStart }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                               <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:{{ c.clientColor }};"></span>{{ c.client }}</span>
-                              <sc-if value="{{ c.flagged }}" hint-placeholder-val="{{ false }}"><span style="display:flex; color:{{ c.flagColor }};">{{ c.flagEl }}</span></sc-if>
+                              <div style="display:flex; align-items:center; gap:7px;">
+                                <sc-if value="{{ c.flagged }}" hint-placeholder-val="{{ false }}"><span style="display:flex; color:{{ c.flagColor }};">{{ c.flagEl }}</span></sc-if>
+                                <button onClick="{{ c.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ c.deleteIcon }}</button>
+                              </div>
                             </div>
                             <div style="font-size:13.5px; font-weight:500; line-height:1.35; margin-bottom:12px;">{{ c.title }}</div>
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -682,7 +688,8 @@
                     </div>
                     <div style="display:flex; gap:8px;">
                       <button onClick="{{ goDemandas }}" style="flex:1; height:33px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Ver demandas</button>
-                      <button style="height:33px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Editar</button>
+                      <button onClick="{{ cl.onEdit }}" style="height:33px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Editar</button>
+                      <button onClick="{{ cl.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:33px; height:33px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ cl.deleteIcon }}</button>
                     </div>
                   </div>
                 </sc-for>
@@ -704,13 +711,14 @@
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Prospectos & leads</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:14px;">
                 <sc-for list="{{ prospects }}" as="pr" hint-placeholder-count="1">
-                  <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; gap:13px; cursor:pointer;" style-hover="border-color:var(--border-2)">
+                  <div onClick="{{ pr.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; gap:13px; cursor:pointer;" style-hover="border-color:var(--border-2)">
                     <div style="width:40px; height:40px; border-radius:12px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--text-2); flex:0 0 auto;">{{ pr.initials }}</div>
                     <div style="flex:1; min-width:0;">
                       <div style="font-size:14px; font-weight:600; margin-bottom:4px;">{{ pr.name }}</div>
                       <div style="font-size:12px; color:var(--text-3);">{{ pr.meta }}</div>
                     </div>
                     <span style="display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:var(--warn); background:var(--warn-weak);">{{ pr.stage }}</span>
+                    <button onClick="{{ pr.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:26px; height:26px; border:none; background:transparent; color:var(--text-3); border-radius:7px; cursor:pointer; flex:0 0 auto;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ pr.deleteIcon }}</button>
                   </div>
                 </sc-for>
                 <button onClick="{{ openDrawerProspecto }}" style="min-height:72px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px dashed var(--border-2); background:transparent; color:var(--text-3); border-radius:14px; font:inherit; font-size:13px; cursor:pointer;" style-hover="color:var(--text-2); border-color:var(--text-3)">{{ iconUserPlus }}<span>Adicionar prospecto</span></button>
@@ -751,10 +759,11 @@
               <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;">
                 <div style="font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:6px;">Lançamentos · junho</div>
                 <sc-for list="{{ finTxns }}" as="t" hint-placeholder-count="4">
-                  <div style="display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border);">
+                  <div onClick="{{ t.onClick }}" style="display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); cursor:pointer; transition:opacity .12s;" style-hover="opacity:.82">
                     <div style="width:32px; height:32px; border-radius:9px; background:{{ t.bg }}; display:flex; align-items:center; justify-content:center; color:{{ t.color }}; flex:0 0 auto;">{{ t.iconEl }}</div>
                     <div style="flex:1; min-width:0;"><div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ t.label }}</div><div style="font-size:11px; color:var(--text-3); margin-top:2px;">{{ t.meta }}</div></div>
                     <div style="font-size:13px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ t.amountColor }}; white-space:nowrap;">{{ t.amount }}</div>
+                    <button onClick="{{ t.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:24px; height:24px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer; flex:0 0 auto;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ t.deleteIcon }}</button>
                   </div>
                 </sc-for>
               </div>
@@ -840,7 +849,7 @@
             </div>
             <div style="flex:1; overflow-y:auto; padding:0 28px 32px;">
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:13px;">
-                <sc-for list="{{ ideias }}" as="idea" hint-placeholder-count="6">
+                <sc-for list="{{ ideiasView }}" as="idea" hint-placeholder-count="6">
                   <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px; cursor:pointer; transition:border-color .12s;" style-hover="border-color:var(--border-2)">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:11px;">
                       <div style="font-size:14px; font-weight:500; line-height:1.35; flex:1;">{{ idea.title }}</div>
@@ -854,6 +863,8 @@
                     <div style="display:flex; align-items:center; justify-content:space-between; padding-top:11px; border-top:1px solid var(--border);">
                       <span style="font-size:11.5px; color:var(--text-3);">{{ idea.date }}</span>
                       <div style="display:flex; gap:5px;">
+                        <button onClick="{{ idea.onEdit }}" style="height:24px; padding:0 9px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:6px; font:inherit; font-size:11px; cursor:pointer;" style-hover="color:var(--text)">Editar</button>
+                        <button onClick="{{ idea.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:24px; height:24px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ idea.deleteIcon }}</button>
                         <button onClick="{{ openDrawer }}" style="height:24px; padding:0 9px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:6px; font:inherit; font-size:11px; cursor:pointer;" style-hover="color:var(--text)">Virar projeto</button>
                       </div>
                     </div>
@@ -1147,6 +1158,33 @@
         </div>
       </sc-if>
 
+      <!-- BUSCA (⌘K) -->
+      <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeSearch }}" style="position:absolute; inset:0; background:rgba(5,6,7,.55); backdrop-filter:blur(2px); z-index:24; animation:cc-scrim .18s ease both;"></div>
+        <div style="position:absolute; top:84px; left:50%; transform:translateX(-50%); width:min(560px,86%); max-height:min(460px,68vh); background:var(--bg); border:1px solid var(--border-2); border-radius:14px; box-shadow:var(--sh-3); z-index:25; display:flex; flex-direction:column; overflow:hidden; animation:cc-drawer .2s cubic-bezier(.4,0,.2,1) both;">
+          <div style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
+            {{ iconSearch }}
+            <input value="{{ searchQuery }}" onInput="{{ searchInputChange }}" autofocus="true" placeholder="Buscar demandas, clientes, prospectos…" style="flex:1; min-width:0; border:none; outline:none; background:transparent; color:var(--text); font:inherit; font-size:14px;" />
+            <span style="font-size:11px; font-family:'Geist Mono',monospace; color:var(--text-3); border:1px solid var(--border); border-radius:5px; padding:1px 5px; flex-shrink:0;">Esc</span>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:6px;">
+            <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="3">
+              <div onClick="{{ r.onClick }}" style="display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:9px; cursor:pointer; transition:background .1s;" style-hover="background:var(--surface-2)">
+                <div style="width:30px; height:30px; border-radius:8px; background:{{ r.bg }}; display:flex; align-items:center; justify-content:center; color:{{ r.color }}; flex:0 0 auto;">{{ r.iconEl }}</div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.label }}</div>
+                  <div style="font-size:11.5px; color:var(--text-3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.meta }}</div>
+                </div>
+                <span style="font-size:10.5px; font-weight:600; letter-spacing:.3px; text-transform:uppercase; color:var(--text-3); flex-shrink:0;">{{ r.kind }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ searchEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:36px 16px; text-align:center; color:var(--text-3); font-size:13px;">Nenhum resultado para "{{ searchQuery }}"</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
       <!-- TOAST -->
       <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:11px; padding:12px 16px; background:var(--surface-2); border:1px solid var(--border-2); border-left:3px solid var(--ok); border-radius:11px; box-shadow:var(--sh-3); z-index:30; animation:cc-toast .28s cubic-bezier(.4,0,.2,1) both;">
@@ -1183,7 +1221,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,true,false,false], drawerPriority: 'media', drawerChecklist: [true,false,false], drawerChecklistLabels: ['Receber imagens brutas','Primeira versão','Aprovação do cliente'], chatInput: '', chatExtra: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '' };
 
   // ---- persistência local (localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
@@ -1196,6 +1234,19 @@ class Component extends DCLogic {
       const data = JSON.parse(raw);
       if (data && typeof data === 'object') this.setState(data);
     } catch (e) { /* localStorage indisponível ou dados corrompidos — ignora */ }
+    this._onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        this.setState({ searchOpen: true, searchQuery: '' });
+      } else if (e.key === 'Escape' && this.state.searchOpen) {
+        this.setState({ searchOpen: false });
+      }
+    };
+    window.addEventListener('keydown', this._onKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this._onKeyDown);
   }
 
   setState(update, cb) {
@@ -1374,15 +1425,35 @@ class Component extends DCLogic {
     const typeIcons = { video:'video', megaphone:'megaphone', image:'image', layers:'layers', type:'type', code:'code', bulb:'bulb' };
     const typeLabels = { video:'Vídeo', megaphone:'Anúncio', image:'Arte', layers:'Social', type:'Legenda', code:'Site', bulb:'Estudo' };
 
+    const typeKeysOrder = ['video','video','megaphone','layers','image','type','image'];
+    const editDemanda = (d) => {
+      const idx = typeKeysOrder.indexOf(d.type);
+      const arr = [false,false,false,false,false,false,false];
+      arr[idx>=0?idx:1] = true;
+      this.setState({
+        drawer:true, drawerMode:'demanda', drawerEditId:d.id,
+        drawerDemandTitle:d.title, drawerDemandClientId: d.clientId!=null?String(d.clientId):'',
+        drawerTypeActive:arr, drawerPriority: d.flag==='high'?'alta':'media',
+        drawerChecklist:[true,false,false], drawerChecklistLabels:['Receber imagens brutas','Primeira versão','Aprovação do cliente'],
+      });
+    };
+    const deleteDemanda = (id) => { if (window.confirm('Excluir esta demanda? Essa ação não pode ser desfeita.')) this.setState({ demands: demands.filter(x=>x.id!==id) }); };
+
     const mkCard = (d) => {
       const cl = clients.find(c => c.id === d.clientId);
       const ti = typeIcons[d.type] || 'image';
-      return { title:d.title, client:cl?cl.nome:'Pessoal', clientColor:cl?cl.color:'var(--text-3)', type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7) };
+      return { title:d.title, client:cl?cl.nome:'Pessoal', clientColor:cl?cl.color:'var(--text-3)', type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
+        deleteIcon:this.icon('close',11,2), onClick:() => editDemanda(d), onDelete:(e) => { e.stopPropagation(); deleteDemanda(d.id); }, onDragStart:(e) => { e.dataTransfer.setData('text/plain', String(d.id)); } };
     };
-    const mkLane = (d) => {
+    const mkLane = (d, editable) => {
       const ti = typeIcons[d.type] || 'image';
       const st = stat[d.status] || stat.todo;
-      return { title:d.title, status:st.l, statusColor:st.c, statusBg:st.bg, type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7) };
+      const base = { title:d.title, status:st.l, statusColor:st.c, statusBg:st.bg, type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7) };
+      if (editable === false) { base.editable = false; base.deleteIcon = null; base.onClick = () => {}; base.onDelete = () => {}; return base; }
+      base.editable = true; base.deleteIcon = this.icon('close',11,2);
+      base.onClick = () => editDemanda(d);
+      base.onDelete = (e) => { e.stopPropagation(); deleteDemanda(d.id); };
+      return base;
     };
 
     const board = [
@@ -1390,7 +1461,10 @@ class Component extends DCLogic {
       { name:'Em produção', status:'prod', color:'var(--info)' },
       { name:'Em revisão', status:'rev', color:'var(--warn)' },
       { name:'Entregue', status:'done', color:'var(--ok)' },
-    ].map(col => ({ name:col.name, color:col.color, count:demands.filter(d=>d.status===col.status).length, cards:demands.filter(d=>d.status===col.status).map(mkCard) }));
+    ].map(col => ({ name:col.name, color:col.color, status:col.status, count:demands.filter(d=>d.status===col.status).length, cards:demands.filter(d=>d.status===col.status).map(mkCard),
+      onDragOver:(e) => e.preventDefault(),
+      onDrop:(e) => { e.preventDefault(); const id = parseInt(e.dataTransfer.getData('text/plain'), 10); if (!id) return; this.setState({ demands: demands.map(d => d.id===id ? { ...d, status: col.status } : d) }); },
+    }));
 
     // ---- por cliente: lanes ----
     const clientLanes = clients.map(cl => {
@@ -1402,9 +1476,9 @@ class Component extends DCLogic {
     });
 
     const personal = [
-      mkLane({ id:101, title:'Canal próprio — edição vlog #12', clientId:null, status:'prod', type:'video', due:'Sábado', flag:null }),
-      mkLane({ id:102, title:'Site portfólio v2', clientId:null, status:'todo', type:'code', due:'Sem prazo', flag:null }),
-      mkLane({ id:103, title:'Estudo: motion no After Effects', clientId:null, status:'todo', type:'bulb', due:'Quando der', flag:null }),
+      mkLane({ id:101, title:'Canal próprio — edição vlog #12', clientId:null, status:'prod', type:'video', due:'Sábado', flag:null }, false),
+      mkLane({ id:102, title:'Site portfólio v2', clientId:null, status:'todo', type:'code', due:'Sem prazo', flag:null }, false),
+      mkLane({ id:103, title:'Estudo: motion no After Effects', clientId:null, status:'todo', type:'bulb', due:'Quando der', flag:null }, false),
     ];
 
     const ac = s.activeClient || 0;
@@ -1463,13 +1537,19 @@ class Component extends DCLogic {
     const cv = s.calView || 'month';
 
     // ---- CLIENTES ----
+    const editCliente = (cl) => this.setState({ drawer:true, drawerMode:'cliente', drawerEditId:cl.id, clienteNome:cl.nome, clienteTipo:cl.tipo||'fixo', clienteValor:String(cl.valor||''), clientePagDia:cl.pagDia||'5', clienteServico:cl.servico||'' });
+    const deleteCliente = (id) => { if (window.confirm('Excluir este cliente? Essa ação não pode ser desfeita.')) this.setState({ clients: clients.filter(x=>x.id!==id) }); };
+    const editProspecto = (p) => this.setState({ drawer:true, drawerMode:'prospecto', drawerEditId:p.id, prospectoNome:p.nome, prospectoSegmento:p.segmento||'', prospectoObs:p.obs||'' });
+    const deleteProspecto = (id) => { if (window.confirm('Excluir este prospecto? Essa ação não pode ser desfeita.')) this.setState({ prospectos: prospectos.filter(x=>x.id!==id) }); };
+
     const clientCards = clients.map(cl => {
       const clD = demands.filter(d => d.clientId === cl.id);
       const openD = clD.filter(d => d.status !== 'done');
       const first = openD[0];
       const pagDia = parseInt(cl.pagDia, 10) || null;
       const isLate = cl.tipo === 'fixo' && pagDia && todayReal.getDate() > pagDia;
-      return { name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026' };
+      return { name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
+        deleteIcon:this.icon('close',12,2), onEdit:() => editCliente(cl), onDelete:() => deleteCliente(cl.id) };
     });
     const pipeline = [
       { label:'Prospecção', color:'var(--text-3)', bg:'transparent', count:prospectos.filter(p=>p.etapa==='Prospecção').length.toString(), names:prospectos.filter(p=>p.etapa==='Prospecção').map(p=>p.nome) },
@@ -1477,7 +1557,8 @@ class Component extends DCLogic {
       { label:'Ativo', color:'var(--ok)', bg:'transparent', count:clients.length.toString(), names:clients.map(c=>c.nome) },
       { label:'Pausa / Encerrado', color:'var(--text-3)', bg:'transparent', count:'0', names:[] },
     ];
-    const prospects = prospectos.map(p => ({ initials:p.nome.split(' ').filter(w=>w).slice(0,2).map(w=>w[0]).join('').toUpperCase(), name:p.nome, meta:[p.segmento,p.obs].filter(Boolean).join(' · '), stage:p.etapa||'Prospecção' }));
+    const prospects = prospectos.map(p => ({ initials:p.nome.split(' ').filter(w=>w).slice(0,2).map(w=>w[0]).join('').toUpperCase(), name:p.nome, meta:[p.segmento,p.obs].filter(Boolean).join(' · '), stage:p.etapa||'Prospecção',
+      deleteIcon:this.icon('close',12,2), onClick:() => editProspecto(p), onDelete:(e) => { e.stopPropagation(); deleteProspecto(p.id); } }));
 
     // ---- FINANCEIRO ----
     const finKpis = [
@@ -1490,13 +1571,21 @@ class Component extends DCLogic {
     const finMax = Math.max(...finBarsRaw.map(b=>b.v));
     const finBars = finBarsRaw.map((b,i) => ({ label:b.l, val:'R$'+Math.round(b.v/1000)+'k', h:Math.round(b.v/finMax*100)+'%', fill: i===5 ? 'var(--accent)' : 'var(--surface-3)', delay: (i*70)+'ms' }));
     const finTxnsDefault = [
-      { label:'Luso Automóveis — junho', meta:'Recebido · 14 jun', amount:'+ '+this.brl(1800), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)' },
-      { label:'Flamenguismo — Reels avulso', meta:'Recebido · 12 jun', amount:'+ '+this.brl(450), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)' },
-      { label:'Adobe Creative Cloud', meta:'Assinatura · 10 jun', amount:'− '+this.brl(124.90), amountColor:'var(--text-2)', ic:'wallet', color:'var(--text-2)', bg:'var(--surface-3)' },
-      { label:'Flamenguismo — pacote jul', meta:'Pendente · vence 25 jun', amount:this.brl(2200), amountColor:'var(--warn)', ic:'clock', color:'var(--warn)', bg:'var(--warn-weak)' },
+      { id:1, label:'Luso Automóveis — junho', meta:'Recebido · 14 jun', amount:'+ '+this.brl(1800), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)', tipo:'receita', valorRaw:'1800', dataRaw:'2026-06-14' },
+      { id:2, label:'Flamenguismo — Reels avulso', meta:'Recebido · 12 jun', amount:'+ '+this.brl(450), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)', tipo:'receita', valorRaw:'450', dataRaw:'2026-06-12' },
+      { id:3, label:'Adobe Creative Cloud', meta:'Assinatura · 10 jun', amount:'− '+this.brl(124.90), amountColor:'var(--text-2)', ic:'wallet', color:'var(--text-2)', bg:'var(--surface-3)', tipo:'despesa', valorRaw:'124.90', dataRaw:'2026-06-10' },
+      { id:4, label:'Flamenguismo — pacote jul', meta:'Pendente · vence 25 jun', amount:this.brl(2200), amountColor:'var(--warn)', ic:'clock', color:'var(--warn)', bg:'var(--warn-weak)', tipo:'receita', valorRaw:'2200', dataRaw:'2026-06-25' },
     ];
     const lancamentos = s.lancamentos || finTxnsDefault;
-    const finTxns = lancamentos.map(t => ({ ...t, iconEl: this.icon(t.ic,15,1.8) }));
+    const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const fmtDataRaw = (raw) => { if (!raw) return '—'; const [y,m,d] = raw.split('-'); return d+' '+(meses[parseInt(m,10)-1]||''); };
+    const buildLancamento = (id, desc, tipo, valorRaw, dataRaw) => {
+      const val = parseFloat(String(valorRaw||'0').replace(',','.')) || 0;
+      return { id, label:desc||(tipo==='receita'?'Receita':'Despesa'), meta:(tipo==='receita'?'Recebido':'Pago')+' · '+fmtDataRaw(dataRaw), amount:(tipo==='receita'?'+ ':'− ')+this.brl(val), amountColor: tipo==='receita'?'var(--ok)':'var(--text-2)', ic: tipo==='receita'?'dollar':'wallet', color: tipo==='receita'?'var(--ok)':'var(--text-2)', bg: tipo==='receita'?'var(--ok-weak)':'var(--surface-3)', tipo, valorRaw:String(valorRaw||''), dataRaw:dataRaw||'' };
+    };
+    const editLancamento = (t) => this.setState({ drawer:true, drawerMode:'lancamento', drawerEditId:t.id, lancDesc:t.label||'', lancTipo:t.tipo||'receita', lancValor:t.valorRaw||'', lancData:t.dataRaw||'' });
+    const deleteLancamento = (id) => { if (window.confirm('Excluir este lançamento? Essa ação não pode ser desfeita.')) this.setState({ lancamentos: lancamentos.filter(x=>x.id!==id) }); };
+    const finTxns = lancamentos.map(t => ({ ...t, iconEl: this.icon(t.ic,15,1.8), deleteIcon:this.icon('close',12,2), onClick:() => editLancamento(t), onDelete:(e) => { e.stopPropagation(); deleteLancamento(t.id); } }));
 
     // ---- SALÁRIO ----
     const salBreakdown = [
@@ -1521,14 +1610,38 @@ class Component extends DCLogic {
     // ---- IDEIAS ----
     const mkTag = (l,c,bg,b) => ({label:l,color:c,bg:bg,border:b||'transparent'});
     const ideiasDefault = [
-      { title:'Série: bastidores da agência solo — ep. 1 ao 6', status:'Refinando', statusColor:'var(--info)', statusBg:'var(--info-weak)', date:'há 2 dias', tags:[mkTag('Pessoal','var(--accent)','var(--accent-weak)'),mkTag('Conteúdo','var(--text-2)','var(--surface-3)')] },
-      { title:'Reels nos bastidores do test-drive Luso', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 3 dias', tags:[mkTag('Luso','#5285f0','rgba(82,133,240,.13)'),mkTag('Vídeo','var(--text-2)','var(--surface-3)')] },
-      { title:'Campanha dia dos pais — Luso Automóveis', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 5 dias', tags:[mkTag('Luso','#5285f0','rgba(82,133,240,.13)'),mkTag('Campanha','var(--text-2)','var(--surface-3)')] },
-      { title:'Preset LUT exclusivo pra vender — paleta Flamengo', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 1 sem', tags:[mkTag('Produto','var(--ok)','var(--ok-weak)'),mkTag('Flamengo','#d7796b','rgba(215,121,107,.13)')] },
-      { title:'Guia: como precificar edição de vídeo freelance', status:'Refinando', statusColor:'var(--info)', statusBg:'var(--info-weak)', date:'há 1 sem', tags:[mkTag('Produto','var(--ok)','var(--ok-weak)'),mkTag('Conteúdo','var(--text-2)','var(--surface-3)')] },
-      { title:'Filtro exclusivo de câmera — paleta Mengão', status:'Virou projeto', statusColor:'var(--ok)', statusBg:'var(--ok-weak)', date:'há 2 sem', tags:[mkTag('Flamengo','#d7796b','rgba(215,121,107,.13)'),mkTag('Produto','var(--ok)','var(--ok-weak)')] },
+      { id:1, title:'Série: bastidores da agência solo — ep. 1 ao 6', status:'Refinando', statusColor:'var(--info)', statusBg:'var(--info-weak)', date:'há 2 dias', obs:'', tags:[mkTag('Pessoal','var(--accent)','var(--accent-weak)'),mkTag('Conteúdo','var(--text-2)','var(--surface-3)')] },
+      { id:2, title:'Reels nos bastidores do test-drive Luso', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 3 dias', obs:'', tags:[mkTag('Luso','#5285f0','rgba(82,133,240,.13)'),mkTag('Vídeo','var(--text-2)','var(--surface-3)')] },
+      { id:3, title:'Campanha dia dos pais — Luso Automóveis', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 5 dias', obs:'', tags:[mkTag('Luso','#5285f0','rgba(82,133,240,.13)'),mkTag('Campanha','var(--text-2)','var(--surface-3)')] },
+      { id:4, title:'Preset LUT exclusivo pra vender — paleta Flamengo', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'há 1 sem', obs:'', tags:[mkTag('Produto','var(--ok)','var(--ok-weak)'),mkTag('Flamengo','#d7796b','rgba(215,121,107,.13)')] },
+      { id:5, title:'Guia: como precificar edição de vídeo freelance', status:'Refinando', statusColor:'var(--info)', statusBg:'var(--info-weak)', date:'há 1 sem', obs:'', tags:[mkTag('Produto','var(--ok)','var(--ok-weak)'),mkTag('Conteúdo','var(--text-2)','var(--surface-3)')] },
+      { id:6, title:'Filtro exclusivo de câmera — paleta Mengão', status:'Virou projeto', statusColor:'var(--ok)', statusBg:'var(--ok-weak)', date:'há 2 sem', obs:'', tags:[mkTag('Flamengo','#d7796b','rgba(215,121,107,.13)'),mkTag('Produto','var(--ok)','var(--ok-weak)')] },
     ];
     const ideias = s.ideias || ideiasDefault;
+    const editIdeia = (idea) => this.setState({ drawer:true, drawerMode:'ideia', drawerEditId:idea.id, ideiaTitulo:idea.title||'', ideiaCategoria:(idea.tags&&idea.tags[0]&&idea.tags[0].label)||'Pessoal', ideiaObs:idea.obs||'' });
+    const deleteIdeia = (id) => { if (window.confirm('Excluir esta ideia? Essa ação não pode ser desfeita.')) this.setState({ ideias: ideias.filter(x=>x.id!==id) }); };
+    const ideiasView = ideias.map(idea => ({ ...idea, deleteIcon:this.icon('close',12,2), onEdit:() => editIdeia(idea), onDelete:() => deleteIdeia(idea.id) }));
+
+    // ---- BUSCA (⌘K) ----
+    const openSearch = () => this.setState({ searchOpen:true, searchQuery:'' });
+    const closeSearch = () => this.setState({ searchOpen:false });
+    const searchInputChange = (e) => this.setState({ searchQuery:e.target.value });
+    const sq = (s.searchQuery||'').trim().toLowerCase();
+    const searchResults = [];
+    if (sq) {
+      demands.forEach(d => { if ((d.title||'').toLowerCase().includes(sq)) {
+        const cl = clients.find(c => c.id === d.clientId);
+        searchResults.push({ kind:'Demanda', label:d.title, meta:cl?cl.nome:'Pessoal', iconEl:this.icon('board',14,1.8), color:'var(--accent)', bg:'var(--accent-weak)', onClick:() => { editDemanda(d); this.setState({ searchOpen:false, screen:'demandas' }); } });
+      }});
+      clients.forEach(cl => { if ((cl.nome||'').toLowerCase().includes(sq)) {
+        searchResults.push({ kind:'Cliente', label:cl.nome, meta:cl.servico||'Cliente', iconEl:this.icon('users',14,1.8), color:'var(--info)', bg:'var(--info-weak)', onClick:() => { editCliente(cl); this.setState({ searchOpen:false, screen:'clientes' }); } });
+      }});
+      prospectos.forEach(p => { if ((p.nome||'').toLowerCase().includes(sq)) {
+        searchResults.push({ kind:'Prospecto', label:p.nome, meta:p.segmento||'Prospecto', iconEl:this.icon('target',14,1.8), color:'var(--warn)', bg:'var(--warn-weak)', onClick:() => { editProspecto(p); this.setState({ searchOpen:false, screen:'clientes' }); } });
+      }});
+    }
+    const searchHasResults = searchResults.length > 0;
+    const searchEmpty = !!sq && !searchHasResults;
 
     // ---- WORKFLOW NODES ----
     const wfNodesBase = [
@@ -1616,22 +1729,30 @@ class Component extends DCLogic {
       go: (id) => this.go(id),
       goSystem: () => this.go('system'),
       goDemandas: () => this.go('demandas'),
-      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda' }),
-      openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
-      openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
-      openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
-      openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia', ideiaTitulo:'', ideiaCategoria:'Pessoal', ideiaObs:'' }),
+      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,true,false,false], drawerPriority:'media' }),
+      openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
+      openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', drawerEditId: null, prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
+      openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', drawerEditId: null, lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
+      openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia', drawerEditId: null, ideiaTitulo:'', ideiaCategoria:'Pessoal', ideiaObs:'' }),
       closeDrawer: () => this.setState({ drawer: false }),
       submitDrawer: () => {
         const mode = s.drawerMode||'demanda';
-        const toastMap = { demanda:'Demanda criada com sucesso', cliente:'Cliente adicionado', prospecto:'Prospecto salvo', lancamento:'Lançamento registrado', ideia:'Ideia capturada' };
-        const updates = { drawer:false, toast:toastMap[mode]||'Salvo com sucesso' };
+        const editId = s.drawerEditId||null;
+        const toastMap = editId
+          ? { demanda:'Demanda atualizada', cliente:'Cliente atualizado', prospecto:'Prospecto atualizado', lancamento:'Lançamento atualizado', ideia:'Ideia atualizada' }
+          : { demanda:'Demanda criada com sucesso', cliente:'Cliente adicionado', prospecto:'Prospecto salvo', lancamento:'Lançamento registrado', ideia:'Ideia capturada' };
+        const updates = { drawer:false, drawerEditId:null, toast:toastMap[mode]||'Salvo com sucesso' };
         if (mode === 'demanda') {
           const dta = s.drawerTypeActive||[];
           const typeKeys = ['video','video','megaphone','layers','image','type','image'];
           const typeIdx = dta.findIndex(Boolean);
           const clientId = parseInt(s.drawerDemandClientId) || null;
-          updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due:'Sem prazo', flag:s.drawerPriority==='alta'?'high':s.drawerPriority==='media'?null:null }];
+          const flag = s.drawerPriority==='alta'?'high':null;
+          if (editId) {
+            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag } : d);
+          } else {
+            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due:'Sem prazo', flag }];
+          }
           updates.drawerDemandTitle = '';
           updates.drawerDemandClientId = '';
           updates.drawerTypeActive = [false,true,false,false,true,false,false];
@@ -1640,31 +1761,40 @@ class Component extends DCLogic {
           updates.drawerChecklistLabels = ['Receber imagens brutas','Primeira versão','Aprovação do cliente'];
         } else if (mode === 'cliente') {
           const nome = s.clienteNome||'Novo cliente';
-          const words = nome.trim().split(/\s+/);
-          const initials = words.length>=2?(words[0][0]+words[words.length-1][0]).toUpperCase():nome.slice(0,2).toUpperCase();
-          const palette = ['#5285f0','#d7796b','#cea052','#4fa890','#8a7ff0','#57a87d','#e07b5a'];
-          const color = palette[clients.length % palette.length];
-          updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', since:'Jun 2026' }];
+          if (editId) {
+            updates.clients = clients.map(cl => cl.id===editId ? { ...cl, nome, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'' } : cl);
+          } else {
+            const words = nome.trim().split(/\s+/);
+            const initials = words.length>=2?(words[0][0]+words[words.length-1][0]).toUpperCase():nome.slice(0,2).toUpperCase();
+            const palette = ['#5285f0','#d7796b','#cea052','#4fa890','#8a7ff0','#57a87d','#e07b5a'];
+            const color = palette[clients.length % palette.length];
+            updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', since:'Jun 2026' }];
+          }
           updates.clienteNome = ''; updates.clienteValor = ''; updates.clienteServico = '';
         } else if (mode === 'prospecto') {
-          updates.prospectos = [...prospectos, { id:Date.now(), nome:s.prospectoNome||'Prospecto', segmento:s.prospectoSegmento||'', obs:s.prospectoObs||'', etapa:'Prospecção' }];
+          if (editId) {
+            updates.prospectos = prospectos.map(p => p.id===editId ? { ...p, nome:s.prospectoNome||p.nome, segmento:s.prospectoSegmento||'', obs:s.prospectoObs||'' } : p);
+          } else {
+            updates.prospectos = [...prospectos, { id:Date.now(), nome:s.prospectoNome||'Prospecto', segmento:s.prospectoSegmento||'', obs:s.prospectoObs||'', etapa:'Prospecção' }];
+          }
           updates.prospectoNome = ''; updates.prospectoSegmento = ''; updates.prospectoObs = '';
         } else if (mode === 'lancamento') {
           const tipo = s.lancTipo||'receita';
-          const val = parseFloat((s.lancValor||'0').replace(',','.')) || 0;
-          let dataFmt = '—';
-          if (s.lancData) {
-            const [y,m,d] = s.lancData.split('-');
-            const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-            dataFmt = d+' '+(meses[parseInt(m,10)-1]||'');
+          if (editId) {
+            updates.lancamentos = lancamentos.map(t => t.id===editId ? buildLancamento(editId, s.lancDesc, tipo, s.lancValor, s.lancData) : t);
+          } else {
+            updates.lancamentos = [buildLancamento(Date.now(), s.lancDesc, tipo, s.lancValor, s.lancData), ...lancamentos];
           }
-          updates.lancamentos = [{ id:Date.now(), label:s.lancDesc||(tipo==='receita'?'Receita':'Despesa'), meta:(tipo==='receita'?'Recebido':'Pago')+' · '+dataFmt, amount:(tipo==='receita'?'+ ':'− ')+this.brl(val), amountColor: tipo==='receita'?'var(--ok)':'var(--text-2)', ic: tipo==='receita'?'dollar':'wallet', color: tipo==='receita'?'var(--ok)':'var(--text-2)', bg: tipo==='receita'?'var(--ok-weak)':'var(--surface-3)' }, ...lancamentos];
           updates.lancDesc = ''; updates.lancValor = ''; updates.lancData = ''; updates.lancTipo = 'receita';
         } else if (mode === 'ideia') {
           const catColors = { Pessoal:['var(--accent)','var(--accent-weak)'], Produto:['var(--ok)','var(--ok-weak)'], Conteúdo:['var(--text-2)','var(--surface-3)'], Cliente:['var(--info)','var(--info-weak)'] };
           const cat = s.ideiaCategoria||'Pessoal';
           const [tc, tbg] = catColors[cat] || catColors.Pessoal;
-          updates.ideias = [{ id:Date.now(), title:s.ideiaTitulo||'Nova ideia', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'agora', obs:s.ideiaObs||'', tags:[{ label:cat, color:tc, bg:tbg, border:'transparent' }] }, ...ideias];
+          if (editId) {
+            updates.ideias = ideias.map(idea => idea.id===editId ? { ...idea, title:s.ideiaTitulo||idea.title, obs:s.ideiaObs||'', tags:[{ label:cat, color:tc, bg:tbg, border:'transparent' }] } : idea);
+          } else {
+            updates.ideias = [{ id:Date.now(), title:s.ideiaTitulo||'Nova ideia', status:'Rascunho', statusColor:'var(--text-3)', statusBg:'var(--surface-3)', date:'agora', obs:s.ideiaObs||'', tags:[{ label:cat, color:tc, bg:tbg, border:'transparent' }] }, ...ideias];
+          }
           updates.ideiaTitulo = ''; updates.ideiaCategoria = 'Pessoal'; updates.ideiaObs = '';
         }
         this.setState(updates);
@@ -1678,8 +1808,12 @@ class Component extends DCLogic {
       isDrawerLancamento: s.drawerMode === 'lancamento',
       isDrawerIdeia: s.drawerMode === 'ideia',
       drawerLabel: ({ demanda:'Nova demanda', cliente:'Novo cliente', prospecto:'Novo prospecto', lancamento:'Lançamento', ideia:'Nova ideia' })[s.drawerMode||'demanda'] || 'Nova demanda',
-      drawerTitle: ({ demanda:'Criar demanda', cliente:'Adicionar cliente', prospecto:'Adicionar prospecto', lancamento:'Registrar lançamento', ideia:'Capturar ideia' })[s.drawerMode||'demanda'] || 'Criar demanda',
-      drawerCta: ({ demanda:'Criar demanda', cliente:'Salvar cliente', prospecto:'Salvar prospecto', lancamento:'Registrar', ideia:'Salvar ideia' })[s.drawerMode||'demanda'] || 'Criar',
+      drawerTitle: s.drawerEditId
+        ? ({ demanda:'Editar demanda', cliente:'Editar cliente', prospecto:'Editar prospecto', lancamento:'Editar lançamento', ideia:'Editar ideia' })[s.drawerMode||'demanda'] || 'Editar'
+        : ({ demanda:'Criar demanda', cliente:'Adicionar cliente', prospecto:'Adicionar prospecto', lancamento:'Registrar lançamento', ideia:'Capturar ideia' })[s.drawerMode||'demanda'] || 'Criar demanda',
+      drawerCta: s.drawerEditId
+        ? 'Salvar alterações'
+        : ({ demanda:'Criar demanda', cliente:'Salvar cliente', prospecto:'Salvar prospecto', lancamento:'Registrar', ideia:'Salvar ideia' })[s.drawerMode||'demanda'] || 'Criar',
       clienteNomeChange: (e) => this.setState({ clienteNome: e.target.value }),
       clienteValorChange: (e) => this.setState({ clienteValor: e.target.value }),
       clientePagDiaChange: (e) => this.setState({ clientePagDia: e.target.value }),
@@ -1735,7 +1869,7 @@ class Component extends DCLogic {
       drawerDemandClientId: s.drawerDemandClientId || '',
       drawerDemandClientChange: (e) => this.setState({ drawerDemandClientId: e.target.value }),
       drawerClientOptions: clients.map(c => ({ id: String(c.id), nome: c.nome, color: c.color })),
-      addClient: () => this.setState({ drawer: true, drawerMode: 'cliente', clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
+      addClient: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
       isPessoal: s.screen === 'pessoal',
       isCalendario: s.screen === 'calendario',
       isCalMonth: cv === 'month',
@@ -1753,6 +1887,8 @@ class Component extends DCLogic {
       iconChevL: this.icon('chevL', 15, 1.8),
       isClientes: s.screen === 'clientes',
       clientCards, pipeline, prospects,
+      openSearch, closeSearch, searchInputChange, searchResults, searchHasResults, searchEmpty,
+      searchOpen: !!s.searchOpen, searchQuery: s.searchQuery || '',
       isFinanceiro: s.screen === 'financeiro',
       finKpis, finBars, finTxns,
       isSalario: s.screen === 'salario',
@@ -1760,7 +1896,7 @@ class Component extends DCLogic {
       isMetas: s.screen === 'metas',
       metas,
       isIdeias: s.screen === 'ideias',
-      ideias,
+      ideias, ideiasView,
       isWorkflow: s.screen === 'workflow',
       wfNodes,
       isAssistente: s.screen === 'assistente',
