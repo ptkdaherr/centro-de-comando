@@ -1225,7 +1225,8 @@
       }
       const cls = "scp" + (n++).toString(36);
       const sel = pseudo === "before" || pseudo === "after" ? "." + cls + "::" + pseudo : "." + cls + ":" + pseudo;
-      el.sheet.insertRule(sel + "{" + css + "}", el.sheet.cssRules.length);
+      const forced = css.split(";").map((d) => d.trim()).filter(Boolean).map((d) => d.endsWith("!important") ? d : d + " !important").join("; ");
+      el.sheet.insertRule(sel + "{" + forced + "}", el.sheet.cssRules.length);
       cache.set(k, cls);
       return cls;
     };
