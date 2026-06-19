@@ -86,8 +86,10 @@ WorkflowNodes: { left, top, type, title, statusLabel }
 - ✅ **`npm run setup` estendido** — agora também pergunta (de forma opcional, pode pular com Enter) a chave do Gemini, e preserva a chave existente se você rodar de novo só pra trocar a senha.
 - **Desvios conscientes em relação ao plano original:** o plano citava o modelo `gemini-2.5-flash` e autenticação via `?key=` na URL; na implementação usei **`gemini-3.5-flash`** (mais novo, confirmado disponível no tier grátis, e o próprio plano já previa o modelo ser trocável via `GEMINI_MODEL` no `.env`) e autenticação via header `x-goog-api-key` (forma atual recomendada pela documentação oficial, em vez de colocar a chave na URL — mais seguro contra a chave aparecer em logs de acesso).
 
+**Resolvido na Fase 3c:**
+- ✅ **PWA instalável** (manifest + service worker + ícones gerados sem deps). App vira janela standalone (sem barra de URL) no desktop e ganha modo "tela cheia" no iOS via meta tags apple. Ver seção "Arquitetura PWA (Fase 3c)" abaixo — inclui a limitação de secure-context (SW/instalação Android exigem HTTPS; LAN por IP não basta).
+
 **Bom ter / próximas sub-fases da Fase 3:**
-- 3c — PWA (manifest + service worker) pra acesso mobile mais robusto que só abrir a URL.
 - 3d — Empacotamento Tauri (.exe) consumindo o mesmo backend local.
 - Heurística de cliente atrasado pode evoluir pra modelo de pagamento real (hoje é só dia-do-mês vs `pagDia`, sem registrar se aquele mês já foi pago).
 
@@ -150,6 +152,46 @@ server/
 
 **Anti-alucinação:** o `systemInstruction` envia o JSON completo do estado atual e instrui explicitamente "nunca invente um id que não apareça nos dados — se não tiver certeza, pergunte". Vale revisar na prática (pedir uma ação citando cliente/id inexistente) e ajustar esse texto se o modelo inventar algo.
 
+## Arquitetura PWA (Fase 3c, 2026-06-19)
+
+O app agora é um **PWA instalável**. Objetivo: abrir como app de verdade (janela standalone, ícone próprio, sem barra de URL) no desktop e dar uma experiência "de app" no celular — um passo antes do empacotamento Tauri (3d), reaproveitando o mesmo backend local.
+
+```
+manifest.webmanifest    nome, ícones, display:standalone, theme/background color
+sw.js                   service worker (network-first + fallback de cache)
+icons/
+  icon.svg              logo vetorial (favicon + ícone "any" do manifest)
+  icon-192.png          ícone 192 (Android/desktop)
+  icon-512.png          ícone 512 (splash, lojas)
+  icon-maskable-512.png ícone com safe zone (Android adaptive)
+  apple-touch-icon.png  180×180 p/ iOS
+tools/gen-icons.mjs     gera os PNGs acima a partir do logo (npm run icons)
+```
+
+**Ícones gerados sem dependência externa.** `tools/gen-icons.mjs` desenha o logo do app (quadrado com gradiente azul `--accent`→`--accent-2` + quadrado branco) e escreve PNGs reais usando só `node:zlib` (encoder PNG próprio: CRC32 + chunks IHDR/IDAT/IEND, antialias por supersampling 4×4) — mantém a filosofia zero-deps das fases 3a/3b. `npm run icons` regenera tudo; não roda no boot. O `icon.svg` é escrito à mão.
+
+**Service worker — estratégia network-first.** Sempre tenta a rede primeiro (então o live reload do dev e os dados nunca ficam presos em cache) e só cai pro cache quando a rede falha; em navegação offline, serve o app shell (`/`). Na primeira carga online ele cacheia o shell + React/ReactDOM (unpkg) + as fontes (Google), então recargas seguintes ficam resilientes a blips de CDN. **Regra de ouro:** o SW NUNCA intercepta `/api/*` (precisa de cookie de sessão e resposta fresca) nem `/__livereload` (stream SSE keep-alive) — ambos passam direto pro browser. Nome do cache versionado (`cdc-pwa-v1`); o `activate` limpa versões antigas.
+
+**Ligação no app:** tags no `<head>` estático de `Centro de Comando.dc.html` (`<link rel=manifest>`, `theme-color`, `apple-touch-icon`, `apple-mobile-web-app-*`, favicon SVG) + um registro de SW defensivo (`if ('serviceWorker' in navigator)`, no evento `load`). No servidor (`server/index.mjs`) só foi preciso registrar o MIME `.webmanifest` — os ícones, o `sw.js` e o manifest já são servidos pela rota de estáticos existente (a raiz, fora de `server/`).
+
+**Limitação importante — secure context.** Service Worker e a instalação automática do Chrome/Android exigem **HTTPS ou localhost**. No desktop via `http://localhost:5174` funciona 100%. Mas no **celular via `http://192.168.1.2:5174` (IP de LAN sem TLS) o SW não registra** — o registro é defensivo e simplesmente não roda lá, sem erro no console. Mesmo assim, no **iOS** o "Adicionar à Tela de Início" já abre em modo standalone graças às meta tags `apple-mobile-web-app-*` (não depende do SW). Pro Android instalar como app e pro SW rodar no celular, precisa de HTTPS — o que chega "de graça" com o Tauri (3d, que serve via protocolo próprio = secure context) ou com a futura hospedagem com TLS. Ou seja: o PWA está completo e **pronto pra brilhar assim que houver HTTPS**, sem mais trabalho de frontend.
+
+**Verificação (ao vivo, Playwright/Chromium headless contra o `npm run server` real, login `teste123`):** SW registra com escopo `/` e fica ativo; após um reload passa a **controlar** a navegação (`controller` ≠ null); o app renderiza e loga normalmente com o SW no caminho; `/api/me` responde `{ok:true}` fresco — **não interceptado nem cacheado**; o cache `cdc-pwa-v1` guarda os 11 itens do shell + React/ReactDOM + fontes e **nenhuma** rota `/api`/`__livereload`; manifest é JSON válido com os 4 ícones (any + maskable, 512 presente). **Zero erro de console/página.** Os 4 PNGs foram validados à parte (assinatura PNG, IHDR color-type 6/8-bit, IDAT descomprimindo no tamanho exato de scanlines). Script de teste e o `playwright` (instalado com `--no-save`, Chromium já em cache) removidos ao final — working tree limpo.
+
+## Tema claro/escuro (2026-06-19)
+
+O app agora tem **tema claro além do escuro**, alternável e persistente. O escuro continua o padrão.
+
+Como funciona:
+- Todas as cores são CSS variables. Os dois conjuntos vivem em `:root, html[data-theme="dark"]` e `html[data-theme="light"]`, num `<style>` no `<head>` **estático** (não no helmet) — assim valem já no boot, antes do React, evitando flash de tema errado. Um script no mesmo `<head>` lê `localStorage['cdc-theme']` e aplica `data-theme` ao `<html>` antes do paint.
+- O toggle (botão ☾/☀ no titlebar) alterna `data-theme` no `<html>` + salva no `localStorage` + atualiza o `theme-color` do PWA. O state `mode` controla o ícone (sol no escuro, lua no claro) e o título do botão.
+- O sistema de **accent** que já existia (`applyTheme()`, temas Azul/Verde/Roxo/Grafite) continua funcionando por cima: ele seta `--accent*` inline no root, sobrepondo o tema. Por isso o root mantém só o trio `--accent` inline; o resto das variáveis vem do `:root`.
+- Além das ~25 variáveis de cor, o tema controla: fundo do app (`--app-bg`/body), o gradiente do root (`--app-gradient`), a scrollbar (`--scrollbar`/`--scrollbar-hover`) e os fios do canvas do Workflow (`--wire`) — tudo que antes era escuro hardcoded.
+
+Quase tudo já era variável (1138 usos de `var(--*)`), então a paleta clara foi uma **redefinição de variáveis**, não uma reescrita. Persistência via `localStorage` (preferência local do dispositivo, não vai pro backend).
+
+**⚠️ Telas/elementos ainda hardcoded (não vêm do `state`, então não respondem ao reset nem ao CRUD):** a tela **Início** inteira (KPIs, "Demandas de hoje", "Demandas futuras", "Atividades recentes" — tudo dados de exemplo fixos no template), os **badges da sidebar** (`Demandas 12`, `Clientes 5`), e provavelmente partes de **Metas/Salário/Calendário**. Pro app virar o ERP real (rumo ao .exe), essas telas precisam ser conectadas ao `state` ou ter os exemplos removidos. Descoberto no QA de 2026-06-19; decisão de tratamento em aberto.
+
 ## Roadmap até o .exe
 
 **Empacotamento desktop: decidido — Tauri** (2026-06-17). Núcleo Rust, sem Node exposto ao frontend (menor superfície de ataque) — só falta instalar o toolchain Rust + build tools no Windows (não estavam instalados na máquina até o momento desta decisão). Eletron e NW.js foram descartados.
@@ -158,7 +200,7 @@ Pendências antes do .exe:
 1. ~~Persistência real~~ ✅ resolvido na Fase 3a (SQLite via backend).
 2. ~~Decidir framework de empacotamento~~ ✅ Tauri.
 3. ~~Conectar o Assistente a uma IA de fato~~ ✅ resolvido na Fase 3b (Gemini).
-4. Acesso mobile robusto via PWA (Fase 3c).
+4. ~~Acesso mobile robusto via PWA~~ ✅ resolvido na Fase 3c (manifest + SW + ícones). Ressalva: no celular via IP HTTP o SW não roda (precisa de HTTPS) — vide limitação de secure-context na seção da Fase 3c.
 5. Empacotar com Tauri consumindo o backend local (Fase 3d) — exige instalar Rust + build tools antes.
 6. Ícone, nome do app, splash, talvez abrir no boot do Windows.
 
@@ -166,12 +208,14 @@ Pendências antes do .exe:
 
 - `Centro de Comando.dc.html` — app principal.
 - `support.js` — runtime do framework DC.
+- `manifest.webmanifest`, `sw.js`, `icons/` — PWA (Fase 3c): manifesto, service worker e ícones. Ver seção "Arquitetura PWA" acima.
+- `tools/gen-icons.mjs` — gera os ícones PNG a partir do logo, zero-deps (`npm run icons`).
 - `server/` — backend local (Fase 3a): API + SQLite + autenticação. Ver seção "Arquitetura de backend" acima.
 - `Canvas.dc.html`, `Canvas-2.dc.html` — templates vazios, provavelmente reservados pra novas telas/testes.
 - `ideias/` — 8 prints de referência visual (dashboard, sidebar, calendário, cor, etc.) que guiaram o design.
 - `screenshots/` — 2 prints de demonstração do estado atual.
 - `.gitignore` — exclui `Timed out questions defaults.zip` (arquivo solto sem relação com o projeto), lixo de OS, pastas de build futuras e os segredos/dados do backend (`server/.env`, `server/data/*.sqlite`).
-- `package.json` — scripts: `npm run dev` (servidor estático antigo, sem backend, útil pra ajuste visual rápido), `npm run setup` (define a senha inicial), `npm run server` (servidor principal a partir da Fase 3a — estáticos + API + auth, porta 5174).
+- `package.json` — scripts: `npm run dev` (servidor estático antigo, sem backend, útil pra ajuste visual rápido), `npm run setup` (define a senha inicial), `npm run server` (servidor principal a partir da Fase 3a — estáticos + API + auth, porta 5174), `npm run icons` (regenera os ícones do PWA).
 
 ## Plano de implementação em fases (decidido em 2026-06-17)
 
@@ -183,7 +227,7 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
 **Fase 3 — assistente IA real, backend seguro, mobile e .exe** (dividida em sub-fases)
 - **3a — Backend local + autenticação + migração de dados** ✅ concluída.
 - **3b — Assistente IA real** (Gemini, function calling, confirmação obrigatória de toda ação, log de auditoria) ✅ concluída (esta seção).
-- **3c — Acesso mobile** (PWA: manifest + service worker).
+- **3c — Acesso mobile** (PWA: manifest + service worker) ✅ concluída.
 - **3d — Empacotamento Tauri (.exe)** consumindo o mesmo backend local.
 - *(fora do escopo por enquanto)* hospedagem pública (VPS vs PaaS) — só quando quiser acesso de fora da rede local; aí entra TLS real, domínio, hardening de servidor.
 
@@ -226,3 +270,48 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
   - Ver seção "Arquitetura do Assistente IA (Fase 3b)" acima pra fluxo completo e os dois desvios conscientes em relação ao plano original (modelo `gemini-3.5-flash` em vez de `gemini-2.5-flash`; header `x-goog-api-key` em vez de `?key=` na URL).
   - **Verificação rodada sem chave do Gemini configurada** (ainda não há uma cadastrada): servidor sobe normal; sintaxe de todos os arquivos (`server/*.mjs` e o bloco JS do `.dc.html`) validada via `node --check`; rotas novas (`/api/chat`, `/api/audit`) confirmadas retornando 401 sem sessão; login testado de verdade com a senha de teste (`teste123`, documentada acima) — funcionou, e `/api/chat` respondeu com o aviso amigável de "assistente não configurado" (sem travar nada); `summarizeAction` testado com os 15 tools contra dados de exemplo, todas as frases corretas; round-trip do `audit_log` (inserir → listar → atualizar status → listar) testado direto contra o SQLite real, sem deixar linha de teste para trás.
   - **Ainda pendente (depende de uma chave real do Gemini, que você ainda não tem):** testar uma pergunta de verdade, uma criação/edição/exclusão confirmada de ponta a ponta (aparecer na tela, persistir, e o `audit_log` virar `applied`), o caminho de Cancelar, e o comportamento ao pedir algo com um cliente/id inexistente. Assim que você gerar a chave (passo a passo no changelog enviado no chat) e rodar `npm run setup` de novo, posso testar tudo isso eu mesmo via terminal, sem precisar abrir o navegador.
+- **2026-06-17 — Painel de demanda virou modal centralizado (era drawer lateral):**
+  - `Centro de Comando.dc.html`: o painel de criar/editar demanda (antes um drawer deslizando da direita, `position:absolute; right:0`) agora usa o mesmo padrão do painel de cliente/prospecto/lançamento/ideia — centralizado na tela (`top:50%; left:50%; transform:translate(-50%,-50%)`), cantos arredondados, header com gradiente, scrim com blur de 3px (igual ao painel de cliente, era 2px). Padding do corpo e do rodapé ajustados de 20px pra 24-28px pra acompanhar o outro painel.
+  - **Bug encontrado e corrigido na animação `cc-pop`:** ela define `transform: scale(...)` em cada keyframe, o que **sobrescreve por completo** qualquer `transform` estático no elemento (CSS não combina os dois — animação vence). Isso fazia o `translate(-50%,-50%)` virar `translate(0,0)` assim que a animação rodava, deixando o canto superior-esquerdo do painel no centro da tela em vez do painel inteiro centralizado — **esse bug já existia no painel de cliente/prospecto/lançamento/ideia também**, só não tinha sido notado. Corrigido incorporando o `translate(-50%,-50%)` em cada keyframe do `cc-pop` (linha do `<style>` no topo do arquivo). Os dois painéis (demanda e cliente/etc.) usam esse keyframe e foram corrigidos juntos.
+  - **Verificação:** subi o backend real (`npm run server`, login com a senha de teste `teste123`), abri "Nova demanda" via Playwright (Chromium headless, instalado só pra esse teste e removido depois) e confirmei por medição de `getBoundingClientRect()` que o centro do painel cai exatamente no centro do viewport (não só visualmente — calculei: x=720 de 1440, igual à metade exata). Screenshot confirmou fundo desfocado e painel arredondado, igual ao painel de cliente.
+  - **Não tocado (fora do escopo, mas mesmo bug):** o modal de busca ⌘K (`animation:cc-drawer`, linha ~1244) usa `transform:translateX(-50%)` com a mesma lógica de animação por keyframe — provavelmente tem o mesmo tipo de bug (a animação `cc-drawer` termina em `translateX(0)`, sobrescrevendo o `-50%`). Não mexi porque não foi pedido, mas é um candidato óbvio pra próxima limpeza visual.
+- **2026-06-17 — Revertido: demanda voltou a ser drawer lateral (decisão do usuário após ver o resultado centralizado):**
+  - `Centro de Comando.dc.html`: desfeitas as mudanças de estrutura/padding do item anterior só pro painel de demanda — voltou a ser `position:absolute; top:0; right:0; bottom:0; width:min(480px,82%)`, scrim `rgba(.55) blur(2px)`, padding `20px`/`16px 20px`, `animation:cc-drawer`. **Mantido:** o fix do keyframe `cc-pop` (continua beneficiando cliente/prospecto/lançamento/ideia, que seguem centralizados) e a divisão em dois blocos `sc-if` separados (`isLateralDrawerOpen` pra demanda, `isEntityPanelOpen` pros outros 4).
+- **2026-06-17 — QA completo de todas as telas e interações (a pedido do usuário):**
+  - Suite automatizada via Playwright/Chromium headless (script descartável, não commitado) contra o backend real (`npm run server`, login `teste123`), cobrindo: login, dashboard Início, abrir/preencher/criar/editar/excluir demanda (confirmando que abre como drawer lateral encostado na direita), kanban "Por status" e drag-and-drop real entre colunas (simulado via `DragEvent`/`DataTransfer` nativos, já que Playwright não dispara HTML5 DnD nativamente), Clientes (confirmando painel centralizado, criar/excluir), Ideias (criar/excluir), busca ⌘K, Financeiro (modal de lançamento centralizado), Assistente (mensagem real enviada e respondida pela API do Gemini em ~1s, com resposta contextual correta sobre os dados reais do app — confirma que a Fase 3b está 100% funcional, não só "não configurado" como nas verificações anteriores sem chave), Workflow (adicionar nó), Calendário, Salário, Metas, Pessoal, recolher/expandir sidebar.
+  - **Resultado: 28/28 passos OK, zero erros de console/página.** Único problema encontrado durante os testes (não do app, do meu script): o modal de Lançamento não fecha com `Esc` — só o modal de busca tem esse atalho — então fechar com `Esc` deixa o scrim bloqueando cliques subsequentes; troquei pra fechar clicando em "Cancelar". Isso não é um bug do app, é uma limitação real (Esc não fecha os modais de cliente/prospecto/lançamento/ideia/demanda, só o de busca) — se quiser, posso adicionar esse atalho nos outros modais.
+  - Dados de teste ("QA Cliente Teste", "QA Teste - demanda automatizada") ficaram residuais no banco real depois de uma primeira rodada que travou no meio (bug no meu script de teste, dois listeners de diálogo duplicados); limpos manualmente depois via `PUT /api/state` direto na API, sem tocar nos dados reais do usuário (`Cliente Teste`, `jet ski lanchas`, `Demanda Teste`, `ada`, `fs`, `sgsg` continuam intactos).
+- **2026-06-17 — Mais motion/interatividade (a pedido do usuário):**
+  - `Centro de Comando.dc.html`: novos keyframes `cc-rise` (entrada sutil fade+translateY, usada em listas/cards), `cc-dot` (pulso pra indicador de "pensando"), `cc-search-pop` (entrada do modal de busca).
+  - **Stagger reveal** (entrada escalonada por item, via `{{ $index }}` do `sc-for` multiplicado em `animation-delay`) nos: KPIs e listas da tela Início (demandas de hoje/futuras/atividades), cards do kanban "Por status" e "Por cliente", lista de clientes, grid de ideias, resultados da busca ⌘K.
+  - **Feedback visual de drag-and-drop no kanban:** card arrastado fica com opacidade reduzida (`draggingId` no state); coluna de destino ganha fundo azulado + borda pontilhada accent enquanto o mouse está sobre ela (`dragOverCol` no state, via `onDragEnter`/`onDragLeave` novos). Limpa tudo em `onDragEnd`/`onDrop`.
+  - **Feedback de clique (`style-active`, pseudo-classe genérica já suportada pelo framework DC)** nos botões de CTA principais (accent, 13 ocorrências), nos itens da sidebar, nos chips de prioridade da demanda, no checkbox do checklist e nos resultados da busca — tudo com leve `scale()` ao pressionar.
+  - **Indicador ativo da sidebar** ganhou transição suave de cor/fundo (`transition:background .16s ease, color .16s ease`) em vez de troca instantânea ao navegar entre telas.
+  - **"Pensando…" do Assistente** virou 3 pontinhos pulsando (`cc-dot`, defasados 150ms entre si) no lugar do texto estático.
+  - **Bug de centralização corrigido no modal de busca ⌘K:** mesmo problema do `cc-pop` (animação `cc-drawer` sobrescrevia o `translateX(-50%)`, deixando a busca desalinhada à esquerda do centro). Criei `cc-search-pop` dedicado (não reaproveitei `cc-drawer` porque esse keyframe também serve o drawer lateral de demanda, que precisa do efeito de slide original sem nenhum translate fixo — misturar os dois quebraria um ou outro).
+  - **Verificação:** suite Playwright completa re-executada após as mudanças (login, demanda lateral + criar/arrastar/editar/excluir, cliente centralizado + criar/excluir, busca ⌘K agora com dx=0 do centro exato, assistente respondendo) — **5/5 OK, zero erros de console**. Screenshot confirmou visualmente o destaque azul na coluna de destino durante o drag e os pontinhos animados no chat.
+- **2026-06-18 — Bug raiz encontrado: hover não funcionava em lugar nenhum do app (apesar de já existirem 79 usos de `style-hover` no código):**
+  - **Causa:** o framework DC (`support.js`) gera o CSS de `style-hover`/`style-active`/`style-focus` como uma classe comum (`.scpN:hover{...}`), **sem `!important`**. Como cada card já define a mesma propriedade (`background`, `border-color`, `box-shadow`, `transform`...) direto no atributo `style=""` inline, e estilo inline sempre vence regra de classe em CSS (não importa pseudo-classe nem especificidade), a troca no hover era calculada mas nunca chegava a ser desenhada — confirmado com Playwright medindo `getComputedStyle` antes/depois do hover em vários elementos (cor de fundo do botão "Nova demanda" não mudava nunca, por exemplo). Em cards com animação de entrada (`animation:cc-rise ... both`), o problema é ainda mais forte: o estado final da animação tem prioridade maior que estilo inline normal, então mesmo se a regra de hover não tivesse esse problema, a animação sozinha já travaria o `transform` no valor final.
+  - **Correção (uma linha, na raiz, beneficia o app inteiro):** em `support.js`, função `createPseudoSheet` (gera as classes `.scpN:hover` etc.), cada declaração do CSS gerado agora recebe `!important` antes de ser inserida na stylesheet. Pela ordem de prioridade do CSS (important-author > animation > normal-author/inline), isso faz a regra de hover vencer tanto o estilo inline normal quanto o estado "congelado" das animações de entrada — sem precisar editar nenhum dos 79+ usos existentes de `style-hover` no `.dc.html`.
+  - **Verificado com Playwright (medindo `getComputedStyle` real antes/depois do `.hover()`, não só visual):** botão "Nova demanda" (`background-color`: `rgb(82,133,240)` → `rgb(63,111,224)`, mudou); card de KPI da tela Início (`transform`: `matrix(1,0,0,1,0,0)` → `matrix(1,0,0,1,0,-3)`, e `box-shadow`: sh-1 → sh-2, ambos mudaram mesmo com a animação `cc-rise` ativa). Sintaxe de `support.js` e do bloco JS do `.dc.html` validada (`node --check` / `new Function`).
+- **2026-06-18 — Mais interação visual no hover, a pedido do usuário ("quero que mexa nos cards, nas demandas, tudo ao passar o mouse tenha interação"):**
+  - Cards que já tinham hover sutil (borda + 1px) ganharam um "lift" mais perceptível: sobe 3px e ganha sombra mais forte (`var(--sh-2)`) — demandas de hoje, kanban (por status e por cliente), clientes, prospectos, ideias, projetos pessoais.
+  - Cards que **não tinham hover nenhum** ganharam: KPIs da tela Início, KPIs do Financeiro, cards de Metas (sobem e ganham sombra); linha de "Atividades recentes", linha do breakdown de Salário, célula do Calendário (ganham destaque de fundo/leve zoom); linha de "Lançamentos" do Financeiro e linha de "Demandas futuras" (ganham destaque de fundo + leve deslocamento lateral).
+  - Nó do Workflow: hover ficou mais forte (sobe mais, ganha sombra de janela `var(--sh-3)` em vez de só mudar a borda).
+  - **Verificação:** suite Playwright (com `getComputedStyle` antes/depois do `.hover()` real, não só screenshot) confirmando que `transform`/`box-shadow`/`background` de fato mudam nos elementos testados. Scripts de teste descartáveis removidos depois, junto com a dependência `playwright` que foi instalada só para esse teste (`npm install --no-save`) e desinstalada ao final — `package.json`/`node_modules` voltaram ao estado original.
+- **2026-06-19 — Fase 3c entregue (PWA: app instalável):**
+  - Novos arquivos: `manifest.webmanifest` (raiz), `sw.js` (service worker, raiz), `icons/` (icon.svg + icon-192/512 + icon-maskable-512 + apple-touch-icon), `tools/gen-icons.mjs` (gerador de ícones zero-deps).
+  - `Centro de Comando.dc.html`: tags PWA no `<head>` estático (manifest, theme-color `#0d0e10`, apple-touch-icon, `apple-mobile-web-app-*`, favicon SVG, `viewport-fit=cover`, `<title>`) + registro defensivo do service worker (`if ('serviceWorker' in navigator)` no `load`).
+  - `server/index.mjs`: só uma linha — MIME `.webmanifest` → `application/manifest+json`. O resto (ícones, sw.js, manifest) já é servido pela rota de estáticos.
+  - `package.json`: novo script `npm run icons`.
+  - **Ícones zero-deps:** `tools/gen-icons.mjs` desenha o logo do app e escreve PNGs reais só com `node:zlib` (encoder PNG próprio com CRC32 + IHDR/IDAT/IEND e antialias 4×4) — sem instalar nada. Reproduz fielmente o quadrado de gradiente azul + quadrado branco central.
+  - **Service worker network-first**, blindado contra `/api/*` e `/__livereload` (passam direto). Cacheia o app shell + React/ReactDOM (unpkg) + fontes (Google) em runtime. Detalhes e fluxo na seção "Arquitetura PWA (Fase 3c)" acima.
+  - **Limitação documentada:** SW e instalação automática (Android/Chrome) exigem HTTPS ou localhost. Funciona 100% no desktop em `localhost`; no celular via IP HTTP o SW não roda (precisa de HTTPS — virá com o Tauri da 3d ou hospedagem com TLS), mas o iOS já abre standalone via as meta tags apple. Vide a seção da Fase 3c.
+  - **Verificação ao vivo (Playwright/Chromium headless já em cache, contra o `npm run server` real, login `teste123`):** SW registra (escopo `/`) e ativa; após reload controla a navegação; app renderiza e loga com o SW no caminho; `/api/me` responde `{ok:true}` fresco (não interceptado/cacheado); cache `cdc-pwa-v1` com 11 itens (shell + React + fontes) e zero rotas `/api`/`__livereload`; manifest válido (4 ícones, any + maskable). Zero erro de console. Os 4 PNGs validados à parte (assinatura, IHDR color-type 6, IDAT no tamanho exato). Tudo de teste removido ao final (working tree limpo).
+- **2026-06-19 — QA funcional completo + reset dos dados de teste (a pedido do usuário):**
+  - **QA (Playwright contra o server real):** 21/21 OK, **zero erros de console** — login, as 11 telas, tabs de demanda, calendário mês/semana, busca ⌘K, hover (fix do `support.js`), sidebar recolher/expandir, criar+editar demanda, criar ideia, e o Assistente respondendo de verdade (Gemini). Também confirmado que a navegação e os empty states funcionam com o banco vazio.
+  - **Reset "app limpo":** zerados todos os dados (`clients`/`demands`/`prospectos`/`ideias`/`lancamentos`/`wfNodesExtra` → listas vazias) e limpo o `audit_log`, via script direto no SQLite com o servidor parado. Backup completo (sqlite + state.json + audit.json) guardado **fora do repo** em `C:\Users\patri\cdc-backups`. Os dados de teste eram: clientes `Cliente Teste`/`jet ski lanchas`, demandas `Demanda Teste`/`ada`/`fs`/`sgsg`, 6 ideias de exemplo, e 3 ações no audit.
+  - **Descoberta:** a tela Início e os badges da sidebar são hardcoded (ver aviso na seção "Tema claro/escuro") — o reset não os afeta.
+- **2026-06-19 — Tema claro/escuro alternável (a pedido do usuário "coloque em versão clara tb, pra poder ser alterado"):**
+  - `Centro de Comando.dc.html`: blocos `:root[data-theme=dark/light]` no `<head>` estático com a paleta completa + novas vars (`--app-bg`, `--app-gradient`, `--scrollbar`, `--wire`); anti-flash script; botão ☾/☀ no titlebar; ícones `sun`/`moon`; handler `toggleTheme`; `componentDidMount` sincroniza o `mode`; helmet e root div ajustados pra usar as vars; fios do Workflow via `--wire`. Ver seção "Tema claro/escuro" acima.
+  - **Verificação (Playwright):** alterna dark↔light, **persiste no reload**, cores batem com a paleta (body `#060708`↔`#e4e7eb`, texto `#e9eaec`↔`#1b1f27`), dark intacto após a refatoração, navegação e empty states OK no claro, **zero erros de console**. Screenshots dos dois temas conferidos. Temporários e `playwright` (--no-save) removidos ao final.

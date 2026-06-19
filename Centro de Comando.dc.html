@@ -2,7 +2,72 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Centro de Comando</title>
+
+<!-- PWA (Fase 3c) -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0d0e10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Comando">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<script>
+  // Registra o service worker. Só roda em contexto seguro (https ou
+  // localhost); em http puro via IP de LAN, 'serviceWorker' nem existe
+  // no navigator, então isto é ignorado sem erro no console.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
+</script>
+
+<!-- Tema claro/escuro — variáveis definidas aqui (head estático) pra valerem
+     já no boot, antes do React, evitando flash de tema errado. -->
+<style>
+  :root, html[data-theme="dark"] {
+    --bg:#0d0e10; --content:#111316; --sidebar:#0a0b0c; --titlebar:#0c0d0f;
+    --surface:#16181b; --surface-2:#1b1e22; --surface-3:#22262c;
+    --border:rgba(255,255,255,.07); --border-2:rgba(255,255,255,.12);
+    --text:#e9eaec; --text-2:#9a9fa7; --text-3:#64696f;
+    --accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14);
+    --ok:#5cae86; --ok-weak:rgba(92,174,134,.13);
+    --warn:#cea052; --warn-weak:rgba(206,160,82,.14);
+    --crit:#d7796b; --crit-weak:rgba(215,121,107,.14);
+    --info:#5e9bd6; --info-weak:rgba(94,155,214,.13);
+    --sh-1:0 1px 2px rgba(0,0,0,.35); --sh-2:0 6px 22px rgba(0,0,0,.4); --sh-3:0 18px 50px rgba(0,0,0,.55);
+    --app-bg:#060708;
+    --app-gradient:radial-gradient(1200px 700px at 20% -10%, #15171b 0%, #0a0b0c 60%, #060708 100%);
+    --scrollbar:rgba(255,255,255,.09); --scrollbar-hover:rgba(255,255,255,.16); --wire:rgba(255,255,255,.18);
+  }
+  html[data-theme="light"] {
+    --bg:#eaecef; --content:#fbfcfd; --sidebar:#edeef2; --titlebar:#e7e9ed;
+    --surface:#ffffff; --surface-2:#f2f4f7; --surface-3:#e8ebf0;
+    --border:rgba(18,22,31,.10); --border-2:rgba(18,22,31,.15);
+    --text:#1b1f27; --text-2:#596170; --text-3:#878d98;
+    --accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.13);
+    --ok:#2f9c6c; --ok-weak:rgba(47,156,108,.13);
+    --warn:#b27d1c; --warn-weak:rgba(178,125,28,.14);
+    --crit:#d24b39; --crit-weak:rgba(210,75,57,.12);
+    --info:#3f80c4; --info-weak:rgba(63,128,196,.12);
+    --sh-1:0 1px 2px rgba(18,24,40,.07); --sh-2:0 6px 22px rgba(18,24,40,.09); --sh-3:0 18px 50px rgba(18,24,40,.15);
+    --app-bg:#e4e7eb;
+    --app-gradient:radial-gradient(1200px 700px at 20% -10%, #ffffff 0%, #edf0f4 55%, #e4e7ec 100%);
+    --scrollbar:rgba(0,0,0,.18); --scrollbar-hover:rgba(0,0,0,.30); --wire:rgba(20,28,45,.22);
+  }
+  html, body { height: 100%; }
+  body { background: var(--app-bg); }
+</style>
+<script>
+  // Aplica o tema salvo ANTES do paint (evita flash claro->escuro no boot).
+  try { document.documentElement.setAttribute('data-theme', localStorage.getItem('cdc-theme') || 'dark'); }
+  catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+</script>
+
 <script src="./support.js"></script>
 </head>
 <body>
@@ -14,10 +79,10 @@
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
-  body { background: #060708; font-family: 'Geist', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Geist', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.09); border-radius: 8px; border: 3px solid transparent; background-clip: padding-box; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.16); background-clip: padding-box; border: 3px solid transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 8px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); background-clip: padding-box; border: 3px solid transparent; }
   ::-webkit-scrollbar-track { background: transparent; }
   @keyframes cc-scrim { from { opacity: 0; } to { opacity: 1; } }
   @keyframes cc-drawer { from { transform: translateX(36px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -25,11 +90,15 @@
   @keyframes cc-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes cc-bar { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
   @keyframes cc-grow-w { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  @keyframes cc-pop { 0% { transform: scale(.92); opacity:0; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity:1; } }
+  @keyframes cc-pop { 0% { transform: translate(-50%,-50%) scale(.92); opacity:0; } 60% { transform: translate(-50%,-50%) scale(1.03); } 100% { transform: translate(-50%,-50%) scale(1); opacity:1; } }
+  @keyframes cc-rise { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes cc-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes cc-dot { 0%, 80%, 100% { opacity:.25; transform: scale(.8); } 40% { opacity:1; transform: scale(1); } }
+  @keyframes cc-search-pop { from { transform: translateX(-50%) translateY(-10px) scale(.98); opacity:0; } to { transform: translateX(-50%) translateY(0) scale(1); opacity:1; } }
 </style>
 </helmet>
 
-<div ref="{{ rootRef }}" style="--bg:#0d0e10; --content:#111316; --sidebar:#0a0b0c; --titlebar:#0c0d0f; --surface:#16181b; --surface-2:#1b1e22; --surface-3:#22262c; --border:rgba(255,255,255,.07); --border-2:rgba(255,255,255,.12); --text:#e9eaec; --text-2:#9a9fa7; --text-3:#64696f; --accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); --ok:#5cae86; --ok-weak:rgba(92,174,134,.13); --warn:#cea052; --warn-weak:rgba(206,160,82,.14); --crit:#d7796b; --crit-weak:rgba(215,121,107,.14); --info:#5e9bd6; --info-weak:rgba(94,155,214,.13); --sh-1:0 1px 2px rgba(0,0,0,.35); --sh-2:0 6px 22px rgba(0,0,0,.4); --sh-3:0 18px 50px rgba(0,0,0,.55); font-family:'Geist',system-ui,sans-serif; color:var(--text); height:100vh; width:100vw; padding:14px; background:radial-gradient(1200px 700px at 20% -10%, #15171b 0%, #0a0b0c 60%, #060708 100%); display:flex;">
+<div ref="{{ rootRef }}" data-theme-root="true" style="--accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); font-family:'Geist',system-ui,sans-serif; color:var(--text); height:100vh; width:100vw; padding:14px; background:var(--app-gradient); display:flex;">
 
   <!-- LOGIN -->
   <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ false }}">
@@ -49,7 +118,7 @@
           <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:12.5px; color:var(--crit); padding:0 2px;">{{ loginError }}</div>
           </sc-if>
-          <button onClick="{{ submitLogin }}" style="height:42px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)">Entrar</button>
+          <button onClick="{{ submitLogin }}" style="height:42px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">Entrar</button>
         </div>
       </div>
     </div>
@@ -78,6 +147,7 @@
       </div>
 
       <div style="display:flex; align-items:center; gap:4px; -webkit-app-region:no-drag;">
+        <button onClick="{{ toggleTheme }}" title="{{ themeTitle }}" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconTheme }}</button>
         <!-- Design System: acesso via goSystem(), mantido como referência interna -->
         <button title="Notificações" style="position:relative; display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2)">{{ iconBell }}<span style="position:absolute; top:5px; right:6px; width:5px; height:5px; border-radius:50%; background:var(--accent);"></span></button>
         <div style="width:1px; height:18px; background:var(--border); margin:0 4px;"></div>
@@ -97,8 +167,8 @@
         <div style="padding:13px 12px 8px; flex:1; display:flex; flex-direction:column; gap:2px; overflow-y:auto; overflow-x:hidden;">
           <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><div style="font-size:10.5px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); padding:4px 10px 6px;">Trabalho</div></sc-if>
           <sc-for list="{{ navTop }}" as="item" hint-placeholder-count="6">
-            <button onClick="{{ item.onClick }}" title="{{ item.label }}" style="position:relative; display:flex; align-items:center; gap:11px; width:100%; height:36px; padding:0 10px; border:none; border-radius:8px; cursor:pointer; font:inherit; font-size:13px; font-weight:{{ item.weight }}; color:{{ item.color }}; background:{{ item.bg }}; justify-content:{{ navJustify }};" style-hover="background:var(--surface-2)">
-              <span style="position:absolute; left:0; top:8px; bottom:8px; width:2.5px; border-radius:0 3px 3px 0; background:{{ item.bar }};"></span>
+            <button onClick="{{ item.onClick }}" title="{{ item.label }}" style="position:relative; display:flex; align-items:center; gap:11px; width:100%; height:36px; padding:0 10px; border:none; border-radius:8px; cursor:pointer; font:inherit; font-size:13px; font-weight:{{ item.weight }}; color:{{ item.color }}; background:{{ item.bg }}; justify-content:{{ navJustify }}; transition:background .16s ease, color .16s ease;" style-hover="background:var(--surface-2)" style-active="transform:scale(.97)">
+              <span style="position:absolute; left:0; top:8px; bottom:8px; width:2.5px; border-radius:0 3px 3px 0; background:{{ item.bar }}; transition:background .16s ease;"></span>
               <span style="display:flex; flex:0 0 auto; color:{{ item.iconColor }};">{{ item.iconEl }}</span>
               <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;">{{ item.label }}</span></sc-if>
               <sc-if value="{{ item.showBadge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto; font-size:11px; font-family:'Geist Mono',monospace; font-weight:500; color:var(--text-2); background:var(--surface-3); border-radius:20px; min-width:20px; height:18px; display:flex; align-items:center; justify-content:center; padding:0 6px;">{{ item.badge }}</span></sc-if>
@@ -108,8 +178,8 @@
           <div style="height:10px;"></div>
           <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><div style="font-size:10.5px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); padding:4px 10px 6px;">Negócio</div></sc-if>
           <sc-for list="{{ navBottom }}" as="item" hint-placeholder-count="4">
-            <button onClick="{{ item.onClick }}" title="{{ item.label }}" style="position:relative; display:flex; align-items:center; gap:11px; width:100%; height:36px; padding:0 10px; border:none; border-radius:8px; cursor:pointer; font:inherit; font-size:13px; font-weight:{{ item.weight }}; color:{{ item.color }}; background:{{ item.bg }}; justify-content:{{ navJustify }};" style-hover="background:var(--surface-2)">
-              <span style="position:absolute; left:0; top:8px; bottom:8px; width:2.5px; border-radius:0 3px 3px 0; background:{{ item.bar }};"></span>
+            <button onClick="{{ item.onClick }}" title="{{ item.label }}" style="position:relative; display:flex; align-items:center; gap:11px; width:100%; height:36px; padding:0 10px; border:none; border-radius:8px; cursor:pointer; font:inherit; font-size:13px; font-weight:{{ item.weight }}; color:{{ item.color }}; background:{{ item.bg }}; justify-content:{{ navJustify }}; transition:background .16s ease, color .16s ease;" style-hover="background:var(--surface-2)" style-active="transform:scale(.97)">
+              <span style="position:absolute; left:0; top:8px; bottom:8px; width:2.5px; border-radius:0 3px 3px 0; background:{{ item.bar }}; transition:background .16s ease;"></span>
               <span style="display:flex; flex:0 0 auto; color:{{ item.iconColor }};">{{ item.iconEl }}</span>
               <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;">{{ item.label }}</span></sc-if>
             </button>
@@ -140,13 +210,13 @@
                 <h1 style="margin:0; font-size:25px; font-weight:600; letter-spacing:-.4px;">Boa tarde, Rafael</h1>
                 <p style="margin:6px 0 0; font-size:13.5px; color:var(--text-2);">Você tem <span style="color:var(--text); font-weight:500;">4 demandas</span> pra hoje · <span style="color:var(--warn);">2 vencem em breve</span></p>
               </div>
-              <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:8px; height:38px; padding:0 16px; border:none; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)">{{ iconPlus }}<span>Nova demanda</span></button>
+              <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:8px; height:38px; padding:0 16px; border:none; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
             </div>
 
             <!-- KPI strip -->
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px;">
               <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .32s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 40ms);" style-hover="border-color:var(--border-2); transform:translateY(-3px); box-shadow:var(--sh-2)">
                   <div style="display:flex; align-items:center; gap:8px; color:var(--text-3); margin-bottom:11px;">
                     <span style="display:flex; color:{{ k.color }};">{{ k.iconEl }}</span>
                     <span style="font-size:12px; font-weight:500; color:var(--text-2);">{{ k.label }}</span>
@@ -169,7 +239,7 @@
             </div>
             <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:13px; margin-bottom:30px;">
               <sc-for list="{{ hoje }}" as="d" hint-placeholder-count="4">
-                <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ d.accent }}; border-radius:12px; padding:15px 16px; cursor:pointer; transition:border-color .12s, transform .12s;" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ d.accent }}; border-radius:12px; padding:15px 16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .32s cubic-bezier(.4,0,.2,1) both; animation-delay: calc(160ms + {{ $index }} * 40ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.985)">
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;">
                     <div style="min-width:0;">
                       <div style="font-size:14.5px; font-weight:600; line-height:1.3; margin-bottom:6px;">{{ d.title }}</div>
@@ -196,7 +266,7 @@
                 <h2 style="margin:0 0 13px; font-size:15px; font-weight:600;">Demandas futuras</h2>
                 <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
                   <sc-for list="{{ futuras }}" as="d" hint-placeholder-count="3">
-                    <div onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:13px; padding:13px 15px; border-bottom:1px solid var(--border); cursor:pointer;" style-hover="background:var(--surface-2)">
+                    <div onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:13px; padding:13px 15px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s, padding-left .12s; animation:cc-rise .3s ease both; animation-delay: calc({{ $index }} * 35ms);" style-hover="background:var(--surface-2); padding-left:19px">
                       <span style="width:9px; height:9px; border-radius:3px; background:{{ d.clientColor }}; flex:0 0 auto;"></span>
                       <div style="flex:1; min-width:0;">
                         <div style="font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ d.title }}</div>
@@ -215,7 +285,7 @@
                 <h2 style="margin:0 0 13px; font-size:15px; font-weight:600;">Atividades recentes</h2>
                 <div style="display:flex; flex-direction:column; gap:3px;">
                   <sc-for list="{{ atividades }}" as="a" hint-placeholder-count="4">
-                    <div style="display:flex; gap:12px; padding:9px 6px;">
+                    <div style="display:flex; gap:12px; padding:9px 6px; border-radius:9px; transition:background .12s; animation:cc-rise .3s ease both; animation-delay: calc({{ $index }} * 35ms);" style-hover="background:var(--surface-2)">
                       <div style="flex:0 0 auto; width:28px; height:28px; border-radius:8px; background:{{ a.bg }}; display:flex; align-items:center; justify-content:center; color:{{ a.color }};">{{ a.iconEl }}</div>
                       <div style="flex:1; min-width:0;">
                         <div style="font-size:13px; line-height:1.4; color:var(--text);">{{ a.text }}</div>
@@ -243,7 +313,7 @@
                   <button onClick="{{ viewStatus }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ statusTabColor }}; background:{{ statusTabBg }};">Por status</button>
                 </div>
                 <button style="display:flex; align-items:center; gap:7px; height:34px; padding:0 13px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12.5px; font-weight:500; cursor:pointer;" style-hover="border-color:var(--border-2); color:var(--text)">{{ iconFilter }}<span>Filtrar</span></button>
-                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)">{{ iconPlus }}<span>Nova demanda</span></button>
+                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
               </div>
             </div>
 
@@ -275,7 +345,7 @@
                 <div style="flex:1; min-height:0; overflow-y:auto; padding:18px 28px 30px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(228px,1fr)); gap:12px;">
                     <sc-for list="{{ activeClientCards }}" as="c" hint-placeholder-count="4">
-                      <div onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                      <div onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .28s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                           <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ c.statusColor }}; background:{{ c.statusBg }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ c.statusColor }};"></span>{{ c.status }}</span>
                           <div style="display:flex; align-items:center; gap:7px;">
@@ -308,9 +378,9 @@
                         <span style="font-size:11.5px; font-family:'Geist Mono',monospace; color:var(--text-3);">{{ col.count }}</span>
                         <button onClick="{{ openDrawer }}" style="margin-left:auto; display:flex; align-items:center; justify-content:center; width:24px; height:24px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text-2)">{{ iconPlusSm }}</button>
                       </div>
-                      <div onDragOver="{{ col.onDragOver }}" onDrop="{{ col.onDrop }}" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px;">
+                      <div onDragOver="{{ col.onDragOver }}" onDragEnter="{{ col.onDragEnter }}" onDragLeave="{{ col.onDragLeave }}" onDrop="{{ col.onDrop }}" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px; background:{{ col.dropBg }}; border:1.5px dashed {{ col.dropBorder }}; border-radius:12px; transition:background .15s ease, border-color .15s ease;">
                         <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
-                          <div draggable="true" onDragStart="{{ c.onDragStart }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                          <div draggable="true" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s ease, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .26s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                               <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:{{ c.clientColor }};"></span>{{ c.client }}</span>
                               <div style="display:flex; align-items:center; gap:7px;">
@@ -428,7 +498,7 @@
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px;">
               <div style="font-size:12.5px; font-weight:600; color:var(--text-2); margin-bottom:15px;">Botões & estados</div>
               <div style="display:flex; flex-wrap:wrap; align-items:center; gap:11px; margin-bottom:16px;">
-                <button style="display:flex; align-items:center; gap:7px; height:36px; padding:0 15px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(82,133,240,.32);" style-hover="background:var(--accent-2)">{{ iconPlus }}Primário</button>
+                <button style="display:flex; align-items:center; gap:7px; height:36px; padding:0 15px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(82,133,240,.32);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}Primário</button>
                 <button style="height:36px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Secundário</button>
                 <button style="height:36px; padding:0 15px; border:none; background:transparent; color:var(--text-2); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">Fantasma</button>
                 <button style="height:36px; padding:0 15px; border:1px solid var(--crit-weak); background:var(--crit-weak); color:var(--crit); border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="background:rgba(215,121,107,.2)">Perigo</button>
@@ -577,13 +647,13 @@
                 <h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Pessoal</h1>
                 <p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">Seus projetos e ideias — separados dos clientes</p>
               </div>
-              <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 15px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}<span>Novo projeto</span></button>
+              <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 15px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Novo projeto</span></button>
             </div>
             <div style="flex:1; min-height:0; overflow-y:auto; padding:4px 28px 36px;">
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Projetos ativos</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(228px,1fr)); gap:12px; margin-bottom:32px;">
                 <sc-for list="{{ personal }}" as="c" hint-placeholder-count="3">
-                  <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .12s, transform .12s; box-shadow:var(--sh-1);" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                  <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-1);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                       <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ c.statusColor }}; background:{{ c.statusBg }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ c.statusColor }};"></span>{{ c.status }}</span>
                       <span style="display:flex; color:var(--text-3);">{{ c.iconType }}</span>
@@ -632,7 +702,7 @@
               <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
                 <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:#5285f0;"></span>Luso Automóveis</div>
                 <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:#d7796b;"></span>Flamenguismo 90+</div>
-                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}<span>Novo evento</span></button>
+                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Novo evento</span></button>
               </div>
             </div>
             <sc-if value="{{ isCalMonth }}" hint-placeholder-val="{{ true }}">
@@ -644,7 +714,7 @@
                 </div>
                 <div style="flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(5,1fr); gap:4px; min-height:0;">
                   <sc-for list="{{ calCells }}" as="cell" hint-placeholder-count="35">
-                    <div onClick="{{ openDrawer }}" style="background:{{ cell.cellBg }}; border:{{ cell.cellBorder }}; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:4px; cursor:pointer; overflow:hidden; min-height:0;" style-hover="background:var(--surface-2)">
+                    <div onClick="{{ openDrawer }}" style="background:{{ cell.cellBg }}; border:{{ cell.cellBorder }}; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:4px; cursor:pointer; overflow:hidden; min-height:0; transition:background .12s, transform .12s; transform:scale(1);" style-hover="background:var(--surface-2); transform:scale(1.03)">
                       <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:8px; font-size:12.5px; font-weight:{{ cell.dayWeight }}; color:{{ cell.dayColor }}; background:{{ cell.dayNumBg }};">{{ cell.day }}</span>
                       <sc-for list="{{ cell.events }}" as="ev" hint-placeholder-count="0">
                         <div style="font-size:10.5px; font-weight:500; color:#fff; background:{{ ev.color }}; border-radius:4px; padding:2px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.9;">{{ ev.label }}</div>
@@ -689,13 +759,13 @@
                 <h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Clientes</h1>
                 <p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">{{ clientesCount }} · {{ demandasCount }} no total</p>
               </div>
-              <button onClick="{{ openDrawerCliente }}" style="display:flex; align-items:center; gap:7px; height:36px; padding:0 15px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)">{{ iconUserPlus }}<span>Adicionar cliente</span></button>
+              <button onClick="{{ openDrawerCliente }}" style="display:flex; align-items:center; gap:7px; height:36px; padding:0 15px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconUserPlus }}<span>Adicionar cliente</span></button>
             </div>
             <div style="flex:1; overflow-y:auto; padding:0 28px 32px;">
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Ativos</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:14px; margin-bottom:30px;">
                 <sc-for list="{{ clientCards }}" as="cl" hint-placeholder-count="2">
-                  <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:16px; cursor:pointer; transition:border-color .12s, transform .12s;" style-hover="border-color:var(--border-2); transform:translateY(-1px)">
+                  <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .3s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 45ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
                       <div style="display:flex; align-items:center; gap:12px;">
                         <div style="width:44px; height:44px; border-radius:13px; background:{{ cl.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:{{ cl.color }}; flex:0 0 auto; letter-spacing:-.5px;">{{ cl.initials }}</div>
@@ -724,7 +794,7 @@
               <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:24px;">
                 <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px;">
                   <sc-for list="{{ pipeline }}" as="stage" hint-placeholder-count="4">
-                    <div style="position:relative; padding:14px 16px; background:{{ stage.bg }}; border:1px solid var(--border);" style-hover="background:var(--surface-2)">
+                    <div style="position:relative; padding:14px 16px; background:{{ stage.bg }}; border:1px solid var(--border); transition:background .12s;" style-hover="background:var(--surface-2)">
                       <div style="font-size:11px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:{{ stage.color }}; margin-bottom:10px;">{{ stage.label }}</div>
                       <div style="font-size:22px; font-weight:600; font-family:'Geist Mono',monospace; margin-bottom:6px;">{{ stage.count }}</div>
                       <sc-for list="{{ stage.names }}" as="n" hint-placeholder-count="0">
@@ -737,7 +807,7 @@
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Prospectos & leads</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:14px;">
                 <sc-for list="{{ prospects }}" as="pr" hint-placeholder-count="1">
-                  <div onClick="{{ pr.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; gap:13px; cursor:pointer;" style-hover="border-color:var(--border-2)">
+                  <div onClick="{{ pr.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; gap:13px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s;" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="width:40px; height:40px; border-radius:12px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--text-2); flex:0 0 auto;">{{ pr.initials }}</div>
                     <div style="flex:1; min-width:0;">
                       <div style="font-size:14px; font-weight:600; margin-bottom:4px;">{{ pr.name }}</div>
@@ -762,7 +832,7 @@
             </div>
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;">
               <sc-for list="{{ finKpis }}" as="k" hint-placeholder-count="4">
-                <div style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ k.accent }}; border-radius:12px; padding:15px 16px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ k.accent }}; border-radius:12px; padding:15px 16px; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s;" style-hover="border-color:var(--border-2); transform:translateY(-3px); box-shadow:var(--sh-2)">
                   <div style="font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:10px;">{{ k.label }}</div>
                   <div style="font-size:21px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ k.color }}; letter-spacing:-.3px;">{{ k.value }}</div>
                   <div style="font-size:11.5px; color:var(--text-3); margin-top:5px;">{{ k.sub }}</div>
@@ -785,7 +855,7 @@
               <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;">
                 <div style="font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:6px;">Lançamentos · junho</div>
                 <sc-for list="{{ finTxns }}" as="t" hint-placeholder-count="4">
-                  <div onClick="{{ t.onClick }}" style="display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); cursor:pointer; transition:opacity .12s;" style-hover="opacity:.82">
+                  <div onClick="{{ t.onClick }}" style="display:flex; align-items:center; gap:12px; padding:11px 6px; margin:0 -6px; border-radius:9px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s, padding-left .12s;" style-hover="background:var(--surface-2); padding-left:11px">
                     <div style="width:32px; height:32px; border-radius:9px; background:{{ t.bg }}; display:flex; align-items:center; justify-content:center; color:{{ t.color }}; flex:0 0 auto;">{{ t.iconEl }}</div>
                     <div style="flex:1; min-width:0;"><div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ t.label }}</div><div style="font-size:11px; color:var(--text-3); margin-top:2px;">{{ t.meta }}</div></div>
                     <div style="font-size:13px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ t.amountColor }}; white-space:nowrap;">{{ t.amount }}</div>
@@ -815,7 +885,7 @@
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px;">
               <div style="padding:14px 20px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; color:var(--text-2);">Breakdown · junho</div>
               <sc-for list="{{ salBreakdown }}" as="row" hint-placeholder-count="5">
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 20px; border-bottom:1px solid var(--border);">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 20px; border-bottom:1px solid var(--border); transition:background .12s;" style-hover="background:var(--surface-2)">
                   <div style="display:flex; align-items:center; gap:10px;"><span style="width:8px; height:8px; border-radius:3px; background:{{ row.dotColor }};"></span><span style="font-size:13.5px; color:{{ row.labelColor }}; font-weight:{{ row.weight }};">{{ row.label }}</span></div>
                   <span style="font-size:14px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ row.valueColor }};">{{ row.value }}</span>
                 </div>
@@ -844,7 +914,7 @@
             </div>
             <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px;">
               <sc-for list="{{ metas }}" as="m" hint-placeholder-count="4">
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s;" style-hover="border-color:var(--border-2); transform:translateY(-3px); box-shadow:var(--sh-2)">
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
                     <div style="display:flex; align-items:center; gap:10px;">
                       <div style="width:38px; height:38px; border-radius:11px; background:{{ m.iconBg }}; display:flex; align-items:center; justify-content:center; color:{{ m.iconColor }};">{{ m.iconEl }}</div>
@@ -870,13 +940,13 @@
             <div style="padding:22px 28px 14px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-shrink:0;">
               <div><h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Ideias</h1><p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">Banco de ideias — capture qualquer coisa, refine depois</p></div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <button onClick="{{ openDrawerIdeia }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}<span>Nova ideia</span></button>
+                <button onClick="{{ openDrawerIdeia }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nova ideia</span></button>
               </div>
             </div>
             <div style="flex:1; overflow-y:auto; padding:0 28px 32px;">
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:13px;">
                 <sc-for list="{{ ideiasView }}" as="idea" hint-placeholder-count="6">
-                  <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px; cursor:pointer; transition:border-color .12s;" style-hover="border-color:var(--border-2)">
+                  <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .3s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 30ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:11px;">
                       <div style="font-size:14px; font-weight:500; line-height:1.35; flex:1;">{{ idea.title }}</div>
                       <span style="display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ idea.statusColor }}; background:{{ idea.statusBg }}; flex-shrink:0;">{{ idea.status }}</span>
@@ -910,22 +980,22 @@
               <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">7 nós · em progresso</span>
               <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
                 <button style="height:28px; padding:0 12px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:7px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Templates</button>
-                <button onClick="{{ addWfNode }}" style="display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; border:none; background:var(--accent); color:#fff; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}<span>Nó</span></button>
+                <button onClick="{{ addWfNode }}" style="display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; border:none; background:var(--accent); color:#fff; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nó</span></button>
               </div>
             </div>
             <div style="flex:1; overflow:auto; background:var(--bg); position:relative;" id="wf-canvas">
               <div style="position:relative; width:1120px; height:460px; margin:30px;">
                 <svg style="position:absolute; inset:0; width:1120px; height:460px; pointer-events:none;" viewBox="0 0 1120 460" xmlns="http://www.w3.org/2000/svg">
-                  <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,.2)"></path></marker></defs>
-                  <path d="M190,180 C225,180 235,180 270,180" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M410,180 C445,180 455,180 490,180" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M630,180 C665,180 675,180 710,180" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M850,180 C885,180 895,180 930,180" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M780,212 C780,260 780,296 780,328" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr)"></path>
-                  <path d="M850,360 C885,360 895,360 930,360" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" marker-end="url(#arr)"></path>
+                  <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" style="fill:var(--wire)"></path></marker></defs>
+                  <path d="M190,180 C225,180 235,180 270,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
+                  <path d="M410,180 C445,180 455,180 490,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
+                  <path d="M630,180 C665,180 675,180 710,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
+                  <path d="M850,180 C885,180 895,180 930,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
+                  <path d="M780,212 C780,260 780,296 780,328" fill="none" style="stroke:var(--wire)" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr)"></path>
+                  <path d="M850,360 C885,360 895,360 930,360" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
                 </svg>
                 <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="7">
-                  <div onClick="{{ openDrawer }}" style="position:absolute; left:{{ nd.left }}; top:{{ nd.top }}; width:140px; background:{{ nd.bg }}; border:1px solid {{ nd.borderColor }}; border-radius:12px; padding:12px 13px; cursor:pointer; transition:border-color .15s, transform .15s; box-shadow:var(--sh-2);" style-hover="transform:translateY(-2px); border-color:var(--accent)">
+                  <div onClick="{{ openDrawer }}" style="position:absolute; left:{{ nd.left }}; top:{{ nd.top }}; width:140px; background:{{ nd.bg }}; border:1px solid {{ nd.borderColor }}; border-radius:12px; padding:12px 13px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-2);" style-hover="transform:translateY(-3px) scale(1.02); border-color:var(--accent); box-shadow:var(--sh-3)">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
                       <span style="font-size:9.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:{{ nd.typeColor }};">{{ nd.type }}</span>
                       <span style="width:8px; height:8px; border-radius:50%; background:{{ nd.statusColor }};"></span>
@@ -992,7 +1062,14 @@
                       <div style="width:28px; height:28px; border-radius:8px; background:var(--accent-weak); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:var(--accent);">{{ iconSpark }}</div>
                     </sc-if>
                     <sc-if value="{{ msg.isText }}" hint-placeholder-val="{{ true }}">
-                      <div style="max-width:72%; padding:12px 15px; border-radius:{{ msg.radius }}; background:{{ msg.bg }}; border:{{ msg.border }}; font-size:13.5px; line-height:1.55; color:var(--text); white-space:pre-line;">{{ msg.text }}</div>
+                      <div style="max-width:72%; padding:12px 15px; border-radius:{{ msg.radius }}; background:{{ msg.bg }}; border:{{ msg.border }}; font-size:13.5px; line-height:1.55; color:var(--text); white-space:pre-line; animation:cc-rise .22s ease both;">{{ msg.text }}</div>
+                    </sc-if>
+                    <sc-if value="{{ msg.isLoading }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex; align-items:center; gap:5px; padding:14px 16px; border-radius:{{ msg.radius }}; background:{{ msg.bg }}; border:{{ msg.border }};">
+                        <span style="width:6px; height:6px; border-radius:50%; background:var(--text-3); animation:cc-dot 1.1s ease-in-out infinite; animation-delay:0ms;"></span>
+                        <span style="width:6px; height:6px; border-radius:50%; background:var(--text-3); animation:cc-dot 1.1s ease-in-out infinite; animation-delay:150ms;"></span>
+                        <span style="width:6px; height:6px; border-radius:50%; background:var(--text-3); animation:cc-dot 1.1s ease-in-out infinite; animation-delay:300ms;"></span>
+                      </div>
                     </sc-if>
                     <sc-if value="{{ msg.isAction }}" hint-placeholder-val="{{ false }}">
                       <div style="max-width:72%; padding:13px 15px; border-radius:12px 12px 12px 3px; background:var(--surface); border:1px solid var(--accent); font-size:13px; line-height:1.5; color:var(--text); display:flex; flex-direction:column; gap:10px;">
@@ -1000,7 +1077,7 @@
                         <div>{{ msg.actionSummary }}</div>
                         <sc-if value="{{ msg.actionPending }}" hint-placeholder-val="{{ true }}">
                           <div style="display:flex; gap:8px;">
-                            <button onClick="{{ msg.onConfirm }}" style="flex:1; height:30px; border:none; background:var(--accent); color:#fff; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)">Confirmar</button>
+                            <button onClick="{{ msg.onConfirm }}" style="flex:1; height:30px; border:none; background:var(--accent); color:#fff; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">Confirmar</button>
                             <button onClick="{{ msg.onReject }}" style="flex:1; height:30px; border:1px solid var(--border-2); background:transparent; color:var(--text-2); border-radius:7px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
                           </div>
                         </sc-if>
@@ -1019,7 +1096,7 @@
                 <div style="display:flex; align-items:center; gap:10px; padding:0 14px; height:44px; background:var(--surface); border:1px solid var(--border-2); border-radius:12px;" style-focus-within="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)">
                   {{ iconSpark }}
                   <input placeholder="Peça ajuda para planejar, escrever, organizar…" value="{{ chatInput }}" onInput="{{ chatInputChange }}" onKeyDown="{{ chatInputKeyDown }}" style="flex:1; border:none; background:transparent; color:var(--text); font:inherit; font-size:13.5px; outline:none;" />
-                  <button onClick="{{ chatSend }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:none; background:var(--accent); color:#fff; border-radius:9px; cursor:pointer;" style-hover="background:var(--accent-2)">{{ iconSend }}</button>
+                  <button onClick="{{ chatSend }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:none; background:var(--accent); color:#fff; border-radius:9px; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconSend }}</button>
                 </div>
               </div>
             </div>
@@ -1038,8 +1115,8 @@
 
       </main>
 
-      <!-- ======= SIDE DRAWER ======= -->
-      <sc-if value="{{ drawer }}" hint-placeholder-val="{{ false }}">
+      <!-- ======= SIDE DRAWER (somente demanda — criar e editar) ======= -->
+      <sc-if value="{{ isLateralDrawerOpen }}" hint-placeholder-val="{{ false }}">
         <div onClick="{{ closeDrawer }}" style="position:absolute; inset:0; background:rgba(5,6,7,.55); backdrop-filter:blur(2px); z-index:20; animation:cc-scrim .18s ease both;"></div>
         <div style="position:absolute; top:0; right:0; bottom:0; width:min(480px,82%); background:var(--bg); border-left:1px solid var(--border-2); box-shadow:var(--sh-3); z-index:21; display:flex; flex-direction:column; animation:cc-drawer .24s cubic-bezier(.4,0,.2,1) both;">
           <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border);">
@@ -1050,8 +1127,6 @@
             <button onClick="{{ closeDrawer }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:9px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconClose }}</button>
           </div>
 
-          <!-- ===== MODO: DEMANDA ===== -->
-          <sc-if value="{{ isDrawerDemanda }}" hint-placeholder-val="{{ true }}">
           <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px;">
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Título</label>
@@ -1083,9 +1158,9 @@
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Prioridade</label>
               <div style="display:flex; gap:6px; max-width:300px;">
-                <span onClick="{{ drawerSetLow }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:12px; font-weight:{{ drawerPrioLowWeight }}; color:{{ drawerPrioLowColor }}; background:{{ drawerPrioLowBg }}; border:1px solid {{ drawerPrioLowBorder }}; cursor:pointer; transition:all .12s;">Baixa</span>
-                <span onClick="{{ drawerSetMed }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:12px; font-weight:{{ drawerPrioMedWeight }}; color:{{ drawerPrioMedColor }}; background:{{ drawerPrioMedBg }}; border:1px solid {{ drawerPrioMedBorder }}; cursor:pointer; transition:all .12s;">Média</span>
-                <span onClick="{{ drawerSetHigh }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:12px; font-weight:{{ drawerPrioHighWeight }}; color:{{ drawerPrioHighColor }}; background:{{ drawerPrioHighBg }}; border:1px solid {{ drawerPrioHighBorder }}; cursor:pointer; transition:all .12s;">Alta</span>
+                <span onClick="{{ drawerSetLow }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:12px; font-weight:{{ drawerPrioLowWeight }}; color:{{ drawerPrioLowColor }}; background:{{ drawerPrioLowBg }}; border:1px solid {{ drawerPrioLowBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">Baixa</span>
+                <span onClick="{{ drawerSetMed }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:12px; font-weight:{{ drawerPrioMedWeight }}; color:{{ drawerPrioMedColor }}; background:{{ drawerPrioMedBg }}; border:1px solid {{ drawerPrioMedBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">Média</span>
+                <span onClick="{{ drawerSetHigh }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:12px; font-weight:{{ drawerPrioHighWeight }}; color:{{ drawerPrioHighColor }}; background:{{ drawerPrioHighBg }}; border:1px solid {{ drawerPrioHighBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">Alta</span>
               </div>
             </div>
             <div>
@@ -1097,7 +1172,7 @@
               <div style="display:flex; flex-direction:column; gap:8px;">
                 <sc-for list="{{ drawerChecklistItems }}" as="ci" hint-placeholder-count="3">
                   <div onClick="{{ ci.toggle }}" style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer; color:{{ ci.textColor }}; user-select:none;">
-                    <span style="width:18px; height:18px; border-radius:6px; border:1px solid {{ ci.checkBorder }}; background:{{ ci.checkBg }}; display:flex; align-items:center; justify-content:center; color:{{ ci.checkColor }}; flex:0 0 auto; transition:all .15s;">{{ ci.checkIcon }}</span>
+                    <span style="width:18px; height:18px; border-radius:6px; border:1px solid {{ ci.checkBorder }}; background:{{ ci.checkBg }}; display:flex; align-items:center; justify-content:center; color:{{ ci.checkColor }}; flex:0 0 auto; transition:all .15s;" style-active="transform:scale(.85)">{{ ci.checkIcon }}</span>
                     <span style="text-decoration:{{ ci.textDecor }};">{{ ci.label }}</span>
                   </div>
                 </sc-for>
@@ -1106,11 +1181,29 @@
             </div>
             <div style="display:flex; align-items:center; gap:10px; padding:13px; border:1px dashed var(--border-2); border-radius:10px; color:var(--text-3); font-size:12.5px; cursor:pointer;">{{ iconClip }}<span>Anexar arquivos ou referências</span></div>
           </div>
-          </sc-if>
+
+          <div style="display:flex; align-items:center; gap:10px; padding:16px 20px; border-top:1px solid var(--border);">
+            <button onClick="{{ submitDrawer }}" style="flex:1; height:40px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ drawerCta }}</button>
+            <button onClick="{{ closeDrawer }}" style="height:40px; padding:0 18px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:13.5px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ======= PAINEL CENTRAL DE CRIAÇÃO (cliente/prospecto/lançamento/ideia) ======= -->
+      <sc-if value="{{ isEntityPanelOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeDrawer }}" style="position:absolute; inset:0; background:rgba(5,6,7,.6); backdrop-filter:blur(3px); z-index:20; animation:cc-scrim .18s ease both;"></div>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(640px,90%); max-height:86vh; background:var(--bg); border:1px solid var(--border-2); border-radius:20px; box-shadow:var(--sh-3); z-index:21; display:flex; flex-direction:column; overflow:hidden; animation:cc-pop .28s cubic-bezier(.4,0,.2,1) both;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:26px 28px 20px; border-bottom:1px solid var(--border); background:linear-gradient(150deg, var(--accent-weak), transparent);">
+            <div>
+              <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">{{ drawerLabel }}</div>
+              <h2 style="margin:0; font-size:20px; font-weight:600; letter-spacing:-.3px;">{{ drawerTitle }}</h2>
+            </div>
+            <button onClick="{{ closeDrawer }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:9px; cursor:pointer; flex:0 0 auto;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconClose }}</button>
+          </div>
 
           <!-- ===== MODO: CLIENTE ===== -->
           <sc-if value="{{ isDrawerCliente }}" hint-placeholder-val="{{ false }}">
-          <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px;">
+          <div style="flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px;">
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Nome do cliente</label>
               <input value="{{ clienteNome }}" onInput="{{ clienteNomeChange }}" placeholder="Ex: Luso Automóveis" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
@@ -1141,7 +1234,7 @@
 
           <!-- ===== MODO: PROSPECTO ===== -->
           <sc-if value="{{ isDrawerProspecto }}" hint-placeholder-val="{{ false }}">
-          <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px;">
+          <div style="flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px;">
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Nome / empresa</label>
               <input value="{{ prospectoNome }}" onInput="{{ prospectoNomeChange }}" placeholder="Ex: Bistro Paulista" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
@@ -1167,7 +1260,7 @@
 
           <!-- ===== MODO: LANÇAMENTO ===== -->
           <sc-if value="{{ isDrawerLancamento }}" hint-placeholder-val="{{ false }}">
-          <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px;">
+          <div style="flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px;">
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Tipo</label>
               <div style="display:flex; gap:8px;">
@@ -1194,7 +1287,7 @@
 
           <!-- ===== MODO: IDEIA ===== -->
           <sc-if value="{{ isDrawerIdeia }}" hint-placeholder-val="{{ false }}">
-          <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:18px;">
+          <div style="flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px;">
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Título da ideia</label>
               <input value="{{ ideiaTitulo }}" onInput="{{ ideiaTituloChange }}" placeholder="Ex: Série bastidores da agência — ep. 1 ao 6" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
@@ -1215,9 +1308,9 @@
           </div>
           </sc-if>
 
-          <div style="display:flex; align-items:center; gap:10px; padding:16px 20px; border-top:1px solid var(--border);">
-            <button onClick="{{ submitDrawer }}" style="flex:1; height:40px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)">{{ drawerCta }}</button>
-            <button onClick="{{ closeDrawer }}" style="height:40px; padding:0 18px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:13.5px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
+          <div style="display:flex; align-items:center; gap:10px; padding:18px 28px; border-top:1px solid var(--border);">
+            <button onClick="{{ submitDrawer }}" style="flex:1; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 16px rgba(82,133,240,.4);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ drawerCta }}</button>
+            <button onClick="{{ closeDrawer }}" style="height:42px; padding:0 20px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:10px; font:inherit; font-size:14px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
           </div>
         </div>
       </sc-if>
@@ -1225,7 +1318,7 @@
       <!-- BUSCA (⌘K) -->
       <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
         <div onClick="{{ closeSearch }}" style="position:absolute; inset:0; background:rgba(5,6,7,.55); backdrop-filter:blur(2px); z-index:24; animation:cc-scrim .18s ease both;"></div>
-        <div style="position:absolute; top:84px; left:50%; transform:translateX(-50%); width:min(560px,86%); max-height:min(460px,68vh); background:var(--bg); border:1px solid var(--border-2); border-radius:14px; box-shadow:var(--sh-3); z-index:25; display:flex; flex-direction:column; overflow:hidden; animation:cc-drawer .2s cubic-bezier(.4,0,.2,1) both;">
+        <div style="position:absolute; top:84px; left:50%; transform:translateX(-50%); width:min(560px,86%); max-height:min(460px,68vh); background:var(--bg); border:1px solid var(--border-2); border-radius:14px; box-shadow:var(--sh-3); z-index:25; display:flex; flex-direction:column; overflow:hidden; animation:cc-search-pop .2s cubic-bezier(.4,0,.2,1) both;">
           <div style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
             {{ iconSearch }}
             <input value="{{ searchQuery }}" onInput="{{ searchInputChange }}" autofocus="true" placeholder="Buscar demandas, clientes, prospectos…" style="flex:1; min-width:0; border:none; outline:none; background:transparent; color:var(--text); font:inherit; font-size:14px;" />
@@ -1233,7 +1326,7 @@
           </div>
           <div style="flex:1; overflow-y:auto; padding:6px;">
             <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="3">
-              <div onClick="{{ r.onClick }}" style="display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:9px; cursor:pointer; transition:background .1s;" style-hover="background:var(--surface-2)">
+              <div onClick="{{ r.onClick }}" style="display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:9px; cursor:pointer; transition:background .1s; animation:cc-rise .22s ease both; animation-delay: calc({{ $index }} * 25ms);" style-hover="background:var(--surface-2)" style-active="transform:scale(.98)">
                 <div style="width:30px; height:30px; border-radius:8px; background:{{ r.bg }}; display:flex; align-items:center; justify-content:center; color:{{ r.color }}; flex:0 0 auto;">{{ r.iconEl }}</div>
                 <div style="flex:1; min-width:0;">
                   <div style="font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.label }}</div>
@@ -1303,6 +1396,9 @@ class Component extends DCLogic {
       }
     };
     window.addEventListener('keydown', this._onKeyDown);
+
+    // sincroniza o modo (claro/escuro) já aplicado pelo script do <head>
+    this.setState({ mode: document.documentElement.getAttribute('data-theme') || 'dark' });
 
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json().catch(() => ({ ok: false })))
@@ -1387,6 +1483,8 @@ class Component extends DCLogic {
       userPlus: ["M15 19v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "M8.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z", "M19 8v6", "M22 11h-6"],
       folder: ["M3 7.5A1.5 1.5 0 0 1 4.5 6h3.8a1.5 1.5 0 0 1 1.2.6l1 1.4h6A1.5 1.5 0 0 1 19 9.5v8A1.5 1.5 0 0 1 17.5 19h-13A1.5 1.5 0 0 1 3 17.5z"],
       code: ["m9 8-4 4 4 4", "m15 8 4 4-4 4"],
+      sun: ["M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M12 2v2", "M12 20v2", "M4.9 4.9l1.4 1.4", "M17.7 17.7l1.4 1.4", "M2 12h2", "M20 12h2", "M6.3 17.7l-1.4 1.4", "M19.1 4.9l-1.4 1.4"],
+      moon: ["M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"],
     };
     const d = P[name] || [];
     return React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: sw, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: '0 0 auto' } }, d.map((dd, i) => React.createElement('path', { key: i, d: dd })));
@@ -1528,7 +1626,10 @@ class Component extends DCLogic {
       const cl = clients.find(c => c.id === d.clientId);
       const ti = typeIcons[d.type] || 'image';
       return { title:d.title, client:cl?cl.nome:'Pessoal', clientColor:cl?cl.color:'var(--text-3)', type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
-        deleteIcon:this.icon('close',11,2), onClick:() => editDemanda(d), onDelete:(e) => { e.stopPropagation(); deleteDemanda(d.id); }, onDragStart:(e) => { e.dataTransfer.setData('text/plain', String(d.id)); } };
+        dragOpacity: s.draggingId===d.id ? '.35' : '1',
+        deleteIcon:this.icon('close',11,2), onClick:() => editDemanda(d), onDelete:(e) => { e.stopPropagation(); deleteDemanda(d.id); },
+        onDragStart:(e) => { e.dataTransfer.setData('text/plain', String(d.id)); this.setState({ draggingId: d.id }); },
+        onDragEnd:() => this.setState({ draggingId: null, dragOverCol: null }) };
     };
     const mkLane = (d, editable) => {
       const ti = typeIcons[d.type] || 'image';
@@ -1547,8 +1648,12 @@ class Component extends DCLogic {
       { name:'Em revisão', status:'rev', color:'var(--warn)' },
       { name:'Entregue', status:'done', color:'var(--ok)' },
     ].map(col => ({ name:col.name, color:col.color, status:col.status, count:demands.filter(d=>d.status===col.status).length, cards:demands.filter(d=>d.status===col.status).map(mkCard),
+      dropBg: s.dragOverCol===col.status ? 'var(--accent-weak)' : 'transparent',
+      dropBorder: s.dragOverCol===col.status ? 'var(--accent)' : 'transparent',
       onDragOver:(e) => e.preventDefault(),
-      onDrop:(e) => { e.preventDefault(); const id = parseInt(e.dataTransfer.getData('text/plain'), 10); if (!id) return; this.setState({ demands: demands.map(d => d.id===id ? { ...d, status: col.status } : d) }); },
+      onDragEnter:(e) => { e.preventDefault(); if (s.dragOverCol!==col.status) this.setState({ dragOverCol: col.status }); },
+      onDragLeave:() => this.setState({ dragOverCol: null }),
+      onDrop:(e) => { e.preventDefault(); const id = parseInt(e.dataTransfer.getData('text/plain'), 10); this.setState({ dragOverCol: null, draggingId: null }); if (!id) return; this.setState({ demands: demands.map(d => d.id===id ? { ...d, status: col.status } : d) }); },
     }));
 
     // ---- por cliente: lanes ----
@@ -1633,7 +1738,7 @@ class Component extends DCLogic {
       const first = openD[0];
       const pagDia = parseInt(cl.pagDia, 10) || null;
       const isLate = cl.tipo === 'fixo' && pagDia && todayReal.getDate() > pagDia;
-      return { name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
+      return { id:cl.id, name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
         deleteIcon:this.icon('close',12,2), onEdit:() => editCliente(cl), onDelete:() => deleteCliente(cl.id) };
     });
     const pipeline = [
@@ -1642,7 +1747,7 @@ class Component extends DCLogic {
       { label:'Ativo', color:'var(--ok)', bg:'transparent', count:clients.length.toString(), names:clients.map(c=>c.nome) },
       { label:'Pausa / Encerrado', color:'var(--text-3)', bg:'transparent', count:'0', names:[] },
     ];
-    const prospects = prospectos.map(p => ({ initials:p.nome.split(' ').filter(w=>w).slice(0,2).map(w=>w[0]).join('').toUpperCase(), name:p.nome, meta:[p.segmento,p.obs].filter(Boolean).join(' · '), stage:p.etapa||'Prospecção',
+    const prospects = prospectos.map(p => ({ id:p.id, initials:p.nome.split(' ').filter(w=>w).slice(0,2).map(w=>w[0]).join('').toUpperCase(), name:p.nome, meta:[p.segmento,p.obs].filter(Boolean).join(' · '), stage:p.etapa||'Prospecção',
       deleteIcon:this.icon('close',12,2), onClick:() => editProspecto(p), onDelete:(e) => { e.stopPropagation(); deleteProspecto(p.id); } }));
 
     // ---- FINANCEIRO ----
@@ -1860,7 +1965,7 @@ class Component extends DCLogic {
       { isAi:false, isAction:false, isText:true, flex:'row-reverse', text:'Escreve a legenda do Reels do gol histórico 90+', bg:'var(--accent)', border:'none', radius:'12px 12px 3px 12px' },
       { isAi:true, isAction:false, isText:true, flex:'row', text:'Aqui vai uma sugestão de legenda:\n\n"Que momento histórico. O gol que parou o Maracanã em 1990 — sentiu o frio na barriga? Se você viveu isso, comenta aqui! Salva pro seu amigo mais flamenguista."\n\nHashtags sugeridas: #Flamengo #GolHistórico #Flamenguismo1990 #MengoNaCopa', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' },
     ];
-    const chatMessages = [...baseChatMessages, ...(s.chatExtra||[]), ...(s.chatLoading ? [{ isAi:true, isAction:false, isText:true, flex:'row', text:'Pensando…', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' }] : [])];
+    const chatMessages = [...baseChatMessages, ...(s.chatExtra||[]), ...(s.chatLoading ? [{ isAi:true, isAction:false, isText:false, isLoading:true, flex:'row', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' }] : [])];
 
     const bv = s.boardView || 'cliente';
 
@@ -1919,6 +2024,15 @@ class Component extends DCLogic {
       navTop: nav.top.map(i => this.decorate(i)),
       navBottom: nav.bottom.map(i => this.decorate(i)),
       toggleSidebar: () => this.setState({ collapsed: !s.collapsed }),
+      toggleTheme: () => {
+        const cur = s.mode || document.documentElement.getAttribute('data-theme') || 'dark';
+        const mode = cur === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem('cdc-theme', mode); } catch (e) {}
+        document.documentElement.setAttribute('data-theme', mode);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', mode === 'light' ? '#e7e9ed' : '#0d0e10');
+        this.setState({ mode });
+      },
       go: (id) => this.go(id),
       goSystem: () => this.go('system'),
       goDemandas: () => this.go('demandas'),
@@ -1927,7 +2041,7 @@ class Component extends DCLogic {
       openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', drawerEditId: null, prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
       openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', drawerEditId: null, lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
       openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia', drawerEditId: null, ideiaTitulo:'', ideiaCategoria:'Pessoal', ideiaObs:'' }),
-      closeDrawer: () => this.setState({ drawer: false }),
+      closeDrawer: () => this.setState({ drawer: false, drawerEditId: null }),
       submitDrawer: () => {
         const mode = s.drawerMode||'demanda';
         const editId = s.drawerEditId||null;
@@ -1993,6 +2107,8 @@ class Component extends DCLogic {
         this._t = setTimeout(() => this.setState({ toast:null }), 2600);
       },
       addWfNode: () => { const extra = [...(s.wfNodesExtra||[])]; extra.push({ title:'Novo nó' }); this.setState({ wfNodesExtra: extra }); },
+      isLateralDrawerOpen: s.drawer && (s.drawerMode||'demanda') === 'demanda',
+      isEntityPanelOpen: s.drawer && (s.drawerMode||'demanda') !== 'demanda',
       isDrawerDemanda: (s.drawerMode||'demanda') === 'demanda',
       isDrawerCliente: s.drawerMode === 'cliente',
       isDrawerProspecto: s.drawerMode === 'prospecto',
@@ -2114,6 +2230,8 @@ class Component extends DCLogic {
       iconPersonal: this.icon('folder', 16, 1.7),
       neutralSwatches, accentSwatches, typeScale, spacing, radii, barData, progress, transactions, toasts, types,
       iconSidebar: this.icon('sidebar', 16, 1.7),
+      iconTheme: this.icon((s.mode || 'dark') === 'light' ? 'moon' : 'sun', 16, 1.7),
+      themeTitle: (s.mode || 'dark') === 'light' ? 'Tema escuro' : 'Tema claro',
       iconSearch: this.icon('search', 14, 1.7),
       iconGrid: this.icon('grid', 14, 1.7),
       iconBell: this.icon('bell', 15, 1.7),
