@@ -190,7 +190,9 @@ Como funciona:
 
 Quase tudo já era variável (1138 usos de `var(--*)`), então a paleta clara foi uma **redefinição de variáveis**, não uma reescrita. Persistência via `localStorage` (preferência local do dispositivo, não vai pro backend).
 
-**⚠️ Telas/elementos ainda hardcoded (não vêm do `state`, então não respondem ao reset nem ao CRUD):** a tela **Início** inteira (KPIs, "Demandas de hoje", "Demandas futuras", "Atividades recentes" — tudo dados de exemplo fixos no template), os **badges da sidebar** (`Demandas 12`, `Clientes 5`), e provavelmente partes de **Metas/Salário/Calendário**. Pro app virar o ERP real (rumo ao .exe), essas telas precisam ser conectadas ao `state` ou ter os exemplos removidos. Descoberto no QA de 2026-06-19; decisão de tratamento em aberto.
+**Telas/elementos que eram hardcoded:**
+- ✅ **Início** e **badges da sidebar** — resolvidos em 2026-06-19 (ver changelog): KPIs/listas da Início e os badges agora **derivam do `state`** (0/empty quando vazio, dados reais quando há). "Atividades recentes" fica em empty state fixo (ainda não há um log de atividades real no modelo de dados).
+- ⏳ **Ainda hardcoded:** provavelmente partes de **Metas/Salário/Calendário** (cards/valores de exemplo) e a data fixa "Segunda · 15 de junho" no header da Início. Conectar conforme for necessário rumo ao app real.
 
 ## Roadmap até o .exe
 
@@ -315,3 +317,8 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
 - **2026-06-19 — Tema claro/escuro alternável (a pedido do usuário "coloque em versão clara tb, pra poder ser alterado"):**
   - `Centro de Comando.dc.html`: blocos `:root[data-theme=dark/light]` no `<head>` estático com a paleta completa + novas vars (`--app-bg`, `--app-gradient`, `--scrollbar`, `--wire`); anti-flash script; botão ☾/☀ no titlebar; ícones `sun`/`moon`; handler `toggleTheme`; `componentDidMount` sincroniza o `mode`; helmet e root div ajustados pra usar as vars; fios do Workflow via `--wire`. Ver seção "Tema claro/escuro" acima.
   - **Verificação (Playwright):** alterna dark↔light, **persiste no reload**, cores batem com a paleta (body `#060708`↔`#e4e7eb`, texto `#e9eaec`↔`#1b1f27`), dark intacto após a refatoração, navegação e empty states OK no claro, **zero erros de console**. Screenshots dos dois temas conferidos. Temporários e `playwright` (--no-save) removidos ao final.
+- **2026-06-19 — Tela Início conectada ao state + badges dinâmicos (a pedido do usuário, pós-reset):**
+  - A Início era 100% hardcoded (KPIs `12/8/R$6.450`, "Luso Automóveis", "Flamenguismo 90+") e não respondia ao reset. Agora os 4 KPIs ("Demandas ativas", "Entregas", "A receber", "Vencendo hoje"), as listas "Demandas de hoje" e "Demandas futuras", e o subtítulo do header **derivam de `s.demands`/`s.clients`/`s.lancamentos`**. "Atividades recentes" fica em empty state (sem fonte real ainda).
+  - **Empty states** novos nas 3 seções quando vazias ("Nenhuma demanda pra hoje/futura", "Nenhuma atividade recente"); subtítulo vira "Nenhuma demanda cadastrada ainda — comece criando uma."
+  - **Badges da sidebar** (`Demandas`/`Clientes`) agora são a contagem real do `state` e **somem quando 0** (eram fixos `12`/`5`).
+  - **Verificação (Playwright):** com o banco vazio → todos os KPIs em 0/R$0,00, os 3 empty states presentes, sem "Luso/Flamenguismo", badges sumidos; ao injetar 1 demanda → aparece em "Demandas futuras", empty state some, badge vira "1". Zero erros de console. Screenshot da Início vazia conferido. Estado deixado vazio (limpo) ao final.

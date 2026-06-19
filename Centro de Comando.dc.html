@@ -208,7 +208,7 @@
               <div>
                 <div style="font-size:13px; color:var(--text-3); margin-bottom:4px;">Segunda · 15 de junho</div>
                 <h1 style="margin:0; font-size:25px; font-weight:600; letter-spacing:-.4px;">Boa tarde, Rafael</h1>
-                <p style="margin:6px 0 0; font-size:13.5px; color:var(--text-2);">Você tem <span style="color:var(--text); font-weight:500;">4 demandas</span> pra hoje · <span style="color:var(--warn);">2 vencem em breve</span></p>
+                <p style="margin:6px 0 0; font-size:13.5px; color:var(--text-2);">{{ inicioResumo }}</p>
               </div>
               <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:8px; height:38px; padding:0 16px; border:none; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
             </div>
@@ -233,7 +233,7 @@
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:13px;">
               <div style="display:flex; align-items:center; gap:10px;">
                 <h2 style="margin:0; font-size:16px; font-weight:600; letter-spacing:-.2px;">Demandas de hoje</h2>
-                <span style="font-size:12px; font-family:'Geist Mono',monospace; color:var(--text-3); background:var(--surface-2); border-radius:20px; padding:2px 9px;">4</span>
+                <span style="font-size:12px; font-family:'Geist Mono',monospace; color:var(--text-3); background:var(--surface-2); border-radius:20px; padding:2px 9px;">{{ hojeCount }}</span>
               </div>
               <button onClick="{{ goDemandas }}" style="display:flex; align-items:center; gap:5px; border:none; background:transparent; color:var(--text-2); font:inherit; font-size:12.5px; cursor:pointer; padding:4px 6px; border-radius:7px;" style-hover="color:var(--text); background:var(--surface-2)"><span>Ver board</span>{{ iconChevR }}</button>
             </div>
@@ -258,6 +258,9 @@
                   </div>
                 </div>
               </sc-for>
+              <sc-if value="{{ hojeEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="grid-column:1/-1; padding:30px; text-align:center; color:var(--text-3); font-size:13px; border:1px dashed var(--border-2); border-radius:12px;">Nenhuma demanda pra hoje.</div>
+              </sc-if>
             </div>
 
             <!-- duas colunas: futuras + atividades -->
@@ -278,6 +281,9 @@
                       </div>
                     </div>
                   </sc-for>
+                  <sc-if value="{{ futurasEmpty }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:26px; text-align:center; color:var(--text-3); font-size:13px;">Nenhuma demanda futura.</div>
+                  </sc-if>
                 </div>
               </div>
 
@@ -293,6 +299,9 @@
                       </div>
                     </div>
                   </sc-for>
+                  <sc-if value="{{ atividadesEmpty }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:20px 8px; color:var(--text-3); font-size:13px;">Nenhuma atividade recente.</div>
+                  </sc-if>
                 </div>
               </div>
             </div>
@@ -1512,12 +1521,14 @@ class Component extends DCLogic {
   componentDidUpdate() { this.applyTheme(); }
 
   navData() {
+    const nD = (this.state.demands || []).length;
+    const nC = (this.state.clients || []).length;
     return {
       top: [
         { id: 'inicio', label: 'Início', icon: 'home' },
-        { id: 'demandas', label: 'Demandas', icon: 'board', badge: '12' },
+        { id: 'demandas', label: 'Demandas', icon: 'board', badge: nD ? String(nD) : null },
         { id: 'calendario', label: 'Calendário', icon: 'calendar' },
-        { id: 'clientes', label: 'Clientes', icon: 'users', badge: '5' },
+        { id: 'clientes', label: 'Clientes', icon: 'users', badge: nC ? String(nC) : null },
         { id: 'pessoal', label: 'Pessoal', icon: 'folder' },
         { id: 'ideias', label: 'Ideias', icon: 'bulb' },
         { id: 'workflow', label: 'Workflow', icon: 'workflow' },
@@ -1574,32 +1585,40 @@ class Component extends DCLogic {
       done: { l: 'Entregue', c: 'var(--ok)', bg: 'var(--ok-weak)' },
     };
 
-    const hoje = [
-      { title: 'Edição vídeo test-drive — SUV', client: 'Luso Automóveis', cc: C.luso, st: 'prod', due: 'Hoje · 17:00', dc: dueAmber, type: 'Vídeo', ti: 'video', accent: C.luso },
-      { title: 'Reels: gol histórico 90+', client: 'Flamenguismo 90+', cc: C.flam, st: 'rev', due: 'Hoje · 14:30', dc: dueRed, type: 'Reels', ti: 'video', accent: C.flam },
-      { title: 'Anúncio Meta — seminovos', client: 'Luso Automóveis', cc: C.luso, st: 'todo', due: 'Hoje', dc: dueMute, type: 'Anúncio', ti: 'megaphone', accent: C.luso },
-      { title: 'Arte de capa — rodada', client: 'Flamenguismo 90+', cc: C.flam, st: 'todo', due: 'Hoje · 19:00', dc: dueAmber, type: 'Arte', ti: 'image', accent: C.flam },
-    ].map(d => ({ title: d.title, client: d.client, clientColor: d.cc, accent: d.accent, status: stat[d.st].l, statusColor: stat[d.st].c, statusBg: stat[d.st].bg, due: d.due, dueColor: d.dc, type: d.type, iconClock: this.icon('clock', 14, 1.7), iconType: this.icon(d.ti, 14, 1.6) }));
+    // Início: KPIs e listas derivam do state real (vazios => empty state).
+    // Antes eram exemplos fixos (Luso, Flamenguismo). "Conectar de verdade" depois.
+    const _demHome = s.demands || [];
+    const _cliHome = s.clients || [];
+    const _tLabelHome = { video:'Vídeo', megaphone:'Anúncio', image:'Arte', layers:'Social', type:'Legenda', code:'Site', bulb:'Estudo' };
+    const _tIconHome = { video:'video', megaphone:'megaphone', image:'image', layers:'layers', type:'type', code:'code', bulb:'bulb' };
+    const _cliOfHome = (id) => _cliHome.find(c => c.id === id);
+    const _isHoje = (d) => /hoje/i.test(d.due || '');
 
-    const futuras = [
-      { title: 'Social media — calendário semanal', client: 'Luso Automóveis', cc: C.luso, type: 'Social', due: 'Amanhã', rel: '16 jun' },
-      { title: 'Legenda carrossel — bastidores', client: 'Flamenguismo 90+', cc: C.flam, type: 'Legenda', due: 'Quarta', rel: '18 jun' },
-      { title: 'Vídeo institucional 30s', client: 'Luso Automóveis', cc: C.luso, type: 'Vídeo', due: 'Quinta', rel: '19 jun' },
-    ].map(d => ({ title: d.title, client: d.client, clientColor: d.cc, type: d.type, due: d.due, dueRel: d.rel }));
+    const hoje = _demHome.filter(_isHoje).map(d => {
+      const cl = _cliOfHome(d.clientId); const st = stat[d.status] || stat.todo;
+      return { title:d.title, client: cl?cl.nome:'Pessoal', clientColor: cl?cl.color:'var(--text-3)', accent: cl?cl.color:'var(--accent)', status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due||'Hoje', dueColor: dueAmber, type: _tLabelHome[d.type]||'Arte', iconClock: this.icon('clock', 14, 1.7), iconType: this.icon(_tIconHome[d.type]||'image', 14, 1.6) };
+    });
 
-    const atividades = [
-      { text: "Você concluiu “Reels: bastidores treino”", time: 'há 2 horas', ic: 'check', color: 'var(--ok)', bg: 'var(--ok-weak)' },
-      { text: 'Novo comentário do cliente em “Anúncio seminovos”', time: 'há 4 horas', ic: 'msg', color: 'var(--info)', bg: 'var(--info-weak)' },
-      { text: 'Pagamento recebido de Luso Automóveis', time: 'ontem · ' + this.brl(1800), ic: 'dollar', color: 'var(--ok)', bg: 'var(--ok-weak)' },
-      { text: 'Demanda criada: “Arte de capa — rodada”', time: 'ontem', ic: 'plus', color: 'var(--text-2)', bg: 'var(--surface-3)' },
-    ].map(a => ({ text: a.text, time: a.time, color: a.color, bg: a.bg, iconEl: this.icon(a.ic, 15, 1.8) }));
+    const futuras = _demHome.filter(d => !_isHoje(d) && d.status !== 'done').slice(0, 6).map(d => {
+      const cl = _cliOfHome(d.clientId);
+      return { title:d.title, client: cl?cl.nome:'Pessoal', clientColor: cl?cl.color:'var(--text-3)', type: _tLabelHome[d.type]||'Arte', due: d.due||'Sem prazo', dueRel: '' };
+    });
 
+    // Sem log de atividades real ainda — fica vazio (empty state) até existir uma fonte.
+    const atividades = [];
+
+    const _aReceber = (s.lancamentos || []).filter(l => l.tipo === 'receita').reduce((a, l) => a + (Number(l.valorRaw) || 0), 0);
     const kpis = [
-      { label: 'Demandas ativas', value: '12', trend: '+3', tc: 'var(--ok)', ic: 'board', color: 'var(--accent)', mono: false },
-      { label: 'Entregas na semana', value: '8', trend: '90%', tc: 'var(--ok)', ic: 'check', color: 'var(--ok)', mono: false },
-      { label: 'A receber', value: this.brl(6450), trend: '4 faturas', tc: 'var(--text-3)', ic: 'wallet', color: 'var(--info)', mono: true },
-      { label: 'Vencendo hoje', value: '2', trend: 'atenção', tc: 'var(--warn)', ic: 'clock', color: 'var(--warn)', mono: false },
+      { label: 'Demandas ativas', value: String(_demHome.filter(d => d.status !== 'done').length), trend: '', tc: 'var(--ok)', ic: 'board', color: 'var(--accent)', mono: false },
+      { label: 'Entregas', value: String(_demHome.filter(d => d.status === 'done').length), trend: '', tc: 'var(--ok)', ic: 'check', color: 'var(--ok)', mono: false },
+      { label: 'A receber', value: this.brl(_aReceber), trend: '', tc: 'var(--text-3)', ic: 'wallet', color: 'var(--info)', mono: true },
+      { label: 'Vencendo hoje', value: String(_demHome.filter(_isHoje).length), trend: '', tc: 'var(--warn)', ic: 'clock', color: 'var(--warn)', mono: false },
     ].map(k => ({ label: k.label, value: k.value, trend: k.trend, trendColor: k.tc, iconEl: this.icon(k.ic, 15, 1.8), color: k.color, font: k.mono ? "'Geist Mono',monospace" : "'Geist',sans-serif" }));
+
+    const hojeCount = hoje.length;
+    const inicioResumo = _demHome.length === 0
+      ? 'Nenhuma demanda cadastrada ainda — comece criando uma.'
+      : (hojeCount > 0 ? (hojeCount + ' demanda(s) pra hoje') : 'Nada vencendo hoje.');
 
     // ---- DADOS DINÂMICOS ----
     const clients = s.clients || this._clients0;
@@ -2164,7 +2183,8 @@ class Component extends DCLogic {
       stubTitle: stub ? stub.t : '',
       stubDesc: stub ? stub.d : '',
       stubIcon: stub ? this.icon(stub.i, 28, 1.7) : null,
-      hoje, futuras, atividades, kpis, board,
+      hoje, futuras, atividades, kpis, board, hojeCount, inicioResumo,
+      hojeEmpty: hoje.length === 0, futurasEmpty: futuras.length === 0, atividadesEmpty: atividades.length === 0,
       clientLanes, personal, personalIdeas,
       clientTabs,
       activeClientCards: activeLane.cards,
