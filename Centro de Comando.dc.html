@@ -1700,6 +1700,12 @@ class Component extends DCLogic {
       const avatarBg = cl.color + '22';
       return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', cards:clD.map(mkLane) };
     });
+    // demandas sem cliente (ou cujo cliente foi removido) — aba "Avulsas" pra nunca sumirem do board por cliente
+    const avulsasD = demands.filter(d => !clients.some(c => c.id === d.clientId));
+    if (avulsasD.length) {
+      const ab = avulsasD.filter(d => d.status !== 'done').length;
+      clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', cards:avulsasD.map(d => mkLane(d, true)) });
+    }
 
     const personal = [
       mkLane({ id:101, title:'Canal próprio — edição vlog #12', clientId:null, status:'prod', type:'video', due:'Sábado', flag:null }, false),
@@ -1714,6 +1720,10 @@ class Component extends DCLogic {
       isActive:i===ac, textColor:i===ac?'var(--text)':'var(--text-2)', borderColor:i===ac?'var(--accent)':'transparent', weight:i===ac?'600':'500',
       onClick:()=>this.setState({ activeClient:i }),
     }));
+    if (avulsasD.length) {
+      const ai = clients.length;
+      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }) });
+    }
     const personalIdeas = [
       { title: 'Série: bastidores de uma agência solo', meta: 'Adicionada ontem · YouTube / Reels', ic: 'video' },
       { title: 'Preset LUT exclusivo pra vender', meta: 'Adicionada há 3 dias · Produto digital', ic: 'layers' },
@@ -2001,7 +2011,7 @@ class Component extends DCLogic {
     ];
     const chatMessages = [...baseChatMessages, ...(s.chatExtra||[]), ...(s.chatLoading ? [{ isAi:true, isAction:false, isText:false, isLoading:true, flex:'row', bg:'var(--surface)', border:'1px solid var(--border)', radius:'12px 12px 12px 3px' }] : [])];
 
-    const bv = s.boardView || 'cliente';
+    const bv = s.boardView || 'status';
 
     // design system data
     const neutralSwatches = [
@@ -2159,6 +2169,12 @@ class Component extends DCLogic {
       drawerCta: s.drawerEditId
         ? 'Salvar alterações'
         : ({ demanda:'Criar demanda', cliente:'Salvar cliente', prospecto:'Salvar prospecto', lancamento:'Registrar', ideia:'Salvar ideia' })[s.drawerMode||'demanda'] || 'Criar',
+      // VALORES dos campos dos drawers — estavam faltando no render, o que travava
+      // a escrita (input controlado com value sempre vazio). Sem isto, digitar não "cola".
+      clienteNome: s.clienteNome || '', clienteValor: s.clienteValor || '', clientePagDia: s.clientePagDia || '5', clienteServico: s.clienteServico || '',
+      prospectoNome: s.prospectoNome || '', prospectoSegmento: s.prospectoSegmento || '', prospectoObs: s.prospectoObs || '',
+      lancDesc: s.lancDesc || '', lancValor: s.lancValor || '', lancData: s.lancData || '',
+      ideiaTitulo: s.ideiaTitulo || '', ideiaObs: s.ideiaObs || '',
       clienteNomeChange: (e) => this.setState({ clienteNome: e.target.value }),
       clienteValorChange: (e) => this.setState({ clienteValor: e.target.value }),
       clientePagDiaChange: (e) => this.setState({ clientePagDia: e.target.value }),
