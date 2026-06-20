@@ -1358,11 +1358,11 @@
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:13px;">
               <div>
                 <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Valor mensal (R$)</label>
-                <input value="{{ clienteValor }}" onInput="{{ clienteValorChange }}" placeholder="Ex: 1.800,00" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                <input value="{{ clienteValor }}" onInput="{{ clienteValorChange }}" inputmode="decimal" placeholder="Ex: 1800,00" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
               </div>
               <div>
                 <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Dia de pagamento</label>
-                <input value="{{ clientePagDia }}" onInput="{{ clientePagDiaChange }}" placeholder="5" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                <input value="{{ clientePagDia }}" onInput="{{ clientePagDiaChange }}" inputmode="numeric" placeholder="5" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
               </div>
             </div>
             <div>
@@ -1415,7 +1415,7 @@
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:13px;">
               <div>
                 <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Valor (R$)</label>
-                <input value="{{ lancValor }}" onInput="{{ lancValorChange }}" placeholder="0,00" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                <input value="{{ lancValor }}" onInput="{{ lancValorChange }}" inputmode="decimal" placeholder="0,00" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
               </div>
               <div>
                 <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Data</label>
@@ -1797,6 +1797,20 @@ class Component extends DCLogic {
       return time ? label + ' · ' + time : label;
     };
 
+    // entrada de DINHEIRO: só dígitos + uma vírgula decimal (bloqueia letras/símbolos)
+    const sanitizeMoney = (v) => {
+      let c = String(v).replace(/[^\d,]/g, '');
+      const i = c.indexOf(',');
+      if (i !== -1) c = c.slice(0, i + 1) + c.slice(i + 1).replace(/,/g, ''); // no máx. uma vírgula
+      return c;
+    };
+    // entrada de DIA (1–31): só dígitos, no máx. 2 e limitado a 31
+    const sanitizeDia = (v) => {
+      let c = String(v).replace(/\D/g, '').slice(0, 2);
+      if (c && parseInt(c, 10) > 31) c = '31';
+      return c;
+    };
+
     const typeKeysOrder = ['video','video','megaphone','layers','image','type','image','rec'];
     const editDemanda = (d) => {
       const idx = typeKeysOrder.indexOf(d.type);
@@ -2003,7 +2017,7 @@ class Component extends DCLogic {
         sub: (fix ? 'Cliente fixo' : 'Freelance') + ' · ' + (_cp.servico ? (_cp.servico.length > 40 ? _cp.servico.slice(0, 40) + '…' : _cp.servico) : 'sem serviço definido') + ' · desde ' + (_cp.since || '—'),
         tipoTag: fix ? 'FIXO' : 'FREELANCE', tagColor: fix ? 'var(--info)' : 'var(--text-2)', tagBg: fix ? 'var(--info-weak)' : 'var(--surface-3)', tagBorder: fix ? 'transparent' : 'var(--border-2)',
         status: late ? 'Atrasado' : 'Ativo', statusColor: late ? 'var(--crit)' : 'var(--ok)', statusBg: late ? 'var(--crit-weak)' : 'var(--ok-weak)',
-        tipoLabel: fix ? 'Cliente fixo' : 'Freelance', valor: this.brl(parseFloat(_cp.valor) || 0), pagDiaLabel: pd ? ('Todo dia ' + pd) : '—', servico: _cp.servico || '—', since: _cp.since || '—',
+        tipoLabel: fix ? 'Cliente fixo' : 'Freelance', valor: this.brl(parseFloat(String(_cp.valor).replace(',', '.')) || 0), pagDiaLabel: pd ? ('Todo dia ' + pd) : '—', servico: _cp.servico || '—', since: _cp.since || '—',
         recebido: this.brl(rec), openN: String(openN), doneN: String(doneN), totalN: String(dd.length),
         demandas: dd.map(d => { const st = stat[d.status] || stat.todo; return { title: d.title, status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due || 'Sem prazo', iconType: this.icon(typeIcons[d.type] || 'image', 13, 1.6), onClick: () => editDemanda(d) }; }),
         hasDemandas: dd.length > 0, noDemandas: dd.length === 0,
@@ -2461,8 +2475,8 @@ class Component extends DCLogic {
       lancDesc: s.lancDesc || '', lancValor: s.lancValor || '', lancData: s.lancData || '',
       ideiaTitulo: s.ideiaTitulo || '', ideiaObs: s.ideiaObs || '',
       clienteNomeChange: (e) => this.setState({ clienteNome: e.target.value }),
-      clienteValorChange: (e) => this.setState({ clienteValor: e.target.value }),
-      clientePagDiaChange: (e) => this.setState({ clientePagDia: e.target.value }),
+      clienteValorChange: (e) => this.setState({ clienteValor: sanitizeMoney(e.target.value) }),
+      clientePagDiaChange: (e) => this.setState({ clientePagDia: sanitizeDia(e.target.value) }),
       clienteServicoChange: (e) => this.setState({ clienteServico: e.target.value }),
       clienteSetFixo: () => this.setState({ clienteTipo: 'fixo' }),
       clienteSetFreela: () => this.setState({ clienteTipo: 'freela' }),
@@ -2474,7 +2488,7 @@ class Component extends DCLogic {
       prospectoSegmentoChange: (e) => this.setState({ prospectoSegmento: e.target.value }),
       prospectoObsChange: (e) => this.setState({ prospectoObs: e.target.value }),
       lancDescChange: (e) => this.setState({ lancDesc: e.target.value }),
-      lancValorChange: (e) => this.setState({ lancValor: e.target.value }),
+      lancValorChange: (e) => this.setState({ lancValor: sanitizeMoney(e.target.value) }),
       lancDataChange: (e) => this.setState({ lancData: e.target.value }),
       lancSetReceita: () => this.setState({ lancTipo: 'receita' }),
       lancSetDespesa: () => this.setState({ lancTipo: 'despesa' }),
