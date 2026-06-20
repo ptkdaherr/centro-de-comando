@@ -2181,9 +2181,22 @@ class Component extends DCLogic {
       const entity = tool.slice(sep + 1); // demanda | cliente | prospecto | lancamento | ideia
       if (entity === 'demanda') {
         const list = this.state.demands || demands;
-        if (action === 'create') this.setState({ demands: [...list, { id:Date.now(), title:args.title||'Nova demanda', clientId: args.clientId ?? null, status:'todo', type:args.type||'image', due:'Sem prazo', flag: args.priority==='alta'?'high':null }] });
-        else if (action === 'edit') this.setState({ demands: list.map(d => d.id===args.id ? { ...d, title: args.title ?? d.title, clientId: args.clientId !== undefined ? args.clientId : d.clientId, type: args.type || d.type, flag: args.priority ? (args.priority==='alta'?'high':null) : d.flag } : d) });
-        else if (action === 'delete') this.setState({ demands: list.filter(d => d.id !== args.id) });
+        if (action === 'create') {
+          const prio = args.priority || 'media';
+          const dueDate = args.prazo || '';
+          const dueTime = args.hora || '';
+          const due = dueDate ? fmtDue(dueDate, dueTime) : 'Sem prazo';
+          this.setState({ demands: [...list, { id:Date.now(), title:args.title||'Nova demanda', clientId: args.clientId ?? null, status:'todo', type:args.type||'image', due, dueDate, dueTime, flag: prio==='alta'?'high':null, priority: prio, brief:'', checklist:[{ label:'Aprovação do cliente', done:false }], attachments:[] }] });
+        } else if (action === 'edit') {
+          this.setState({ demands: list.map(d => {
+            if (d.id !== args.id) return d;
+            const prio = args.priority || d.priority || 'media';
+            const dueDate = args.prazo !== undefined ? args.prazo : (d.dueDate || '');
+            const dueTime = args.hora !== undefined ? args.hora : (d.dueTime || '');
+            const due = (args.prazo !== undefined || args.hora !== undefined) ? (dueDate ? fmtDue(dueDate, dueTime) : 'Sem prazo') : (d.due || 'Sem prazo');
+            return { ...d, title: args.title ?? d.title, clientId: args.clientId !== undefined ? args.clientId : d.clientId, type: args.type || d.type, priority: prio, flag: prio==='alta'?'high':null, dueDate, dueTime, due };
+          }) });
+        } else if (action === 'delete') this.setState({ demands: list.filter(d => d.id !== args.id) });
       } else if (entity === 'cliente') {
         const list = this.state.clients || clients;
         if (action === 'create') {

@@ -8,7 +8,8 @@
 // mesma lógica de submitDrawer/editX/deleteX já existente.
 // =============================================================
 
-const DEMANDA_TYPES = ['video', 'megaphone', 'layers', 'image', 'type'];
+const DEMANDA_TYPES = ['video', 'megaphone', 'layers', 'image', 'type', 'rec'];
+const TYPE_HINT = 'Tipo de entrega: video=Vídeo/Reels, megaphone=Anúncio, layers=Social media/Carrossel, image=Arte, type=Legenda, rec=Gravação';
 
 function entityTool(action, entity, properties, required) {
   return {
@@ -22,15 +23,19 @@ export const TOOLS = [
   entityTool('create', 'demanda', {
     title: { type: 'string', description: 'Título da demanda' },
     clientId: { type: 'integer', description: 'id de um cliente já existente; omitir para demanda pessoal (sem cliente)' },
-    type: { type: 'string', enum: DEMANDA_TYPES, description: 'Tipo de entrega' },
-    priority: { type: 'string', enum: ['alta', 'media'], description: 'Prioridade' },
+    type: { type: 'string', enum: DEMANDA_TYPES, description: TYPE_HINT },
+    priority: { type: 'string', enum: ['baixa', 'media', 'alta'], description: 'Prioridade (padrão: media)' },
+    prazo: { type: 'string', description: 'Data de entrega no formato AAAA-MM-DD; omitir se não houver prazo' },
+    hora: { type: 'string', description: 'Hora da entrega no formato HH:MM (opcional, junto com prazo)' },
   }, ['title']),
   entityTool('edit', 'demanda', {
     id: { type: 'integer', description: 'id da demanda a editar' },
     title: { type: 'string' },
     clientId: { type: 'integer' },
-    type: { type: 'string', enum: DEMANDA_TYPES },
-    priority: { type: 'string', enum: ['alta', 'media'] },
+    type: { type: 'string', enum: DEMANDA_TYPES, description: TYPE_HINT },
+    priority: { type: 'string', enum: ['baixa', 'media', 'alta'] },
+    prazo: { type: 'string', description: 'Nova data AAAA-MM-DD' },
+    hora: { type: 'string', description: 'Nova hora HH:MM' },
   }, ['id']),
   entityTool('delete', 'demanda', {
     id: { type: 'integer', description: 'id da demanda a excluir' },
@@ -114,8 +119,12 @@ export function summarizeAction(tool, args, currentState) {
   };
 
   switch (tool) {
-    case 'create_demanda':
-      return `Criar demanda "${args.title}"${args.clientId ? ` para ${clientName(args.clientId)}` : ' (pessoal)'}`;
+    case 'create_demanda': {
+      const extras = [];
+      if (args.priority && args.priority !== 'media') extras.push(`prioridade ${args.priority}`);
+      if (args.prazo) extras.push(`prazo ${args.prazo}${args.hora ? ' ' + args.hora : ''}`);
+      return `Criar demanda "${args.title}"${args.clientId ? ` para ${clientName(args.clientId)}` : ' (pessoal)'}${extras.length ? ' — ' + extras.join(', ') : ''}`;
+    }
     case 'edit_demanda': {
       const d = findById(currentState.demands, args.id);
       return `Editar demanda "${d ? d.title : '#' + args.id}"${args.title ? ` → título "${args.title}"` : ''}`;
