@@ -1168,6 +1168,22 @@
                 <div style="font-size:15px; font-weight:600;">Assistente</div>
                 <div style="font-size:12px; color:var(--text-3); margin-top:2px;">Planejamento, textos, resumos — offline quando precisar</div>
               </div>
+              <sc-if value="{{ iaNotConfigured }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:30px;">
+                  <div style="max-width:440px; width:100%; background:var(--surface); border:1px solid var(--border-2); border-radius:16px; padding:26px; box-shadow:var(--sh-2);">
+                    <div style="width:44px; height:44px; border-radius:13px; background:var(--accent-weak); color:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:16px;">{{ iconSpark }}</div>
+                    <h2 style="margin:0 0 7px; font-size:17px; font-weight:600;">Ative o Assistente</h2>
+                    <p style="margin:0 0 18px; font-size:13px; color:var(--text-2); line-height:1.55;">Cole sua chave do Google Gemini (é grátis). Ela fica salva só nesta máquina — nunca sai daqui. Pegue a sua em <span style="color:var(--accent); font-weight:500;">aistudio.google.com/apikey</span>.</p>
+                    <input value="{{ geminiKeyInput }}" onInput="{{ geminiKeyChange }}" placeholder="Cole a chave aqui (AIza…)" style="width:100%; height:42px; padding:0 13px; background:var(--bg); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:13px; outline:none; margin-bottom:12px;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                    <sc-if value="{{ geminiCfgError }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:12px; color:var(--crit); margin-bottom:12px;">{{ geminiCfgError }}</div>
+                    </sc-if>
+                    <button onClick="{{ saveGeminiKey }}" style="width:100%; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.98)">{{ geminiSaveLabel }}</button>
+                    <p style="margin:14px 0 0; font-size:11.5px; color:var(--text-3); line-height:1.5;">Sem chave, o app funciona normalmente — só o chat do Assistente fica indisponível.</p>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ iaConfigured }}" hint-placeholder-val="{{ true }}">
               <div style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px;">
                 <sc-for list="{{ chatMessages }}" as="msg" hint-placeholder-count="4">
                   <div style="display:flex; flex-direction:{{ msg.flex }}; align-items:flex-end; gap:9px;">
@@ -1212,6 +1228,7 @@
                   <button onClick="{{ chatSend }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:none; background:var(--accent); color:#fff; border-radius:9px; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconSend }}</button>
                 </div>
               </div>
+              </sc-if>
             </div>
           </div>
         </sc-if>
@@ -1523,7 +1540,14 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginPassword: '', loginError: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginPassword: '', loginError: '', geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+
+  _loadConfig() {
+    fetch('/api/config', { credentials: 'include' })
+      .then((r) => r.json().catch(() => ({})))
+      .then((d) => this.setState({ geminiConfigured: !!d.geminiConfigured }))
+      .catch(() => {});
+  }
 
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
@@ -1548,7 +1572,7 @@ class Component extends DCLogic {
       .then((r) => r.json().catch(() => ({ ok: false })))
       .then((d) => {
         this.setState({ authed: !!d.ok, authChecked: true });
-        if (d.ok) this._loadState();
+        if (d.ok) { this._loadState(); this._loadConfig(); }
       })
       .catch(() => this.setState({ authed: false, authChecked: true }));
   }
@@ -2151,7 +2175,7 @@ class Component extends DCLogic {
       if (!password) return;
       fetch('/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })
         .then(async (r) => {
-          if (r.ok) { this.setState({ authed: true, loginPassword: '', loginError: '' }); this._loadState(); }
+          if (r.ok) { this.setState({ authed: true, loginPassword: '', loginError: '' }); this._loadState(); this._loadConfig(); }
           else { const d = await r.json().catch(() => ({})); this.setState({ loginError: d.error || 'Senha incorreta', loginPassword: '' }); }
         })
         .catch(() => this.setState({ loginError: 'Não foi possível conectar ao servidor' }));
@@ -2730,6 +2754,23 @@ class Component extends DCLogic {
       chatInputChange: (e) => this.setState({ chatInput: e.target.value }),
       chatInputKeyDown: (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); const inp=(s.chatInput||'').trim(); if(!inp || s.chatLoading) return; aiSendMessage(inp); } },
       chatSend: () => { const inp=(s.chatInput||'').trim(); if(!inp || s.chatLoading) return; aiSendMessage(inp); },
+      // ---- CONFIG DO ASSISTENTE (cada um cola a própria chave do Gemini) ----
+      iaConfigured: !!s.geminiConfigured,
+      iaNotConfigured: !s.geminiConfigured,
+      geminiKeyInput: s.geminiKeyInput || '',
+      geminiKeyChange: (e) => this.setState({ geminiKeyInput: e.target.value, geminiCfgError: '' }),
+      geminiSaving: !!s.geminiSaving,
+      geminiSaveLabel: s.geminiSaving ? 'Salvando…' : 'Salvar chave',
+      geminiCfgError: s.geminiCfgError || '',
+      saveGeminiKey: () => {
+        const key = (s.geminiKeyInput || '').trim();
+        if (!key || s.geminiSaving) { if (!key) this.setState({ geminiCfgError: 'Cole sua chave do Gemini primeiro.' }); return; }
+        this.setState({ geminiSaving: true, geminiCfgError: '' });
+        fetch('/api/config/gemini', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) })
+          .then(async (r) => { const d = await r.json().catch(() => ({})); if (r.ok && d.geminiConfigured) { this.setState({ geminiConfigured: true, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '', toast: 'Assistente configurado' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2400); } else { this.setState({ geminiSaving: false, geminiCfgError: d.error || 'Não consegui salvar a chave.' }); } })
+          .catch(() => this.setState({ geminiSaving: false, geminiCfgError: 'Sem conexão com o servidor.' }));
+      },
+      trocarGeminiKey: () => this.setState({ geminiConfigured: false, geminiKeyInput: '', geminiCfgError: '' }),
     };
   }
 }

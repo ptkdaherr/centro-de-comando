@@ -42,10 +42,24 @@ function loadEnv(envPath) {
 const PACKAGED = !!process.env.CDC_DATA_DIR;
 const DATA_ENV = process.env.CDC_DATA_DIR ? path.join(process.env.CDC_DATA_DIR, '.env') : null;
 const ENV_PATH = DATA_ENV && fs.existsSync(DATA_ENV) ? DATA_ENV : path.join(__dirname, '.env');
+// Onde GRAVAR alterações (ex.: a chave do Gemini que o usuário configura no app):
+// no empacotado, sempre na pasta de dados gravável; em dev, no .env ao lado do server.
+const WRITE_ENV_PATH = DATA_ENV || path.join(__dirname, '.env');
 const env = loadEnv(ENV_PATH);
 const APP_PASSWORD_HASH = env.APP_PASSWORD_HASH;
-const GEMINI_API_KEY = env.GEMINI_API_KEY;
+let GEMINI_API_KEY = env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+// Persiste chaves no .env de escrita, preservando o que já existe (ex.: senha).
+function persistEnv(updates) {
+  const base = fs.existsSync(WRITE_ENV_PATH) ? loadEnv(WRITE_ENV_PATH) : { ...env };
+  const merged = { ...base, ...updates };
+  if (!merged.APP_PASSWORD_HASH && APP_PASSWORD_HASH) merged.APP_PASSWORD_HASH = APP_PASSWORD_HASH;
+  let content = '';
+  for (const [k, v] of Object.entries(merged)) if (v) content += `${k}=${v}\n`;
+  fs.mkdirSync(path.dirname(WRITE_ENV_PATH), { recursive: true });
+  fs.writeFileSync(WRITE_ENV_PATH, content);
+}
 
 if (!APP_PASSWORD_HASH) {
   console.error('\n  Nenhuma senha configurada ainda.\n  Rode primeiro: npm run setup\n');
@@ -166,6 +180,23 @@ async function handleApi(req, res, url) {
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     saveState(body);
     return sendJson(res, 200, { ok: true });
+  }
+
+  // estado de configuração (nunca devolve a chave em si, só se está configurada)
+  if (url === '/api/config' && req.method === 'GET') {
+    if (!requireAuth(req, res)) return;
+    return sendJson(res, 200, { geminiConfigured: !!GEMINI_API_KEY, model: GEMINI_MODEL });
+  }
+  // o usuário cola a própria chave do Gemini; salva só na máquina dele (.env de escrita)
+  if (url === '/api/config/gemini' && req.method === 'POST') {
+    if (!requireAuth(req, res)) return;
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
+    const key = typeof body.key === 'string' ? body.key.trim() : '';
+    if (key && key.length < 20) return sendJson(res, 400, { error: 'essa chave parece curta demais — confira e cole de novo' });
+    try { persistEnv({ GEMINI_API_KEY: key }); } catch { return sendJson(res, 500, { error: 'não consegui salvar a chave no disco' }); }
+    GEMINI_API_KEY = key;
+    return sendJson(res, 200, { ok: true, geminiConfigured: !!key });
   }
 
   if (url === '/api/chat' && req.method === 'POST') {
