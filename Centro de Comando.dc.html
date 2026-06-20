@@ -331,7 +331,12 @@
                   <button onClick="{{ viewCliente }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ clienteTabColor }}; background:{{ clienteTabBg }};">Por cliente</button>
                   <button onClick="{{ viewStatus }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ statusTabColor }}; background:{{ statusTabBg }};">Por status</button>
                 </div>
-                <button style="display:flex; align-items:center; gap:7px; height:34px; padding:0 13px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12.5px; font-weight:500; cursor:pointer;" style-hover="border-color:var(--border-2); color:var(--text)">{{ iconFilter }}<span>Filtrar</span></button>
+                <div style="display:flex; align-items:center; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
+                  <button onClick="{{ prioFilterAll }}" title="Todas as prioridades" style="height:28px; padding:0 11px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:{{ prioAllW }}; cursor:pointer; color:{{ prioAllColor }}; background:{{ prioAllBg }};">Todas</button>
+                  <button onClick="{{ prioFilterHigh }}" title="Alta prioridade" style="display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:{{ prioHighW }}; cursor:pointer; color:{{ prioHighColor }}; background:{{ prioHighBg }};"><span style="width:7px; height:7px; border-radius:50%; background:var(--crit);"></span>Alta</button>
+                  <button onClick="{{ prioFilterMed }}" title="Média prioridade" style="display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:{{ prioMedW }}; cursor:pointer; color:{{ prioMedColor }}; background:{{ prioMedBg }};"><span style="width:7px; height:7px; border-radius:50%; background:var(--warn);"></span>Média</button>
+                  <button onClick="{{ prioFilterLow }}" title="Baixa prioridade" style="display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:{{ prioLowW }}; cursor:pointer; color:{{ prioLowColor }}; background:{{ prioLowBg }};"><span style="width:7px; height:7px; border-radius:50%; background:var(--ok);"></span>Baixa</button>
+                </div>
                 <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
               </div>
             </div>
@@ -342,7 +347,7 @@
                 <!-- tabs row -->
                 <div style="display:flex; align-items:stretch; padding:0 28px; border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto;">
                   <sc-for list="{{ clientTabs }}" as="ct" hint-placeholder-count="2">
-                    <button onClick="{{ ct.onClick }}" style="display:flex; align-items:center; gap:8px; height:42px; padding:0 16px; border:none; border-bottom:2.5px solid {{ ct.borderColor }}; background:transparent; color:{{ ct.textColor }}; font:inherit; font-size:13px; font-weight:{{ ct.weight }}; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-bottom:-1px; transition:color .1s;" style-hover="color:var(--text)">
+                    <button onClick="{{ ct.onClick }}" onDragOver="{{ ct.onDragOver }}" onDragEnter="{{ ct.onDragEnter }}" onDragLeave="{{ ct.onDragLeave }}" onDrop="{{ ct.onDrop }}" style="display:flex; align-items:center; gap:8px; height:42px; padding:0 16px; border:none; border-bottom:2.5px solid {{ ct.borderColor }}; background:{{ ct.dropBg }}; color:{{ ct.textColor }}; font:inherit; font-size:13px; font-weight:{{ ct.weight }}; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-bottom:-1px; border-radius:8px 8px 0 0; transition:color .1s, background .12s; box-shadow:{{ ct.dropRing }};" style-hover="color:var(--text)">
                       <span style="width:8px; height:8px; border-radius:3px; background:{{ ct.color }}; flex:0 0 auto;"></span>
                       <span>{{ ct.name }}</span>
                       <span style="font-size:11px; font-family:'Geist Mono',monospace; padding:1px 6px; border-radius:10px; background:var(--surface-3); color:var(--text-3);">{{ ct.count }}</span>
@@ -364,11 +369,11 @@
                 <div style="flex:1; min-height:0; overflow-y:auto; padding:18px 28px 30px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(228px,1fr)); gap:12px;">
                     <sc-for list="{{ activeClientCards }}" as="c" hint-placeholder-count="4">
-                      <div onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .28s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
+                      <div draggable="{{ c.draggable }}" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="position:relative; background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .28s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                           <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ c.statusColor }}; background:{{ c.statusBg }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ c.statusColor }};"></span>{{ c.status }}</span>
                           <div style="display:flex; align-items:center; gap:7px;">
-                            <sc-if value="{{ c.flagged }}" hint-placeholder-val="{{ false }}"><span style="display:flex; color:{{ c.flagColor }};">{{ c.flagEl }}</span></sc-if>
+                            <span title="Prioridade" style="display:inline-flex; align-items:center; gap:4px; height:20px; padding:0 7px; border-radius:6px; font-size:10.5px; font-weight:600; color:{{ c.prioColor }}; background:{{ c.prioBg }};"><span style="width:5px; height:5px; border-radius:50%; background:{{ c.prioColor }};"></span>{{ c.prioLabel }}</span>
                             <sc-if value="{{ c.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ c.deleteIcon }}</button></sc-if>
                           </div>
                         </div>
@@ -399,11 +404,11 @@
                       </div>
                       <div onDragOver="{{ col.onDragOver }}" onDragEnter="{{ col.onDragEnter }}" onDragLeave="{{ col.onDragLeave }}" onDrop="{{ col.onDrop }}" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px; background:{{ col.dropBg }}; border:1.5px dashed {{ col.dropBorder }}; border-radius:12px; transition:background .15s ease, border-color .15s ease;">
                         <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
-                          <div draggable="true" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s ease, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .26s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
+                          <div draggable="true" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s ease, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .26s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                               <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:{{ c.clientColor }};"></span>{{ c.client }}</span>
                               <div style="display:flex; align-items:center; gap:7px;">
-                                <sc-if value="{{ c.flagged }}" hint-placeholder-val="{{ false }}"><span style="display:flex; color:{{ c.flagColor }};">{{ c.flagEl }}</span></sc-if>
+                                <span title="Prioridade" style="display:inline-flex; align-items:center; gap:4px; height:20px; padding:0 7px; border-radius:6px; font-size:10.5px; font-weight:600; color:{{ c.prioColor }}; background:{{ c.prioBg }};"><span style="width:5px; height:5px; border-radius:50%; background:{{ c.prioColor }};"></span>{{ c.prioLabel }}</span>
                                 <button onClick="{{ c.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ c.deleteIcon }}</button>
                               </div>
                             </div>
@@ -1212,17 +1217,31 @@
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:13px;">
               <div>
-                <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Cliente</label>
-                <select value="{{ drawerDemandClientId }}" onChange="{{ drawerDemandClientChange }}" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none; cursor:pointer; appearance:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)">
-                  <option value="">Pessoal (sem cliente)</option>
-                  <sc-for list="{{ drawerClientOptions }}" as="opt" hint-placeholder-count="2">
-                    <option value="{{ opt.id }}">{{ opt.nome }}</option>
-                  </sc-for>
-                </select>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;">
+                  <label style="font-size:11.5px; font-weight:500; color:var(--text-2);">Cliente</label>
+                  <button onClick="{{ toggleInlineClient }}" style="border:none; background:transparent; color:var(--accent); font:inherit; font-size:11px; font-weight:600; cursor:pointer; padding:0;" style-hover="text-decoration:underline">{{ inlineClientToggleLabel }}</button>
+                </div>
+                <sc-if value="{{ inlineClientClosed }}" hint-placeholder-val="{{ true }}">
+                  <select value="{{ drawerDemandClientId }}" onChange="{{ drawerDemandClientChange }}" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none; cursor:pointer; appearance:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)">
+                    <option value="">Pessoal (sem cliente)</option>
+                    <sc-for list="{{ drawerClientOptions }}" as="opt" hint-placeholder-count="2">
+                      <option value="{{ opt.id }}">{{ opt.nome }}</option>
+                    </sc-for>
+                  </select>
+                </sc-if>
+                <sc-if value="{{ inlineClientOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; gap:6px;">
+                    <input value="{{ inlineClientName }}" onInput="{{ inlineClientNameChange }}" onKeyDown="{{ inlineClientKeyDown }}" placeholder="Nome do cliente" autofocus style="flex:1; min-width:0; height:38px; padding:0 11px; background:var(--surface); border:1px solid var(--accent); border-radius:9px; color:var(--text); font:inherit; font-size:13px; outline:none; box-shadow:0 0 0 3px var(--accent-weak);" />
+                    <button onClick="{{ addInlineClient }}" title="Criar e selecionar" style="flex:0 0 auto; width:38px; height:38px; display:flex; align-items:center; justify-content:center; border:none; background:var(--accent); color:#fff; border-radius:9px; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.92)">{{ iconCheck }}</button>
+                  </div>
+                </sc-if>
               </div>
               <div>
                 <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Prazo</label>
-                <div style="display:flex; align-items:center; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; font-size:13.5px; cursor:pointer;">{{ iconCal }}<span style="margin-left:8px;">Hoje · 17:00</span></div>
+                <div style="display:flex; gap:6px;">
+                  <input type="date" value="{{ drawerDemandDate }}" onInput="{{ drawerDemandDateChange }}" style="flex:1; min-width:0; height:38px; padding:0 11px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:12.5px; outline:none; cursor:pointer; color-scheme:{{ colorScheme }};" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                  <input type="time" value="{{ drawerDemandTime }}" onInput="{{ drawerDemandTimeChange }}" style="flex:0 0 76px; width:76px; height:38px; padding:0 9px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:12.5px; outline:none; cursor:pointer; color-scheme:{{ colorScheme }};" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
               </div>
             </div>
             <div>
@@ -1243,26 +1262,38 @@
             </div>
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Briefing</label>
-              <textarea placeholder="Descreva o briefing…" style="width:100%; min-height:86px; padding:11px 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13px; line-height:1.5; resize:vertical; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)"></textarea>
+              <textarea value="{{ drawerBrief }}" onInput="{{ drawerBriefChange }}" placeholder="Descreva o briefing…" style="width:100%; min-height:86px; padding:11px 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13px; line-height:1.5; resize:vertical; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)"></textarea>
             </div>
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:9px;">Checklist</label>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                <sc-for list="{{ drawerChecklistItems }}" as="ci" hint-placeholder-count="3">
-                  <div onClick="{{ ci.toggle }}" style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer; color:{{ ci.textColor }}; user-select:none;">
-                    <span style="width:18px; height:18px; border-radius:6px; border:1px solid {{ ci.checkBorder }}; background:{{ ci.checkBg }}; display:flex; align-items:center; justify-content:center; color:{{ ci.checkColor }}; flex:0 0 auto; transition:all .15s;" style-active="transform:scale(.85)">{{ ci.checkIcon }}</span>
-                    <span style="text-decoration:{{ ci.textDecor }};">{{ ci.label }}</span>
+              <div style="display:flex; flex-direction:column; gap:7px;">
+                <sc-for list="{{ drawerChecklistItems }}" as="ci" hint-placeholder-count="1">
+                  <div style="display:flex; align-items:center; gap:9px; font-size:13px;">
+                    <span onClick="{{ ci.toggle }}" title="Concluir" style="width:18px; height:18px; border-radius:6px; border:1px solid {{ ci.checkBorder }}; background:{{ ci.checkBg }}; display:flex; align-items:center; justify-content:center; color:{{ ci.checkColor }}; flex:0 0 auto; cursor:pointer; transition:all .15s;" style-active="transform:scale(.85)">{{ ci.checkIcon }}</span>
+                    <input value="{{ ci.label }}" onInput="{{ ci.onLabelChange }}" placeholder="Item do checklist" style="flex:1; min-width:0; height:32px; padding:0 10px; background:transparent; border:1px solid transparent; border-radius:7px; color:{{ ci.textColor }}; font:inherit; font-size:13px; text-decoration:{{ ci.textDecor }}; outline:none; transition:border-color .12s, background .12s;" style-hover="background:var(--surface)" style-focus="border-color:var(--border-2); background:var(--surface); text-decoration:none" />
+                    <button onClick="{{ ci.onDelete }}" title="Remover" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ iconXsm }}</button>
                   </div>
                 </sc-for>
-                <button onClick="{{ drawerAddChecklistItem }}" style="display:flex; align-items:center; gap:7px; margin-top:2px; border:none; background:transparent; color:var(--text-3); font:inherit; font-size:12px; cursor:pointer; padding:2px 0;" style-hover="color:var(--text-2)">{{ iconPlusSm }}<span>Adicionar item</span></button>
+                <button onClick="{{ drawerAddChecklistItem }}" style="display:flex; align-items:center; gap:7px; margin-top:3px; border:none; background:transparent; color:var(--text-3); font:inherit; font-size:12px; cursor:pointer; padding:2px 0;" style-hover="color:var(--accent)">{{ iconPlusSm }}<span>Adicionar item</span></button>
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; padding:13px; border:1px dashed var(--border-2); border-radius:10px; color:var(--text-3); font-size:12.5px; cursor:pointer;">{{ iconClip }}<span>Anexar arquivos ou referências</span></div>
+            <div>
+              <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Anexos</label>
+              <div style="position:relative; display:flex; align-items:center; gap:10px; padding:13px; border:1px dashed var(--border-2); border-radius:10px; color:var(--text-3); font-size:12.5px; cursor:pointer; transition:border-color .12s, color .12s;" style-hover="border-color:var(--accent); color:var(--text-2)">{{ iconClip }}<span>Anexar arquivos ou referências</span><input type="file" multiple="multiple" onChange="{{ drawerFileChange }}" style="position:absolute; inset:0; opacity:0; cursor:pointer;" /></div>
+              <sc-if value="{{ hasAttachments }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; flex-wrap:wrap; gap:7px; margin-top:9px;">
+                  <sc-for list="{{ drawerAttachments }}" as="att" hint-placeholder-count="2">
+                    <span style="display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 6px 0 10px; background:var(--surface); border:1px solid var(--border-2); border-radius:8px; font-size:12px; color:var(--text-2); max-width:200px;"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ att.name }}</span><button onClick="{{ att.onRemove }}" title="Remover" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ iconXsm }}</button></span>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
           </div>
 
           <div style="display:flex; align-items:center; gap:10px; padding:16px 20px; border-top:1px solid var(--border);">
             <button onClick="{{ submitDrawer }}" style="flex:1; height:40px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ drawerCta }}</button>
-            <button onClick="{{ closeDrawer }}" style="height:40px; padding:0 18px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:13.5px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
+            <button onClick="{{ resetDrawerDemanda }}" title="Limpar tudo e começar de novo" style="height:40px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-3); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="color:var(--warn); border-color:var(--warn)">Limpar</button>
+            <button onClick="{{ closeDrawer }}" style="height:40px; padding:0 16px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
           </div>
         </div>
       </sc-if>
@@ -1704,40 +1735,84 @@ class Component extends DCLogic {
     const clients = s.clients || this._clients0;
     const prospectos = s.prospectos || this._prospectos0;
     const demands = s.demands || this._demands0;
-    const typeIcons = { video:'video', megaphone:'megaphone', image:'image', layers:'layers', type:'type', code:'code', bulb:'bulb' };
-    const typeLabels = { video:'Vídeo', megaphone:'Anúncio', image:'Arte', layers:'Social', type:'Legenda', code:'Site', bulb:'Estudo' };
+    const typeIcons = { video:'video', megaphone:'megaphone', image:'image', layers:'layers', type:'type', code:'code', bulb:'bulb', rec:'video' };
+    const typeLabels = { video:'Vídeo', megaphone:'Anúncio', image:'Arte', layers:'Social', type:'Legenda', code:'Site', bulb:'Estudo', rec:'Gravação' };
 
-    const typeKeysOrder = ['video','video','megaphone','layers','image','type','image'];
+    // ---- PRIORIDADE: cor/rótulo + filtro da tela Demandas ----
+    const prioMeta = { alta:{ label:'Alta', color:'var(--crit)', bg:'var(--crit-weak)' }, media:{ label:'Média', color:'var(--warn)', bg:'var(--warn-weak)' }, baixa:{ label:'Baixa', color:'var(--ok)', bg:'var(--ok-weak)' } };
+    const prioOf = (d) => d.priority || (d.flag === 'high' ? 'alta' : 'media');
+    const fp = s.demandPrio || 'all';
+    const passPrio = (d) => fp === 'all' || prioOf(d) === fp;
+
+    // ---- PRAZO: data(yyyy-mm-dd)+hora -> rótulo amigável (Hoje/Amanhã/DD mmm · HH:MM) ----
+    const _mesAbbr = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const fmtDue = (date, time) => {
+      if (!date) return time || 'Sem prazo';
+      const p = date.split('-').map(Number);
+      const dt = new Date(p[0], p[1] - 1, p[2]);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const diff = Math.round((dt - today) / 86400000);
+      let label;
+      if (diff === 0) label = 'Hoje';
+      else if (diff === 1) label = 'Amanhã';
+      else if (diff === -1) label = 'Ontem';
+      else label = p[2] + ' ' + (_mesAbbr[p[1] - 1] || '');
+      return time ? label + ' · ' + time : label;
+    };
+
+    const typeKeysOrder = ['video','video','megaphone','layers','image','type','image','rec'];
     const editDemanda = (d) => {
       const idx = typeKeysOrder.indexOf(d.type);
-      const arr = [false,false,false,false,false,false,false];
+      const arr = [false,false,false,false,false,false,false,false];
       arr[idx>=0?idx:1] = true;
+      const hasCk = d.checklist && d.checklist.length;
       this.setState({
-        drawer:true, drawerMode:'demanda', drawerEditId:d.id,
+        drawer:true, drawerMode:'demanda', drawerEditId:d.id, drawerNewClientOpen:false,
         drawerDemandTitle:d.title, drawerDemandClientId: d.clientId!=null?String(d.clientId):'',
-        drawerTypeActive:arr, drawerPriority: d.flag==='high'?'alta':'media',
-        drawerChecklist:[true,false,false], drawerChecklistLabels:['Receber imagens brutas','Primeira versão','Aprovação do cliente'],
+        drawerTypeActive:arr, drawerPriority: prioOf(d),
+        drawerDemandDate: d.dueDate||'', drawerDemandTime: d.dueTime||'',
+        drawerBrief: d.brief||'', drawerAttachments: (d.attachments||[]).map(a => ({ name: a.name || a })),
+        drawerChecklist: hasCk ? d.checklist.map(c => !!c.done) : [false],
+        drawerChecklistLabels: hasCk ? d.checklist.map(c => c.label) : ['Aprovação do cliente'],
       });
     };
     const deleteDemanda = (id) => { if (window.confirm('Excluir esta demanda? Essa ação não pode ser desfeita.')) this.setState({ demands: demands.filter(x=>x.id!==id) }); };
+    // cria um cliente direto do drawer de demanda e já o seleciona, sem fechar o drawer
+    const addInlineClient = () => {
+      const nome = (s.drawerNewClientName||'').trim();
+      if (!nome) return;
+      const words = nome.split(/\s+/);
+      const initials = words.length>=2 ? (words[0][0]+words[words.length-1][0]).toUpperCase() : nome.slice(0,2).toUpperCase();
+      const color = palette[clients.length % palette.length];
+      const id = Date.now();
+      this.setState({ clients:[...clients, { id, nome, initials, color, tipo:'fixo', valor:'0', pagDia:'5', servico:'', since:'Jun 2026' }], drawerDemandClientId:String(id), drawerNewClientOpen:false, drawerNewClientName:'', toast:'Cliente “'+nome+'” criado' });
+      clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast:null }), 2200);
+    };
 
     const mkCard = (d) => {
       const cl = clients.find(c => c.id === d.clientId);
       const ti = typeIcons[d.type] || 'image';
+      const pm = prioMeta[prioOf(d)] || prioMeta.media;
       return { title:d.title, client:cl?cl.nome:'Pessoal', clientColor:cl?cl.color:'var(--text-3)', type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
+        prioLabel:pm.label, prioColor:pm.color, prioBg:pm.bg,
         dragOpacity: s.draggingId===d.id ? '.35' : '1',
         deleteIcon:this.icon('close',11,2), onClick:() => editDemanda(d), onDelete:(e) => { e.stopPropagation(); deleteDemanda(d.id); },
         onDragStart:(e) => { e.dataTransfer.setData('text/plain', String(d.id)); this.setState({ draggingId: d.id }); },
-        onDragEnd:() => this.setState({ draggingId: null, dragOverCol: null }) };
+        onDragEnd:() => this.setState({ draggingId: null, dragOverCol: null, dragOverClient: null }) };
     };
     const mkLane = (d, editable) => {
       const ti = typeIcons[d.type] || 'image';
       const st = stat[d.status] || stat.todo;
-      const base = { title:d.title, status:st.l, statusColor:st.c, statusBg:st.bg, type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7) };
-      if (editable === false) { base.editable = false; base.deleteIcon = null; base.onClick = () => {}; base.onDelete = () => {}; return base; }
-      base.editable = true; base.deleteIcon = this.icon('close',11,2);
+      const pm = prioMeta[prioOf(d)] || prioMeta.media;
+      const base = { title:d.title, status:st.l, statusColor:st.c, statusBg:st.bg, type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
+        prioLabel:pm.label, prioColor:pm.color, prioBg:pm.bg,
+        dragOpacity: s.draggingId===d.id ? '.4' : '1', onDragStart:() => {}, onDragEnd:() => {} };
+      if (editable === false) { base.editable = false; base.draggable = 'false'; base.deleteIcon = null; base.onClick = () => {}; base.onDelete = () => {}; return base; }
+      base.editable = true; base.draggable = 'true'; base.deleteIcon = this.icon('close',11,2);
       base.onClick = () => editDemanda(d);
       base.onDelete = (e) => { e.stopPropagation(); deleteDemanda(d.id); };
+      base.onDragStart = (e) => { e.dataTransfer.setData('text/plain', String(d.id)); this.setState({ draggingId: d.id }); };
+      base.onDragEnd = () => this.setState({ draggingId: null, dragOverClient: null, dragOverCol: null });
       return base;
     };
 
@@ -1746,7 +1821,7 @@ class Component extends DCLogic {
       { name:'Em produção', status:'prod', color:'var(--info)' },
       { name:'Em revisão', status:'rev', color:'var(--warn)' },
       { name:'Entregue', status:'done', color:'var(--ok)' },
-    ].map(col => ({ name:col.name, color:col.color, status:col.status, count:demands.filter(d=>d.status===col.status).length, cards:demands.filter(d=>d.status===col.status).map(mkCard),
+    ].map(col => ({ name:col.name, color:col.color, status:col.status, count:demands.filter(d=>d.status===col.status&&passPrio(d)).length, cards:demands.filter(d=>d.status===col.status&&passPrio(d)).map(mkCard),
       dropBg: s.dragOverCol===col.status ? 'var(--accent-weak)' : 'transparent',
       dropBorder: s.dragOverCol===col.status ? 'var(--accent)' : 'transparent',
       onDragOver:(e) => e.preventDefault(),
@@ -1761,13 +1836,13 @@ class Component extends DCLogic {
       const openD = clD.filter(d => d.status !== 'done');
       const first = openD[0];
       const avatarBg = cl.color + '22';
-      return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', cards:clD.map(mkLane) };
+      return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', cards:clD.filter(passPrio).map(mkLane) };
     });
     // demandas sem cliente (ou cujo cliente foi removido) — aba "Avulsas" pra nunca sumirem do board por cliente
     const avulsasD = demands.filter(d => !clients.some(c => c.id === d.clientId));
     if (avulsasD.length) {
       const ab = avulsasD.filter(d => d.status !== 'done').length;
-      clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', cards:avulsasD.map(d => mkLane(d, true)) });
+      clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', cards:avulsasD.filter(passPrio).map(d => mkLane(d, true)) });
     }
 
     const personal = [
@@ -1778,14 +1853,24 @@ class Component extends DCLogic {
 
     const ac = s.activeClient || 0;
     const activeLane = clientLanes[ac] || clientLanes[0] || { cards:[], openLabel:'0 abertas', next:'', nextColor:'var(--text-3)', color:'var(--accent)', initials:'?', avatarBg:'var(--surface)', tag:'', tagColor:'var(--text-3)', tagBg:'var(--surface)', tagBorder:'var(--border)' };
+    // arrastar um card de demanda e soltar numa aba reatribui o cliente da demanda
+    const tabDrop = (key, targetClientId) => ({
+      dropBg: s.dragOverClient===key ? 'var(--accent-weak)' : 'transparent',
+      dropRing: s.dragOverClient===key ? 'inset 0 0 0 1.5px var(--accent)' : 'none',
+      onDragOver:(e)=>e.preventDefault(),
+      onDragEnter:(e)=>{ e.preventDefault(); if(s.dragOverClient!==key) this.setState({ dragOverClient:key }); },
+      onDragLeave:()=>{ if(s.dragOverClient===key) this.setState({ dragOverClient:null }); },
+      onDrop:(e)=>{ e.preventDefault(); const id=parseInt(e.dataTransfer.getData('text/plain'),10); this.setState({ dragOverClient:null, draggingId:null }); if(!id) return; this.setState({ demands: demands.map(d=>d.id===id?{...d, clientId:targetClientId}:d), toast:'Demanda movida' }); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),2200); },
+    });
     const clientTabs = clients.map((cl, i) => ({
       name:cl.nome, count:demands.filter(d=>d.clientId===cl.id&&d.status!=='done').length, color:cl.color,
       isActive:i===ac, textColor:i===ac?'var(--text)':'var(--text-2)', borderColor:i===ac?'var(--accent)':'transparent', weight:i===ac?'600':'500',
       onClick:()=>this.setState({ activeClient:i }),
+      ...tabDrop(cl.id, cl.id),
     }));
     if (avulsasD.length) {
       const ai = clients.length;
-      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }) });
+      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
     }
     const personalIdeas = [
       { title: 'Série: bastidores de uma agência solo', meta: 'Adicionada ontem · YouTube / Reels', ic: 'video' },
@@ -2166,11 +2251,12 @@ class Component extends DCLogic {
       { color: 'var(--info)', ic: 'info', title: 'Novo comentário', body: 'Cliente respondeu no anúncio de seminovos.' },
     ].map(t => ({ ...t, iconEl: this.icon(t.ic, 17, 1.8) }));
 
-    const drawerTypeLabels = ['Vídeo', 'Reels', 'Anúncio', 'Social media', 'Arte', 'Legenda', 'Carrossel'];
-    const dta = s.drawerTypeActive || [false,true,false,false,true,false,false];
+    const drawerTypeLabels = ['Vídeo', 'Reels', 'Anúncio', 'Social media', 'Arte', 'Legenda', 'Carrossel', 'Gravação'];
+    const dta = s.drawerTypeActive || [false,true,false,false,false,false,false,false];
+    // seleção ÚNICA: o tipo escolhido é o que fica salvo na demanda (clicar um troca o ativo)
     const types = drawerTypeLabels.map((label, i) => {
       const on = dta[i];
-      return { label, color: on ? 'var(--accent)' : 'var(--text-2)', bg: on ? 'var(--accent-weak)' : 'var(--surface)', border: on ? 'var(--accent)' : 'var(--border-2)', onClick: () => { const n = [...dta]; n[i] = !n[i]; this.setState({ drawerTypeActive: n }); } };
+      return { label, color: on ? 'var(--accent)' : 'var(--text-2)', bg: on ? 'var(--accent-weak)' : 'var(--surface)', border: on ? 'var(--accent)' : 'var(--border-2)', onClick: () => { this.setState({ drawerTypeActive: drawerTypeLabels.map((_, j) => j === i) }); } };
     });
 
     return {
@@ -2197,12 +2283,19 @@ class Component extends DCLogic {
       go: (id) => this.go(id),
       goSystem: () => this.go('system'),
       goDemandas: () => this.go('demandas'),
-      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,true,false,false], drawerPriority:'media' }),
+      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }),
       openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
       openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', drawerEditId: null, prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
       openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', drawerEditId: null, lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
       openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia', drawerEditId: null, ideiaTitulo:'', ideiaCategoria:'Pessoal', ideiaObs:'' }),
-      closeDrawer: () => this.setState({ drawer: false, drawerEditId: null }),
+      closeDrawer: () => {
+        // guarda de saída: no drawer de demanda, se há conteúdo não salvo, confirma antes de descartar
+        if ((s.drawerMode||'demanda') === 'demanda' && !s.drawerEditId) {
+          const dirty = (s.drawerDemandTitle||'').trim() || (s.drawerBrief||'').trim() || (s.drawerAttachments||[]).length || s.drawerDemandClientId || s.drawerDemandDate;
+          if (dirty && !window.confirm('Você preencheu campos que ainda não foram salvos. Sair mesmo assim? (use “Criar demanda” para salvar)')) return;
+        }
+        this.setState({ drawer: false, drawerEditId: null });
+      },
       submitDrawer: () => {
         const mode = s.drawerMode||'demanda';
         const editId = s.drawerEditId||null;
@@ -2212,21 +2305,31 @@ class Component extends DCLogic {
         const updates = { drawer:false, drawerEditId:null, toast:toastMap[mode]||'Salvo com sucesso' };
         if (mode === 'demanda') {
           const dta = s.drawerTypeActive||[];
-          const typeKeys = ['video','video','megaphone','layers','image','type','image'];
+          const typeKeys = ['video','video','megaphone','layers','image','type','image','rec'];
           const typeIdx = dta.findIndex(Boolean);
           const clientId = parseInt(s.drawerDemandClientId) || null;
-          const flag = s.drawerPriority==='alta'?'high':null;
+          const priority = s.drawerPriority || 'media';
+          const flag = priority==='alta'?'high':null;
+          const dueDate = s.drawerDemandDate || '';
+          const dueTime = s.drawerDemandTime || '';
+          const due = fmtDue(dueDate, dueTime);
+          const ckLabels = s.drawerChecklistLabels || ['Aprovação do cliente'];
+          const ckDone = s.drawerChecklist || [false];
+          const checklist = ckLabels.map((label,i) => ({ label, done: !!ckDone[i] })).filter(c => (c.label||'').trim());
+          const attachments = (s.drawerAttachments||[]).map(a => ({ name: a.name }));
           if (editId) {
-            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag } : d);
+            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag, priority, dueDate, dueTime, due, brief:s.drawerBrief||'', checklist, attachments } : d);
           } else {
-            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due:'Sem prazo', flag }];
+            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due, dueDate, dueTime, flag, priority, brief:s.drawerBrief||'', checklist, attachments }];
           }
           updates.drawerDemandTitle = '';
           updates.drawerDemandClientId = '';
-          updates.drawerTypeActive = [false,true,false,false,true,false,false];
+          updates.drawerTypeActive = [false,true,false,false,false,false,false,false];
           updates.drawerPriority = 'media';
-          updates.drawerChecklist = [true,false,false];
-          updates.drawerChecklistLabels = ['Receber imagens brutas','Primeira versão','Aprovação do cliente'];
+          updates.drawerDemandDate = ''; updates.drawerDemandTime = '';
+          updates.drawerBrief = ''; updates.drawerAttachments = []; updates.drawerNewClientOpen = false; updates.drawerNewClientName = '';
+          updates.drawerChecklist = [false];
+          updates.drawerChecklistLabels = ['Aprovação do cliente'];
         } else if (mode === 'cliente') {
           const nome = s.clienteNome||'Novo cliente';
           if (editId) {
@@ -2345,6 +2448,39 @@ class Component extends DCLogic {
       drawerDemandClientChange: (e) => this.setState({ drawerDemandClientId: e.target.value }),
       drawerClientOptions: clients.map(c => ({ id: String(c.id), nome: c.nome, color: c.color })),
       addClient: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
+      // ---- DRAWER DEMANDA: cliente inline ----
+      inlineClientOpen: !!s.drawerNewClientOpen,
+      inlineClientClosed: !s.drawerNewClientOpen,
+      inlineClientToggleLabel: s.drawerNewClientOpen ? '× cancelar' : '+ novo cliente',
+      toggleInlineClient: () => this.setState({ drawerNewClientOpen: !s.drawerNewClientOpen, drawerNewClientName: '' }),
+      inlineClientName: s.drawerNewClientName || '',
+      inlineClientNameChange: (e) => this.setState({ drawerNewClientName: e.target.value }),
+      inlineClientKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); addInlineClient(); } },
+      addInlineClient,
+      // ---- DRAWER DEMANDA: prazo (data + hora) ----
+      colorScheme: (s.mode || document.documentElement.getAttribute('data-theme') || 'dark') === 'light' ? 'light' : 'dark',
+      drawerDemandDate: s.drawerDemandDate || '',
+      drawerDemandDateChange: (e) => this.setState({ drawerDemandDate: e.target.value }),
+      drawerDemandTime: s.drawerDemandTime || '',
+      drawerDemandTimeChange: (e) => this.setState({ drawerDemandTime: e.target.value }),
+      // ---- DRAWER DEMANDA: briefing ----
+      drawerBrief: s.drawerBrief || '',
+      drawerBriefChange: (e) => this.setState({ drawerBrief: e.target.value }),
+      // ---- DRAWER DEMANDA: anexos ----
+      hasAttachments: (s.drawerAttachments || []).length > 0,
+      drawerAttachments: (s.drawerAttachments || []).map((a, i) => ({ name: a.name, onRemove: () => { const arr = [...(s.drawerAttachments || [])]; arr.splice(i, 1); this.setState({ drawerAttachments: arr }); } })),
+      drawerFileChange: (e) => { const files = [...(e.target.files || [])].map(f => ({ name: f.name })); if (files.length) this.setState({ drawerAttachments: [...(s.drawerAttachments || []), ...files] }); e.target.value = ''; },
+      // ---- DRAWER DEMANDA: limpar/reset ----
+      resetDrawerDemanda: () => this.setState({ drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'], toast:'Campos limpos' }),
+      // ---- DEMANDAS: filtro de prioridade ----
+      prioFilterAll: () => this.setState({ demandPrio:'all' }),
+      prioFilterHigh: () => this.setState({ demandPrio:'alta' }),
+      prioFilterMed: () => this.setState({ demandPrio:'media' }),
+      prioFilterLow: () => this.setState({ demandPrio:'baixa' }),
+      prioAllBg: fp==='all'?'var(--accent)':'transparent', prioAllColor: fp==='all'?'#fff':'var(--text-2)', prioAllW: fp==='all'?'600':'500',
+      prioHighBg: fp==='alta'?'var(--crit-weak)':'transparent', prioHighColor: fp==='alta'?'var(--crit)':'var(--text-2)', prioHighW: fp==='alta'?'600':'500',
+      prioMedBg: fp==='media'?'var(--warn-weak)':'transparent', prioMedColor: fp==='media'?'var(--warn)':'var(--text-2)', prioMedW: fp==='media'?'600':'500',
+      prioLowBg: fp==='baixa'?'var(--ok-weak)':'transparent', prioLowColor: fp==='baixa'?'var(--ok)':'var(--text-2)', prioLowW: fp==='baixa'?'600':'500',
       isPessoal: s.screen === 'pessoal',
       isCalendario: s.screen === 'calendario',
       isCalMonth: cv === 'month',
@@ -2438,9 +2574,9 @@ class Component extends DCLogic {
         drawerPrioHighBorder: dp==='alta' ? 'var(--crit)' : 'var(--border-2)',
         drawerPrioHighWeight: dp==='alta' ? '600' : '500',
       }; })(),
-      // ---- CHECKLIST DRAWER ----
-      drawerAddChecklistItem: () => { const labels=[...(s.drawerChecklistLabels||['Receber imagens brutas','Primeira versão','Aprovação do cliente'])]; labels.push('Novo item'); const checks=[...(s.drawerChecklist||[true,false,false])]; checks.push(false); this.setState({ drawerChecklistLabels:labels, drawerChecklist:checks }); },
-      drawerChecklistItems: (()=>{ const dck = s.drawerChecklist||[true,false,false]; const labels = s.drawerChecklistLabels||['Receber imagens brutas','Primeira versão','Aprovação do cliente']; return labels.map((label,i)=>({ label, textColor: dck[i] ? 'var(--text-2)' : 'var(--text)', textDecor: dck[i] ? 'line-through' : 'none', checkBorder: dck[i] ? 'var(--ok)' : 'var(--border-2)', checkBg: dck[i] ? 'var(--ok-weak)' : 'transparent', checkColor: dck[i] ? 'var(--ok)' : 'transparent', checkIcon: dck[i] ? this.icon('checkSm',11,2.2) : null, toggle: ()=>{ const n=[...dck]; n[i]=!n[i]; this.setState({ drawerChecklist:n }); } })); })(),
+      // ---- CHECKLIST DRAWER (editável: toggle, editar label, excluir) ----
+      drawerAddChecklistItem: () => { const labels=[...(s.drawerChecklistLabels||['Aprovação do cliente'])]; labels.push(''); const checks=[...(s.drawerChecklist||[false])]; checks.push(false); this.setState({ drawerChecklistLabels:labels, drawerChecklist:checks }); },
+      drawerChecklistItems: (()=>{ const dck = s.drawerChecklist||[false]; const labels = s.drawerChecklistLabels||['Aprovação do cliente']; return labels.map((label,i)=>({ label, textColor: dck[i] ? 'var(--text-3)' : 'var(--text)', textDecor: dck[i] ? 'line-through' : 'none', checkBorder: dck[i] ? 'var(--ok)' : 'var(--border-2)', checkBg: dck[i] ? 'var(--ok-weak)' : 'transparent', checkColor: dck[i] ? 'var(--ok)' : 'transparent', checkIcon: dck[i] ? this.icon('checkSm',11,2.2) : null, toggle: ()=>{ const n=[...dck]; n[i]=!n[i]; this.setState({ drawerChecklist:n }); }, onLabelChange:(e)=>{ const n=[...labels]; n[i]=e.target.value; this.setState({ drawerChecklistLabels:n }); }, onDelete:()=>{ const nl=[...labels]; nl.splice(i,1); const nc=[...dck]; nc.splice(i,1); this.setState({ drawerChecklistLabels:nl, drawerChecklist:nc }); } })); })(),
       // ---- CHAT ----
       chatInput: s.chatInput || '',
       chatInputChange: (e) => this.setState({ chatInput: e.target.value }),
