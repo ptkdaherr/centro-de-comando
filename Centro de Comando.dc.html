@@ -996,8 +996,8 @@
                 <div style="font-size:42px; font-weight:700; font-family:'Geist Mono',monospace; color:var(--ok); letter-spacing:-1.5px; line-height:1;">{{ salRecomendacao }}</div>
                 <div style="font-size:13px; color:var(--text-2); margin-top:10px;">Baseado no caixa atual e na reserva de segurança de 20%</div>
               </div>
-              <div style="width:120px; height:120px; border-radius:50%; background:conic-gradient(var(--ok) 0 58%, var(--surface-3) 58% 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="width:84px; height:84px; border-radius:50%; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;"><span style="font-size:20px; font-weight:700; font-family:'Geist Mono',monospace; color:var(--ok);">58%</span><span style="font-size:9.5px; color:var(--text-3);">do disponível</span></div>
+              <div style="width:120px; height:120px; border-radius:50%; background:conic-gradient(var(--ok) 0 {{ salPct }}%, var(--surface-3) {{ salPct }}% 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <div style="width:84px; height:84px; border-radius:50%; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;"><span style="font-size:20px; font-weight:700; font-family:'Geist Mono',monospace; color:var(--ok);">{{ salPct }}%</span><span style="font-size:9.5px; color:var(--text-3);">do recebido</span></div>
               </div>
             </div>
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px;">
@@ -2034,16 +2034,7 @@ class Component extends DCLogic {
     const prospects = prospectos.map(p => ({ id:p.id, initials:p.nome.split(' ').filter(w=>w).slice(0,2).map(w=>w[0]).join('').toUpperCase(), name:p.nome, meta:[p.segmento,p.obs].filter(Boolean).join(' · '), stage:p.etapa||'Prospecção',
       deleteIcon:this.icon('close',12,2), onClick:() => editProspecto(p), onDelete:(e) => { e.stopPropagation(); deleteProspecto(p.id); } }));
 
-    // ---- FINANCEIRO ----
-    const finKpis = [
-      { label:'Recebido no mês', value:this.brl(2250), sub:'de '+this.brl(6450)+' esperado', color:'var(--ok)', accent:'var(--ok)' },
-      { label:'A receber', value:this.brl(4200), sub:'3 faturas pendentes', color:'var(--info)', accent:'var(--info)' },
-      { label:'Despesas', value:this.brl(612.90), sub:'Adobe, internet, outros', color:'var(--text-2)', accent:'var(--text-3)' },
-      { label:'Resultado parcial', value:this.brl(1637.10), sub:'recebido − despesas', color:'var(--text)', accent:'var(--accent)' },
-    ];
-    const finBarsRaw = [{l:'Jan',v:3200},{l:'Fev',v:3200},{l:'Mar',v:4600},{l:'Abr',v:4200},{l:'Mai',v:5100},{l:'Jun',v:2250}];
-    const finMax = Math.max(...finBarsRaw.map(b=>b.v));
-    const finBars = finBarsRaw.map((b,i) => ({ label:b.l, val: s.hideMoney ? '•••' : 'R$'+Math.round(b.v/1000)+'k', h:Math.round(b.v/finMax*100)+'%', fill: i===5 ? 'var(--accent)' : 'var(--surface-3)', delay: (i*70)+'ms' }));
+    // ---- FINANCEIRO ---- (finKpis/finBars são calculados depois, a partir dos lançamentos reais)
     const finTxnsDefault = [
       { id:1, label:'Luso Automóveis — junho', meta:'Recebido · 14 jun', amount:'+ '+this.brl(1800), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)', tipo:'receita', valorRaw:'1800', dataRaw:'2026-06-14' },
       { id:2, label:'Flamenguismo — Reels avulso', meta:'Recebido · 12 jun', amount:'+ '+this.brl(450), amountColor:'var(--ok)', ic:'dollar', color:'var(--ok)', bg:'var(--ok-weak)', tipo:'receita', valorRaw:'450', dataRaw:'2026-06-12' },
@@ -2061,25 +2052,68 @@ class Component extends DCLogic {
     const deleteLancamento = (id) => { if (window.confirm('Excluir este lançamento? Essa ação não pode ser desfeita.')) this.setState({ lancamentos: lancamentos.filter(x=>x.id!==id) }); };
     const finTxns = lancamentos.map(t => ({ ...t, iconEl: this.icon(t.ic,15,1.8), deleteIcon:this.icon('close',12,2), onClick:() => editLancamento(t), onDelete:(e) => { e.stopPropagation(); deleteLancamento(t.id); } }));
 
-    // ---- SALÁRIO ----
-    const salBreakdown = [
-      { label:'Receita recebida', value:this.brl(2250), dotColor:'var(--ok)', labelColor:'var(--text-2)', valueColor:'var(--ok)', weight:'400' },
-      { label:'Despesas do mês', value:'− '+this.brl(612.90), dotColor:'var(--crit)', labelColor:'var(--text-2)', valueColor:'var(--text-2)', weight:'400' },
-      { label:'Reserva de segurança (20%)', value:'− '+this.brl(327.42), dotColor:'var(--warn)', labelColor:'var(--text-2)', valueColor:'var(--text-2)', weight:'400' },
-      { label:'Disponível para retirada', value:this.brl(1309.68), dotColor:'var(--accent)', labelColor:'var(--text)', valueColor:'var(--text)', weight:'600' },
-      { label:'Recomendação (90% do disponível)', value:this.brl(1178.71), dotColor:'var(--ok)', labelColor:'var(--ok)', valueColor:'var(--ok)', weight:'700' },
+    // ---- AGREGADOS FINANCEIROS REAIS (a partir dos lançamentos/clientes) ----
+    const _lval = (t) => parseFloat(String(t.valorRaw || '0').replace(',', '.')) || 0;
+    const _ym = (raw) => (raw || '').slice(0, 7); // 'AAAA-MM'
+    const _now = new Date();
+    const _ymOf = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    const nowYM = _ymOf(_now);
+    const recOfMonth = (ym) => lancamentos.filter(t => t.tipo === 'receita' && _ym(t.dataRaw) === ym).reduce((a, t) => a + _lval(t), 0);
+    const despOfMonth = (ym) => lancamentos.filter(t => t.tipo === 'despesa' && _ym(t.dataRaw) === ym).reduce((a, t) => a + _lval(t), 0);
+    const recMes = recOfMonth(nowYM);
+    const despMes = despOfMonth(nowYM);
+    const resultado = recMes - despMes;
+    const esperadoMes = clients.filter(c => (c.tipo || 'fixo') === 'fixo').reduce((a, c) => a + (parseFloat(String(c.valor || '0').replace(',', '.')) || 0), 0);
+    const aReceber = Math.max(0, esperadoMes - recMes);
+
+    const finKpis = [
+      { label:'Recebido no mês', value:this.brl(recMes), sub: esperadoMes > 0 ? ('de ' + this.brl(esperadoMes) + ' esperado') : 'sem clientes fixos', color:'var(--ok)', accent:'var(--ok)' },
+      { label:'A receber', value:this.brl(aReceber), sub: aReceber > 0 ? 'de clientes fixos este mês' : 'tudo recebido', color:'var(--info)', accent:'var(--info)' },
+      { label:'Despesas', value:this.brl(despMes), sub: despMes > 0 ? 'no mês atual' : 'nenhuma no mês', color:'var(--text-2)', accent:'var(--text-3)' },
+      { label:'Resultado parcial', value:this.brl(resultado), sub:'recebido − despesas', color: resultado >= 0 ? 'var(--text)' : 'var(--crit)', accent:'var(--accent)' },
     ];
-    const salHistRaw = [{l:'F',v:900},{l:'M',v:1100},{l:'A',v:1300},{l:'M',v:1450},{l:'J',v:1179}];
-    const salMax = Math.max(...salHistRaw.map(b=>b.v));
+    const _capMes = (i) => (meses[i] || '').charAt(0).toUpperCase() + (meses[i] || '').slice(1);
+    const finBarsRaw = [];
+    for (let i = 5; i >= 0; i--) { const dt = new Date(_now.getFullYear(), _now.getMonth() - i, 1); finBarsRaw.push({ l: _capMes(dt.getMonth()), v: recOfMonth(_ymOf(dt)) }); }
+    const finMax = Math.max(1, ...finBarsRaw.map(b => b.v));
+    const _kfmt = (v) => v >= 1000 ? 'R$' + (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k' : 'R$' + Math.round(v);
+    const finBars = finBarsRaw.map((b, i) => ({ label:b.l, val: s.hideMoney ? '•••' : _kfmt(b.v), h: Math.round(b.v / finMax * 100) + '%', fill: i === 5 ? 'var(--accent)' : 'var(--surface-3)', delay: (i * 70) + 'ms' }));
+
+    // ---- SALÁRIO (derivado do caixa real do mês) ----
+    const salBase = Math.max(0, recMes - despMes);
+    const salReserva = salBase * 0.20;
+    const salDisp = salBase - salReserva;      // = salBase * 0,8
+    const salRecom = salDisp * 0.90;
+    const salPct = recMes > 0 ? Math.min(100, Math.round(salRecom / recMes * 100)) : 0;
+    const salBreakdown = [
+      { label:'Receita recebida', value:this.brl(recMes), dotColor:'var(--ok)', labelColor:'var(--text-2)', valueColor:'var(--ok)', weight:'400' },
+      { label:'Despesas do mês', value:'− '+this.brl(despMes), dotColor:'var(--crit)', labelColor:'var(--text-2)', valueColor:'var(--text-2)', weight:'400' },
+      { label:'Reserva de segurança (20%)', value:'− '+this.brl(salReserva), dotColor:'var(--warn)', labelColor:'var(--text-2)', valueColor:'var(--text-2)', weight:'400' },
+      { label:'Disponível para retirada', value:this.brl(salDisp), dotColor:'var(--accent)', labelColor:'var(--text)', valueColor:'var(--text)', weight:'600' },
+      { label:'Recomendação (90% do disponível)', value:this.brl(salRecom), dotColor:'var(--ok)', labelColor:'var(--ok)', valueColor:'var(--ok)', weight:'700' },
+    ];
+    const salHistRaw = [];
+    for (let i = 4; i >= 0; i--) { const dt = new Date(_now.getFullYear(), _now.getMonth() - i, 1); salHistRaw.push({ l: _capMes(dt.getMonth()).charAt(0), v: Math.max(0, recOfMonth(_ymOf(dt)) - despOfMonth(_ymOf(dt))) * 0.8 }); }
+    const salMax = Math.max(1, ...salHistRaw.map(b=>b.v));
     const salHistory = salHistRaw.map((b,i) => ({ label:b.l, h:Math.round(b.v/salMax*80)+'%', fill: i===4 ? 'var(--ok)' : 'var(--surface-3)', delay: (i*80)+'ms' }));
 
-    // ---- METAS ----
-    const _maskMoney = (v) => s.hideMoney ? 'R$ ••••' : v;
+    // ---- METAS (derivadas dos dados reais) ----
+    const _pctOf = (a, b) => b > 0 ? Math.min(100, Math.round(a / b * 100)) : 0;
+    const _doneN = demands.filter(d => d.status === 'done').length;
+    const _totalN = demands.length;
+    const _cliN = clients.length;
+    const _prosN = prospectos.length;
+    const _alvoCli = _cliN + _prosN;
+    const _alvoPros = Math.max(_prosN, 3);
+    const _pFat = _pctOf(recMes, esperadoMes);
+    const _pEnt = _pctOf(_doneN, _totalN);
+    const _pCli = _pctOf(_cliN, _alvoCli);
+    const _pPro = _pctOf(_prosN, _alvoPros);
     const metas = [
-      { title:'Faturamento', subtitle:'Meta mensal', iconEl:this.icon('dollar',18,1.7), iconBg:'var(--ok-weak)', iconColor:'var(--ok)', current:_maskMoney('R$ 2.250'), target:_maskMoney('R$ 6.500'), bar:'35%', barColor:'var(--ok)', pct:'35%', pctColor:'var(--ok)', pctBg:'var(--ok-weak)', note: s.hideMoney ? 'Faltam R$ ••••' : 'Faltam R$ 4.250', trend:'+18% vs mai', trendColor:'var(--ok)' },
-      { title:'Entregas no prazo', subtitle:'Demandas entregues', iconEl:this.icon('check',18,2), iconBg:'var(--accent-weak)', iconColor:'var(--accent)', current:'8', target:'15', bar:'53%', barColor:'var(--accent)', pct:'53%', pctColor:'var(--accent)', pctBg:'var(--accent-weak)', note:'7 entregas faltando', trend:'87% pontualidade', trendColor:'var(--text-2)' },
-      { title:'Clientes ativos', subtitle:'Novos contratos', iconEl:this.icon('users',18,1.7), iconBg:'var(--info-weak)', iconColor:'var(--info)', current:'2', target:'3', bar:'67%', barColor:'var(--info)', pct:'67%', pctColor:'var(--info)', pctBg:'var(--info-weak)', note:'1 cliente em proposta', trend:'Bistro em negoc.', trendColor:'var(--warn)' },
-      { title:'Horas produtivas', subtitle:'Estimativa semanal', iconEl:this.icon('clock',18,1.7), iconBg:'var(--warn-weak)', iconColor:'var(--warn)', current:'32h', target:'40h', bar:'80%', barColor:'var(--warn)', pct:'80%', pctColor:'var(--warn)', pctBg:'var(--warn-weak)', note:'Boa semana', trend:'−2h vs semana ant.', trendColor:'var(--text-2)' },
+      { title:'Faturamento', subtitle:'Recebido vs. esperado (clientes fixos)', iconEl:this.icon('dollar',18,1.7), iconBg:'var(--ok-weak)', iconColor:'var(--ok)', current:this.brl(recMes), target: esperadoMes > 0 ? this.brl(esperadoMes) : '—', bar:_pFat+'%', barColor:'var(--ok)', pct:_pFat+'%', pctColor:'var(--ok)', pctBg:'var(--ok-weak)', note: esperadoMes > 0 ? (recMes < esperadoMes ? 'Faltam ' + this.brl(esperadoMes - recMes) : 'Meta atingida 🎉') : 'Cadastre clientes fixos p/ a meta', trend: nowYM, trendColor:'var(--text-3)' },
+      { title:'Entregas', subtitle:'Demandas concluídas', iconEl:this.icon('check',18,2), iconBg:'var(--accent-weak)', iconColor:'var(--accent)', current:String(_doneN), target:String(_totalN), bar:_pEnt+'%', barColor:'var(--accent)', pct:_pEnt+'%', pctColor:'var(--accent)', pctBg:'var(--accent-weak)', note: _totalN > 0 ? ((_totalN - _doneN) + ' em aberto') : 'Sem demandas ainda', trend: _pEnt + '% concluído', trendColor:'var(--text-2)' },
+      { title:'Clientes ativos', subtitle:'Carteira + funil', iconEl:this.icon('users',18,1.7), iconBg:'var(--info-weak)', iconColor:'var(--info)', current:String(_cliN), target:String(_alvoCli || 0), bar:_pCli+'%', barColor:'var(--info)', pct:_pCli+'%', pctColor:'var(--info)', pctBg:'var(--info-weak)', note: _prosN + ' em prospecção', trend: _cliN + ' contratado(s)', trendColor:'var(--text-2)' },
+      { title:'Prospecções', subtitle:'No funil de vendas', iconEl:this.icon('target',18,1.7), iconBg:'var(--warn-weak)', iconColor:'var(--warn)', current:String(_prosN), target:String(_alvoPros), bar:_pPro+'%', barColor:'var(--warn)', pct:_pPro+'%', pctColor:'var(--warn)', pctBg:'var(--warn-weak)', note: _prosN > 0 ? 'Converter em clientes' : 'Adicione prospectos', trend:'meta ' + _alvoPros, trendColor:'var(--text-3)' },
     ];
 
     // ---- IDEIAS ----
@@ -2622,7 +2656,8 @@ class Component extends DCLogic {
       finKpis, finBars, finTxns,
       isSalario: s.screen === 'salario',
       salBreakdown, salHistory,
-      salRecomendacao: s.hideMoney ? 'R$ ••••' : 'R$ 1.480,00',
+      salRecomendacao: this.brl(salRecom),
+      salPct: salPct,
       isMetas: s.screen === 'metas',
       metas,
       isIdeias: s.screen === 'ideias',
