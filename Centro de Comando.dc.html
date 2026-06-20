@@ -120,15 +120,17 @@
           </div>
           <div style="text-align:center; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.14s;">
             <div style="font-size:16px; font-weight:600; letter-spacing:.1px;">Centro de Comando</div>
-            <div style="font-size:12.5px; color:var(--text-3); margin-top:3px;">Acesso restrito — digite a senha</div>
+            <div style="font-size:12.5px; color:var(--text-3); margin-top:3px;">{{ authSubtitle }}</div>
           </div>
         </div>
         <div style="width:100%; display:flex; flex-direction:column; gap:11px;">
-          <input type="password" value="{{ loginPassword }}" onInput="{{ loginPasswordChange }}" onKeyDown="{{ loginKeyDown }}" autofocus="true" placeholder="Senha" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.23s;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+          <input value="{{ loginUsername }}" onInput="{{ loginUsernameChange }}" onKeyDown="{{ loginKeyDown }}" autofocus="true" placeholder="Usuário" autocapitalize="none" autocomplete="username" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.2s;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+          <input type="password" value="{{ loginPassword }}" onInput="{{ loginPasswordChange }}" onKeyDown="{{ loginKeyDown }}" placeholder="Senha" autocomplete="current-password" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.26s;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
           <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:12.5px; color:var(--crit); padding:0 2px;">{{ loginError }}</div>
           </sc-if>
-          <button onClick="{{ submitLogin }}" style="height:42px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35); animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.32s;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">Entrar</button>
+          <button onClick="{{ submitAuth }}" style="height:42px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35); animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.32s;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ authCta }}</button>
+          <button onClick="{{ toggleAuthMode }}" style="border:none; background:transparent; color:var(--text-3); font:inherit; font-size:12px; cursor:pointer; padding:5px; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.38s;" style-hover="color:var(--accent)">{{ authToggleLabel }}</button>
         </div>
       </div>
     </div>
@@ -212,12 +214,13 @@
 
         <!-- user footer -->
         <div style="border-top:1px solid var(--border); padding:10px; display:flex; align-items:center; gap:10px;">
-          <div style="flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:linear-gradient(150deg,#3a4252,#272d38); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--text); border:1px solid var(--border-2);">RA</div>
+          <div style="flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:linear-gradient(150deg,#3a4252,#272d38); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--text); border:1px solid var(--border-2);">{{ userInitials }}</div>
           <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
             <div style="min-width:0; flex:1;">
-              <div style="font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Rafael Andrade</div>
+              <div style="font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ username }}</div>
               <div style="font-size:11px; color:var(--text-3); white-space:nowrap;">Agência · plano solo</div>
             </div>
+            <button onClick="{{ logout }}" title="Sair da conta" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border:1px solid var(--border); background:var(--surface); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconLogout }}</button>
           </sc-if>
         </div>
       </aside>
@@ -1540,7 +1543,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginPassword: '', loginError: '', geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -1571,7 +1574,7 @@ class Component extends DCLogic {
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json().catch(() => ({ ok: false })))
       .then((d) => {
-        this.setState({ authed: !!d.ok, authChecked: true });
+        this.setState({ authed: !!d.ok, authChecked: true, username: d.username || '', authMode: d.hasUsers ? 'login' : 'signup' });
         if (d.ok) { this._loadState(); this._loadConfig(); }
       })
       .catch(() => this.setState({ authed: false, authChecked: true }));
@@ -1655,6 +1658,7 @@ class Component extends DCLogic {
       moon: ["M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"],
       eye: ["M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z", "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"],
       eyeOff: ["M10 5.2A9.6 9.6 0 0 1 12 5c6.4 0 10 7 10 7a13.3 13.3 0 0 1-2.2 2.9", "M6.6 6.6A13.4 13.4 0 0 0 2 12s3.6 7 10 7a9.4 9.4 0 0 0 4.4-1.1", "M3 3l18 18", "M9.7 9.7a3 3 0 0 0 4.2 4.2"],
+      logout: ["M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3", "M16 17l5-5-5-5", "M21 12H9"],
     };
     const d = P[name] || [];
     return React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: sw, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: '0 0 auto' } }, d.map((dd, i) => React.createElement('path', { key: i, d: dd })));
@@ -2169,18 +2173,25 @@ class Component extends DCLogic {
     const ideiasView = ideias.map(idea => ({ ...idea, deleteIcon:this.icon('close',12,2), onEdit:() => editIdeia(idea), onDelete:() => deleteIdeia(idea.id) }));
 
     // ---- AUTENTICAÇÃO ----
+    const loginUsernameChange = (e) => this.setState({ loginUsername: e.target.value, loginError: '' });
     const loginPasswordChange = (e) => this.setState({ loginPassword: e.target.value, loginError: '' });
-    const submitLogin = () => {
+    const toggleAuthMode = () => this.setState({ authMode: (s.authMode === 'signup' ? 'login' : 'signup'), loginError: '' });
+    const submitAuth = () => {
+      if (s.authBusy) return;
+      const username = (s.loginUsername || '').trim();
       const password = s.loginPassword || '';
-      if (!password) return;
-      fetch('/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })
+      const signup = s.authMode === 'signup';
+      if (!username || !password) { this.setState({ loginError: 'Preencha usuário e senha.' }); return; }
+      this.setState({ authBusy: true, loginError: '' });
+      fetch(signup ? '/api/signup' : '/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) })
         .then(async (r) => {
-          if (r.ok) { this.setState({ authed: true, loginPassword: '', loginError: '' }); this._loadState(); this._loadConfig(); }
-          else { const d = await r.json().catch(() => ({})); this.setState({ loginError: d.error || 'Senha incorreta', loginPassword: '' }); }
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && d.ok) { this.setState({ authed: true, username: d.username || username, loginUsername: '', loginPassword: '', loginError: '', authBusy: false }); this._loadState(); this._loadConfig(); }
+          else { this.setState({ loginError: d.error || (signup ? 'Não consegui criar a conta' : 'Usuário ou senha incorretos'), loginPassword: '', authBusy: false }); }
         })
-        .catch(() => this.setState({ loginError: 'Não foi possível conectar ao servidor' }));
+        .catch(() => this.setState({ loginError: 'Não foi possível conectar ao servidor', authBusy: false }));
     };
-    const loginKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); submitLogin(); } };
+    const loginKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); submitAuth(); } };
 
     // ---- BUSCA (⌘K) ----
     const openSearch = () => this.setState({ searchOpen:true, searchQuery:'' });
@@ -2674,8 +2685,18 @@ class Component extends DCLogic {
       openSearch, closeSearch, searchInputChange, searchResults, searchHasResults, searchEmpty,
       searchOpen: !!s.searchOpen, searchQuery: s.searchQuery || '',
       authed: !!s.authed, showLogin: !!s.authChecked && !s.authed,
-      loginPassword: s.loginPassword || '', loginError: s.loginError || '',
-      loginPasswordChange, loginKeyDown, submitLogin,
+      loginUsername: s.loginUsername || '', loginPassword: s.loginPassword || '', loginError: s.loginError || '',
+      loginUsernameChange, loginPasswordChange, loginKeyDown, submitAuth, toggleAuthMode,
+      authSubtitle: s.authMode === 'signup' ? 'Crie sua conta — seus dados ficam só seus' : 'Entre com seu usuário e senha',
+      authCta: s.authBusy ? 'Aguarde…' : (s.authMode === 'signup' ? 'Criar conta' : 'Entrar'),
+      authToggleLabel: s.authMode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma',
+      username: s.username || '',
+      userInitials: ((s.username || '?').trim().slice(0, 2) || '?').toUpperCase(),
+      iconLogout: this.icon('logout', 15, 1.8),
+      logout: () => {
+        fetch('/api/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+        this.setState({ authed: false, username: '', authMode: 'login', loginUsername: '', loginPassword: '', loginError: '', clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, wfNodesExtra: null, geminiConfigured: false, screen: 'inicio' });
+      },
       isFinanceiro: s.screen === 'financeiro',
       finKpis, finBars, finTxns,
       isSalario: s.screen === 'salario',

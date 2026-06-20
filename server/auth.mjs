@@ -29,18 +29,20 @@ const sessions = new Map();
 
 export const SESSION_COOKIE = 'cdc_session';
 
-export function createSession() {
+// sessão guarda o userId dono dela (multiusuário)
+export function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { expiresAt: Date.now() + SESSION_TTL_MS });
+  sessions.set(token, { userId, expiresAt: Date.now() + SESSION_TTL_MS });
   return token;
 }
 
-export function isValidSession(token) {
-  if (!token) return false;
+// devolve o userId da sessão (ou null se inválida/expirada)
+export function getSessionUserId(token) {
+  if (!token) return null;
   const s = sessions.get(token);
-  if (!s) return false;
-  if (Date.now() > s.expiresAt) { sessions.delete(token); return false; }
-  return true;
+  if (!s) return null;
+  if (Date.now() > s.expiresAt) { sessions.delete(token); return null; }
+  return s.userId;
 }
 
 export function destroySession(token) {
