@@ -241,6 +241,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Service worker (PWA) só no app empacotado. Em dev devolvemos 404 pra não
+  // deixar o cache do SW servir versão antiga e confundir durante o trabalho.
+  if (url === '/sw.js' && !PACKAGED) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('sw off (dev)'); return; }
+
   let filePath;
   if (url === '/') filePath = path.join(ROOT, MAIN_FILE);
   else if (url.endsWith('/')) filePath = path.join(ROOT, url, 'index.html');

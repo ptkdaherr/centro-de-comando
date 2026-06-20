@@ -16,12 +16,16 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>
-  // Registra o service worker. Só roda em contexto seguro (https ou
-  // localhost); em http puro via IP de LAN, 'serviceWorker' nem existe
-  // no navigator, então isto é ignorado sem erro no console.
+  // Registra o service worker SE o servidor o disponibilizar (só no app
+  // empacotado/.exe). Em dev o /sw.js responde 404, então removemos qualquer
+  // SW antigo pra o cache do PWA não servir versão velha durante o trabalho.
   if ('serviceWorker' in navigator) {
+    var clearSW = function () { navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (x) { x.unregister(); }); }); };
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
+      fetch('/sw.js', { method: 'HEAD' }).then(function (r) {
+        if (r.ok) navigator.serviceWorker.register('/sw.js').catch(function () {});
+        else clearSW();
+      }).catch(clearSW);
     });
   }
 </script>
