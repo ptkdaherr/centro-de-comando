@@ -691,10 +691,13 @@
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Projetos ativos</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(228px,1fr)); gap:12px; margin-bottom:32px;">
                 <sc-for list="{{ personal }}" as="c" hint-placeholder-count="3">
-                  <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-1);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
+                  <div onClick="{{ c.onClick }}" title="Clique para editar" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-1);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                       <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ c.statusColor }}; background:{{ c.statusBg }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ c.statusColor }};"></span>{{ c.status }}</span>
-                      <span style="display:flex; color:var(--text-3);">{{ c.iconType }}</span>
+                      <div style="display:flex; align-items:center; gap:7px;">
+                        <span style="display:flex; color:var(--text-3);">{{ c.iconType }}</span>
+                        <button onClick="{{ c.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ c.deleteIcon }}</button>
+                      </div>
                     </div>
                     <div style="font-size:13.5px; font-weight:500; line-height:1.35; margin-bottom:13px; min-height:36px;">{{ c.title }}</div>
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:11px; border-top:1px solid var(--border);">
@@ -708,13 +711,14 @@
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Ideias rascunho</div>
               <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
                 <sc-for list="{{ personalIdeas }}" as="idea" hint-placeholder-count="3">
-                  <div style="display:flex; align-items:center; gap:13px; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer;" style-hover="background:var(--surface-2)">
+                  <div onClick="{{ idea.onClick }}" title="Clique para editar" style="display:flex; align-items:center; gap:13px; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer;" style-hover="background:var(--surface-2)">
                     <span style="display:flex; color:var(--text-3);">{{ idea.iconEl }}</span>
                     <div style="flex:1; min-width:0;">
                       <div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ idea.title }}</div>
                       <div style="font-size:11.5px; color:var(--text-3); margin-top:2px;">{{ idea.meta }}</div>
                     </div>
-                    <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:7px; font:inherit; font-size:11.5px; cursor:pointer;" style-hover="color:var(--text)">Virar projeto</button>
+                    <button onClick="{{ idea.onVirar }}" style="display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:7px; font:inherit; font-size:11.5px; cursor:pointer; flex:0 0 auto;" style-hover="color:var(--text)">Virar projeto</button>
+                    <button onClick="{{ idea.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:26px; height:26px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer; flex:0 0 auto;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ idea.deleteIcon }}</button>
                   </div>
                 </sc-for>
                 <button onClick="{{ openDrawerIdeia }}" style="width:100%; display:flex; align-items:center; gap:8px; padding:13px 16px; border:none; background:transparent; color:var(--text-3); font:inherit; font-size:13px; cursor:pointer;" style-hover="color:var(--text-2)">{{ iconPlusSm }}<span>Nova ideia</span></button>
@@ -1898,11 +1902,9 @@ class Component extends DCLogic {
       clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', cards:avulsasD.filter(passPrio).map(d => mkLane(d, true)) });
     }
 
-    const personal = [
-      mkLane({ id:101, title:'Canal próprio — edição vlog #12', clientId:null, status:'prod', type:'video', due:'Sábado', flag:null }, false),
-      mkLane({ id:102, title:'Site portfólio v2', clientId:null, status:'todo', type:'code', due:'Sem prazo', flag:null }, false),
-      mkLane({ id:103, title:'Estudo: motion no After Effects', clientId:null, status:'todo', type:'bulb', due:'Quando der', flag:null }, false),
-    ];
+    // Projetos pessoais = demandas sem cliente (reais, editáveis) — não os mocks antigos
+    const personal = demands.filter(d => d.clientId == null && d.status !== 'done').map(d => mkLane(d, true));
+    const personalEmpty = personal.length === 0;
 
     const ac = s.activeClient || 0;
     const activeLane = clientLanes[ac] || clientLanes[0] || { cards:[], openLabel:'0 abertas', next:'', nextColor:'var(--text-3)', color:'var(--accent)', initials:'?', avatarBg:'var(--surface)', tag:'', tagColor:'var(--text-3)', tagBg:'var(--surface)', tagBorder:'var(--border)' };
@@ -1925,11 +1927,7 @@ class Component extends DCLogic {
       const ai = clients.length;
       clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
     }
-    const personalIdeas = [
-      { title: 'Série: bastidores de uma agência solo', meta: 'Adicionada ontem · YouTube / Reels', ic: 'video' },
-      { title: 'Preset LUT exclusivo pra vender', meta: 'Adicionada há 3 dias · Produto digital', ic: 'layers' },
-      { title: 'Guia: como precificar edição de vídeo', meta: 'Adicionada há 1 semana · Conteúdo', ic: 'type' },
-    ].map(i => ({ title: i.title, meta: i.meta, iconEl: this.icon(i.ic, 15, 1.7) }));
+    // personalIdeas (ideias reais) é montado mais abaixo, após `ideias`/`editIdeia` existirem
     // ---- CALENDÁRIO ----
     const calDayHeaders = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
     const calMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -2096,6 +2094,19 @@ class Component extends DCLogic {
     ];
     const ideias = s.ideias || ideiasDefault;
     const editIdeia = (idea) => this.setState({ drawer:true, drawerMode:'ideia', drawerEditId:idea.id, ideiaTitulo:idea.title||'', ideiaCategoria:(idea.tags&&idea.tags[0]&&idea.tags[0].label)||'Pessoal', ideiaObs:idea.obs||'' });
+    // "Virar projeto": abre o drawer de nova demanda já com o título/obs da ideia
+    const projetoFromIdeia = (idea) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle: idea.title||'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief: idea.obs||'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
+    // Ideias rascunho da aba Pessoal = ideias reais (clicáveis pra editar / virar projeto)
+    const personalIdeas = ideias.map(idea => ({
+      title: idea.title,
+      meta: ((idea.tags && idea.tags[0] && idea.tags[0].label) || 'Ideia') + ' · ' + (idea.date || idea.status || ''),
+      iconEl: this.icon('bulb', 15, 1.7),
+      onClick: () => editIdeia(idea),
+      onVirar: (e) => { if (e && e.stopPropagation) e.stopPropagation(); projetoFromIdeia(idea); },
+      onDelete: (e) => { if (e && e.stopPropagation) e.stopPropagation(); deleteIdeia(idea.id); },
+      deleteIcon: this.icon('close', 12, 2),
+    }));
+    const personalIdeasEmpty = personalIdeas.length === 0;
     const deleteIdeia = (id) => { if (window.confirm('Excluir esta ideia? Essa ação não pode ser desfeita.')) this.setState({ ideias: ideias.filter(x=>x.id!==id) }); };
     const ideiasView = ideias.map(idea => ({ ...idea, deleteIcon:this.icon('close',12,2), onEdit:() => editIdeia(idea), onDelete:() => deleteIdeia(idea.id) }));
 
@@ -2532,7 +2543,7 @@ class Component extends DCLogic {
       stubIcon: stub ? this.icon(stub.i, 28, 1.7) : null,
       hoje, futuras, atividades, kpis, board, hojeCount, inicioResumo, hojeLabel, saudacao, ctxChip1, ctxChip2, ctxChip3,
       hojeEmpty: hoje.length === 0, futurasEmpty: futuras.length === 0, atividadesEmpty: atividades.length === 0,
-      clientLanes, personal, personalIdeas,
+      clientLanes, personal, personalIdeas, personalEmpty, personalIdeasEmpty,
       clientTabs,
       activeClientCards: activeLane.cards,
       activeClientInfo: activeLane,
