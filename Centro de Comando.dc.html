@@ -249,7 +249,7 @@
             </div>
             <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:13px; margin-bottom:30px;">
               <sc-for list="{{ hoje }}" as="d" hint-placeholder-count="4">
-                <div onClick="{{ openDrawer }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ d.accent }}; border-radius:12px; padding:15px 16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .32s cubic-bezier(.4,0,.2,1) both; animation-delay: calc(160ms + {{ $index }} * 40ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.985)">
+                <div onClick="{{ d.onClick }}" title="Clique para editar" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ d.accent }}; border-radius:12px; padding:15px 16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .32s cubic-bezier(.4,0,.2,1) both; animation-delay: calc(160ms + {{ $index }} * 40ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.985)">
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;">
                     <div style="min-width:0;">
                       <div style="font-size:14.5px; font-weight:600; line-height:1.3; margin-bottom:6px;">{{ d.title }}</div>
@@ -279,7 +279,7 @@
                 <h2 style="margin:0 0 13px; font-size:15px; font-weight:600;">Demandas futuras</h2>
                 <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
                   <sc-for list="{{ futuras }}" as="d" hint-placeholder-count="3">
-                    <div onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:13px; padding:13px 15px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s, padding-left .12s; animation:cc-rise .3s ease both; animation-delay: calc({{ $index }} * 35ms);" style-hover="background:var(--surface-2); padding-left:19px">
+                    <div onClick="{{ d.onClick }}" title="Clique para editar" style="display:flex; align-items:center; gap:13px; padding:13px 15px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s, padding-left .12s; animation:cc-rise .3s ease both; animation-delay: calc({{ $index }} * 35ms);" style-hover="background:var(--surface-2); padding-left:19px">
                       <span style="width:9px; height:9px; border-radius:3px; background:{{ d.clientColor }}; flex:0 0 auto;"></span>
                       <div style="flex:1; min-width:0;">
                         <div style="font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ d.title }}</div>
@@ -1292,7 +1292,12 @@
 
           <div style="display:flex; align-items:center; gap:10px; padding:16px 20px; border-top:1px solid var(--border);">
             <button onClick="{{ submitDrawer }}" style="flex:1; height:40px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ drawerCta }}</button>
-            <button onClick="{{ resetDrawerDemanda }}" title="Limpar tudo e começar de novo" style="height:40px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-3); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="color:var(--warn); border-color:var(--warn)">Limpar</button>
+            <sc-if value="{{ isCreatingDemanda }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ resetDrawerDemanda }}" title="Limpar tudo e começar de novo" style="height:40px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-3); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="color:var(--warn); border-color:var(--warn)">Limpar</button>
+            </sc-if>
+            <sc-if value="{{ isEditingDemanda }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ deleteDrawerDemanda }}" title="Excluir esta demanda" style="height:40px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface); color:var(--crit); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:var(--crit-weak); border-color:var(--crit)">Excluir</button>
+            </sc-if>
             <button onClick="{{ closeDrawer }}" style="height:40px; padding:0 16px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
           </div>
         </div>
@@ -1689,19 +1694,19 @@ class Component extends DCLogic {
     // Antes eram exemplos fixos (Luso, Flamenguismo). "Conectar de verdade" depois.
     const _demHome = s.demands || [];
     const _cliHome = s.clients || [];
-    const _tLabelHome = { video:'Vídeo', megaphone:'Anúncio', image:'Arte', layers:'Social', type:'Legenda', code:'Site', bulb:'Estudo' };
-    const _tIconHome = { video:'video', megaphone:'megaphone', image:'image', layers:'layers', type:'type', code:'code', bulb:'bulb' };
+    const _tLabelHome = { video:'Vídeo', megaphone:'Anúncio', image:'Arte', layers:'Social', type:'Legenda', code:'Site', bulb:'Estudo', rec:'Gravação' };
+    const _tIconHome = { video:'video', megaphone:'megaphone', image:'image', layers:'layers', type:'type', code:'code', bulb:'bulb', rec:'video' };
     const _cliOfHome = (id) => _cliHome.find(c => c.id === id);
     const _isHoje = (d) => /hoje/i.test(d.due || '');
 
     const hoje = _demHome.filter(_isHoje).map(d => {
       const cl = _cliOfHome(d.clientId); const st = stat[d.status] || stat.todo;
-      return { title:d.title, client: cl?cl.nome:'Pessoal', clientColor: cl?cl.color:'var(--text-3)', accent: cl?cl.color:'var(--accent)', status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due||'Hoje', dueColor: dueAmber, type: _tLabelHome[d.type]||'Arte', iconClock: this.icon('clock', 14, 1.7), iconType: this.icon(_tIconHome[d.type]||'image', 14, 1.6) };
+      return { title:d.title, client: cl?cl.nome:'Pessoal', clientColor: cl?cl.color:'var(--text-3)', accent: cl?cl.color:'var(--accent)', status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due||'Hoje', dueColor: dueAmber, type: _tLabelHome[d.type]||'Arte', iconClock: this.icon('clock', 14, 1.7), iconType: this.icon(_tIconHome[d.type]||'image', 14, 1.6), onClick: () => editDemanda(d) };
     });
 
     const futuras = _demHome.filter(d => !_isHoje(d) && d.status !== 'done').slice(0, 6).map(d => {
       const cl = _cliOfHome(d.clientId);
-      return { title:d.title, client: cl?cl.nome:'Pessoal', clientColor: cl?cl.color:'var(--text-3)', type: _tLabelHome[d.type]||'Arte', due: d.due||'Sem prazo', dueRel: '' };
+      return { title:d.title, client: cl?cl.nome:'Pessoal', clientColor: cl?cl.color:'var(--text-3)', type: _tLabelHome[d.type]||'Arte', due: d.due||'Sem prazo', dueRel: '', onClick: () => editDemanda(d) };
     });
 
     // Sem log de atividades real ainda — fica vazio (empty state) até existir uma fonte.
@@ -2378,7 +2383,9 @@ class Component extends DCLogic {
       isDrawerProspecto: s.drawerMode === 'prospecto',
       isDrawerLancamento: s.drawerMode === 'lancamento',
       isDrawerIdeia: s.drawerMode === 'ideia',
-      drawerLabel: ({ demanda:'Nova demanda', cliente:'Novo cliente', prospecto:'Novo prospecto', lancamento:'Lançamento', ideia:'Nova ideia' })[s.drawerMode||'demanda'] || 'Nova demanda',
+      drawerLabel: (s.drawerEditId
+        ? ({ demanda:'Editar demanda', cliente:'Editar cliente', prospecto:'Editar prospecto', lancamento:'Editar lançamento', ideia:'Editar ideia' })
+        : ({ demanda:'Nova demanda', cliente:'Novo cliente', prospecto:'Novo prospecto', lancamento:'Lançamento', ideia:'Nova ideia' }))[s.drawerMode||'demanda'] || 'Nova demanda',
       drawerTitle: s.drawerEditId
         ? ({ demanda:'Editar demanda', cliente:'Editar cliente', prospecto:'Editar prospecto', lancamento:'Editar lançamento', ideia:'Editar ideia' })[s.drawerMode||'demanda'] || 'Editar'
         : ({ demanda:'Criar demanda', cliente:'Adicionar cliente', prospecto:'Adicionar prospecto', lancamento:'Registrar lançamento', ideia:'Capturar ideia' })[s.drawerMode||'demanda'] || 'Criar demanda',
@@ -2470,8 +2477,12 @@ class Component extends DCLogic {
       hasAttachments: (s.drawerAttachments || []).length > 0,
       drawerAttachments: (s.drawerAttachments || []).map((a, i) => ({ name: a.name, onRemove: () => { const arr = [...(s.drawerAttachments || [])]; arr.splice(i, 1); this.setState({ drawerAttachments: arr }); } })),
       drawerFileChange: (e) => { const files = [...(e.target.files || [])].map(f => ({ name: f.name })); if (files.length) this.setState({ drawerAttachments: [...(s.drawerAttachments || []), ...files] }); e.target.value = ''; },
-      // ---- DRAWER DEMANDA: limpar/reset ----
+      // ---- DRAWER DEMANDA: criar vs editar (footer) ----
+      isCreatingDemanda: s.drawer && (s.drawerMode||'demanda')==='demanda' && !s.drawerEditId,
+      isEditingDemanda: s.drawer && (s.drawerMode||'demanda')==='demanda' && !!s.drawerEditId,
+      // ---- DRAWER DEMANDA: limpar/reset (criar) e excluir (editar) ----
       resetDrawerDemanda: () => this.setState({ drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'], toast:'Campos limpos' }),
+      deleteDrawerDemanda: () => { const id = s.drawerEditId; if (id && window.confirm('Excluir esta demanda? Essa ação não pode ser desfeita.')) { this.setState({ demands:(s.demands||[]).filter(x=>x.id!==id), drawer:false, drawerEditId:null, toast:'Demanda excluída' }); clearTimeout(this._t); this._t = setTimeout(()=>this.setState({ toast:null }), 2200); } },
       // ---- DEMANDAS: filtro de prioridade ----
       prioFilterAll: () => this.setState({ demandPrio:'all' }),
       prioFilterHigh: () => this.setState({ demandPrio:'alta' }),
