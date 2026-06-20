@@ -16,7 +16,7 @@ out/
 
 # Backend (Fase 3a) — segredos e dados locais, nunca versionar
 server/.env
-server/data/*.sqlite
+server/data/
 
 # Tauri (Fase 3d) — build, código gerado e o Node embutido (sidecar)
 src-tauri/target/

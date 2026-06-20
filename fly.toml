@@ -1,0 +1,31 @@
+# Centro de Comando — configuração do Fly.io
+# Troque "app" por um nome único (o `fly launch` ajuda a escolher).
+app = "centro-de-comando"
+primary_region = "gru"   # São Paulo — menor latência pro Brasil
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  CDC_DATA_DIR = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # 0 = mais barato (a máquina "dorme" quando ociosa e acorda no 1º acesso;
+  # ao acordar, todo mundo refaz login). Troque pra 1 pra ficar sempre ligada
+  # (experiência mais lisa, ~poucos dólares/mês).
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+# Disco persistente: é AQUI que o banco (cdc.sqlite) fica salvo entre reinícios.
+# Sem isso, os dados sumiriam a cada deploy.
+[[mounts]]
+  source = "cdc_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

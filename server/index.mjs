@@ -340,10 +340,10 @@ if (!PACKAGED) {
 
 server.listen(PORT, () => {
   const link = `http://localhost:${PORT}/`;
-  console.log('\n  Centro de Comando — servidor (Fase 3a: backend + auth + SQLite)\n');
-  console.log(`  ➜  Local:   ${link}`);
-  console.log('  ➜  Live reload ativo (salve um arquivo e o navegador atualiza)\n');
-  console.log('  Ctrl+C para parar.\n');
+  console.log(`\n  Centro de Comando — servidor multiusuário ${PACKAGED ? '(modo hospedado/produção)' : '(dev)'}\n`);
+  console.log(`  ➜  Porta:   ${PORT}${PACKAGED ? '' : '   ' + link}`);
+  if (!PACKAGED) console.log('  ➜  Live reload ativo (salve um arquivo e o navegador atualiza)');
+  console.log('\n  Ctrl+C para parar.\n');
   // em dev abre o navegador; empacotado (Tauri) a janela é aberta pelo app
   if (!PACKAGED) {
     const opener = process.platform === 'win32' ? `start "" "${link}"` : process.platform === 'darwin' ? `open "${link}"` : `xdg-open "${link}"`;

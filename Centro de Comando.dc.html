@@ -126,6 +126,9 @@
         <div style="width:100%; display:flex; flex-direction:column; gap:11px;">
           <input value="{{ loginUsername }}" onInput="{{ loginUsernameChange }}" onKeyDown="{{ loginKeyDown }}" autofocus="true" placeholder="Usuário" autocapitalize="none" autocomplete="username" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.2s;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
           <input type="password" value="{{ loginPassword }}" onInput="{{ loginPasswordChange }}" onKeyDown="{{ loginKeyDown }}" placeholder="Senha" autocomplete="current-password" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none; animation:cc-rise .55s cubic-bezier(.16,1,.3,1) both; animation-delay:.26s;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+          <sc-if value="{{ isSignupMode }}" hint-placeholder-val="{{ false }}">
+            <input value="{{ loginCode }}" onInput="{{ loginCodeChange }}" onKeyDown="{{ loginKeyDown }}" placeholder="Código de convite (se houver)" autocapitalize="none" style="width:100%; height:42px; padding:0 14px; border:1px solid var(--border-2); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+          </sc-if>
           <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:12.5px; color:var(--crit); padding:0 2px;">{{ loginError }}</div>
           </sc-if>
@@ -1543,7 +1546,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -2183,7 +2186,8 @@ class Component extends DCLogic {
       const signup = s.authMode === 'signup';
       if (!username || !password) { this.setState({ loginError: 'Preencha usuário e senha.' }); return; }
       this.setState({ authBusy: true, loginError: '' });
-      fetch(signup ? '/api/signup' : '/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) })
+      const payload = signup ? { username, password, code: (s.loginCode || '').trim() } : { username, password };
+      fetch(signup ? '/api/signup' : '/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         .then(async (r) => {
           const d = await r.json().catch(() => ({}));
           if (r.ok && d.ok) { this.setState({ authed: true, username: d.username || username, loginUsername: '', loginPassword: '', loginError: '', authBusy: false }); this._loadState(); this._loadConfig(); }
@@ -2685,8 +2689,10 @@ class Component extends DCLogic {
       openSearch, closeSearch, searchInputChange, searchResults, searchHasResults, searchEmpty,
       searchOpen: !!s.searchOpen, searchQuery: s.searchQuery || '',
       authed: !!s.authed, showLogin: !!s.authChecked && !s.authed,
-      loginUsername: s.loginUsername || '', loginPassword: s.loginPassword || '', loginError: s.loginError || '',
+      loginUsername: s.loginUsername || '', loginPassword: s.loginPassword || '', loginCode: s.loginCode || '', loginError: s.loginError || '',
       loginUsernameChange, loginPasswordChange, loginKeyDown, submitAuth, toggleAuthMode,
+      loginCodeChange: (e) => this.setState({ loginCode: e.target.value, loginError: '' }),
+      isSignupMode: s.authMode === 'signup',
       authSubtitle: s.authMode === 'signup' ? 'Crie sua conta — seus dados ficam só seus' : 'Entre com seu usuário e senha',
       authCta: s.authBusy ? 'Aguarde…' : (s.authMode === 'signup' ? 'Criar conta' : 'Entrar'),
       authToggleLabel: s.authMode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma',

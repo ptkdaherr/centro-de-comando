@@ -1,0 +1,23 @@
+# nada disso precisa ir pra imagem (mantém o build leve e seguro)
+.git
+.gitignore
+node_modules
+src-tauri
+tools
+site
+ideias
+screenshots
+Canvas.dc.html
+Canvas-2.dc.html
+*.md
+package-lock.json
+
+# segredos e dados locais — NUNCA vão pra imagem
+server/.env
+server/data
+server/setup.mjs
+
+# os próprios arquivos de deploy
+Dockerfile
+.dockerignore
+fly.toml
