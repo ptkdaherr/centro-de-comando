@@ -1061,39 +1061,31 @@
         <!-- ======= WORKFLOW ======= -->
         <sc-if value="{{ isWorkflow }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex; flex-direction:column; height:100%; animation:cc-fade .2s ease both;">
-            <div style="padding:12px 20px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border);">
-              <span style="font-size:14px; font-weight:600; color:var(--text);">Série: Bastidores Agência Solo</span>
-              <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">7 nós · em progresso</span>
-              <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
-                <button style="height:28px; padding:0 12px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:7px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Templates</button>
-                <button onClick="{{ addWfNode }}" style="display:flex; align-items:center; gap:6px; height:28px; padding:0 12px; border:none; background:var(--accent); color:#fff; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nó</span></button>
-              </div>
+            <div style="padding:13px 22px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border);">
+              <span style="font-size:14px; font-weight:600; color:var(--text);">Cérebro da agência</span>
+              <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
+              <span style="font-size:12px; color:var(--text-3);">clientes, demandas e ideias conectados — clique num nó pra abrir</span>
             </div>
-            <div style="flex:1; overflow:auto; background:var(--bg); position:relative;" id="wf-canvas">
-              <div style="position:relative; width:1120px; height:460px; margin:30px;">
-                <svg style="position:absolute; inset:0; width:1120px; height:460px; pointer-events:none;" viewBox="0 0 1120 460" xmlns="http://www.w3.org/2000/svg">
-                  <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" style="fill:var(--wire)"></path></marker></defs>
-                  <path d="M190,180 C225,180 235,180 270,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M410,180 C445,180 455,180 490,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M630,180 C665,180 675,180 710,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M850,180 C885,180 895,180 930,180" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
-                  <path d="M780,212 C780,260 780,296 780,328" fill="none" style="stroke:var(--wire)" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr)"></path>
-                  <path d="M850,360 C885,360 895,360 930,360" fill="none" style="stroke:var(--wire)" stroke-width="2" marker-end="url(#arr)"></path>
-                </svg>
-                <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="7">
-                  <div onClick="{{ openDrawer }}" style="position:absolute; left:{{ nd.left }}; top:{{ nd.top }}; width:140px; background:{{ nd.bg }}; border:1px solid {{ nd.borderColor }}; border-radius:12px; padding:12px 13px; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s; box-shadow:var(--sh-2);" style-hover="transform:translateY(-3px) scale(1.02); border-color:var(--accent); box-shadow:var(--sh-3)">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
-                      <span style="font-size:9.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:{{ nd.typeColor }};">{{ nd.type }}</span>
-                      <span style="width:8px; height:8px; border-radius:50%; background:{{ nd.statusColor }};"></span>
+            <div style="flex:1; overflow:auto; position:relative; background:radial-gradient(820px 600px at 50% 50%, var(--surface) 0%, var(--bg) 72%);" id="wf-canvas">
+              <sc-if value="{{ wfEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-3); text-align:center; padding:20px;">
+                  <div style="font-size:15px; font-weight:500; color:var(--text-2);">Seu cérebro ainda está vazio</div>
+                  <div style="font-size:12.5px; max-width:340px; line-height:1.5;">Cadastre clientes e demandas — eles aparecem aqui conectados automaticamente, como num mapa mental.</div>
+                </div>
+              </sc-if>
+              <div style="position:relative; width:1120px; height:800px; margin:0 auto;">
+                <sc-for list="{{ wfLinks }}" as="lk" hint-placeholder-count="0">
+                  <div style="position:absolute; left:{{ lk.mx }}px; top:{{ lk.my }}px; width:{{ lk.len }}px; height:0; border-top:1.5px {{ lk.lineStyle }} var(--wire); opacity:{{ lk.op }}; transform:translate(-50%,-50%) rotate({{ lk.ang }}deg); z-index:1; pointer-events:none;"></div>
+                </sc-for>
+                <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
+                  <div onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; z-index:2; width:{{ nd.maxW }};" style-active="transform:translate(-50%,-50%) scale(.94)">
+                    <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; box-shadow:{{ nd.glow }}; border:2px solid var(--content); flex:0 0 auto; transition:transform .16s ease, box-shadow .16s ease;" style-hover="transform:scale(1.18)"></div>
+                    <div style="text-align:center; max-width:{{ nd.maxW }};">
+                      <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }};">{{ nd.label }}</div>
+                      <sc-if value="{{ nd.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px; color:var(--text-3); margin-top:2px;">{{ nd.sub }}</div></sc-if>
                     </div>
-                    <div style="font-size:12.5px; font-weight:600; line-height:1.3; color:var(--text);">{{ nd.title }}</div>
-                    <div style="font-size:11px; color:{{ nd.statusColor }}; margin-top:6px;">{{ nd.statusLabel }}</div>
                   </div>
                 </sc-for>
-              </div>
-              <div style="position:absolute; bottom:18px; right:18px; display:flex; flex-direction:column; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px; box-shadow:var(--sh-2);">
-                <button style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; font-size:16px; cursor:pointer;" style-hover="background:var(--surface-2)">+</button>
-                <button style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; font-size:16px; cursor:pointer;" style-hover="background:var(--surface-2)">−</button>
               </div>
             </div>
           </div>
@@ -1991,16 +1983,40 @@ class Component extends DCLogic {
     const searchEmpty = !!sq && !searchHasResults;
 
     // ---- WORKFLOW NODES ----
-    const wfNodesBase = [
-      { left:'50px', top:'148px', bg:'var(--surface)', borderColor:'var(--accent)', type:'ENTRADA', typeColor:'var(--accent)', title:'Briefing', statusLabel:'Concluído', statusColor:'var(--ok)' },
-      { left:'270px', top:'148px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'TAREFA', typeColor:'var(--info)', title:'Roteiro ep.1', statusLabel:'Em produção', statusColor:'var(--info)' },
-      { left:'490px', top:'148px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'TAREFA', typeColor:'var(--text-3)', title:'Gravação', statusLabel:'A fazer', statusColor:'var(--text-3)' },
-      { left:'710px', top:'148px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'TAREFA', typeColor:'var(--text-3)', title:'Edição', statusLabel:'A fazer', statusColor:'var(--text-3)' },
-      { left:'930px', top:'148px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'REVISÃO', typeColor:'var(--warn)', title:'Revisão cliente', statusLabel:'A fazer', statusColor:'var(--text-3)' },
-      { left:'710px', top:'328px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'TAREFA', typeColor:'var(--text-3)', title:'Legenda + SEO', statusLabel:'A fazer', statusColor:'var(--text-3)' },
-      { left:'930px', top:'328px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'SAÍDA', typeColor:'var(--ok)', title:'Publicação', statusLabel:'A fazer', statusColor:'var(--text-3)' },
-    ];
-    const wfNodes = [...wfNodesBase, ...(s.wfNodesExtra||[]).map((n,i)=>({ left:(1150+i*220)+'px', top:'148px', bg:'var(--surface)', borderColor:'var(--border-2)', type:'TAREFA', typeColor:'var(--text-3)', title:n.title||'Novo nó', statusLabel:'A fazer', statusColor:'var(--text-3)' }))];
+    // ---- WORKFLOW = grafo "cérebro" (estilo Obsidian) derivado do state ----
+    // Centro = a agência; grupos = clientes (+ Avulsas, + Ideias); folhas = demandas/ideias.
+    const wfGroups = clients.map(cl => ({
+      key:'c'+cl.id, label:cl.nome, color:cl.color,
+      items: demands.filter(d => d.clientId === cl.id).map(d => ({ title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })),
+      onClick: () => this.setState({ screen:'clientes', clientProfileId:cl.id }),
+    }));
+    const wfAvul = demands.filter(d => !clients.some(c => c.id === d.clientId));
+    if (wfAvul.length) wfGroups.push({ key:'avul', label:'Avulsas', color:'var(--text-3)', items: wfAvul.map(d => ({ title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })), onClick:() => this.setState({ screen:'demandas' }) });
+    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map(it => ({ title:it.title, color:'var(--warn)', onClick:() => this.setState({ screen:'ideias' }) })), onClick:() => this.setState({ screen:'ideias' }) });
+
+    const wfCx = 560, wfCy = 380, wfR1 = 210;
+    const wfNodes = []; const wfLinks = [];
+    // linha = div fino rotacionado (o framework DC não interpola atributos x1/y1 de <line> SVG)
+    const wfLink = (x1, y1, x2, y2, dash, op) => { const dx = x2 - x1, dy = y2 - y1; wfLinks.push({ mx:(x1 + x2) / 2, my:(y1 + y2) / 2, len:Math.sqrt(dx * dx + dy * dy), ang:Math.atan2(dy, dx) * 180 / Math.PI, lineStyle:dash ? 'dashed' : 'solid', op }); };
+    wfNodes.push({ x:wfCx, y:wfCy, label:'Minha agência', sub:clients.length+' clientes · '+demands.length+' demandas', hasSub:true, color:'var(--accent)', size:84, glow:'0 0 0 7px var(--accent-weak)', labelSize:'13px', labelW:'700', maxW:'140px', onClick:() => this.setState({ screen:'inicio' }) });
+    const wfN = Math.max(wfGroups.length, 1);
+    wfGroups.forEach((g, i) => {
+      const ang = (i / wfN) * Math.PI * 2 - Math.PI / 2;
+      const gx = wfCx + Math.cos(ang) * wfR1, gy = wfCy + Math.sin(ang) * wfR1;
+      wfNodes.push({ x:gx, y:gy, label:g.label, sub:g.items.length+(g.key==='ideias'?' ideias':' demandas'), hasSub:true, color:g.color, size:56, glow:'0 0 0 5px '+g.color+'22', labelSize:'12px', labelW:'600', maxW:'120px', onClick:g.onClick });
+      wfLink(wfCx, wfCy, gx, gy, false, '.55');
+      const m = g.items.length;
+      const r2 = 92 + Math.min(m, 6) * 11;
+      g.items.forEach((it, j) => {
+        const spread = Math.min(2.2, Math.max(0.95, 0.66 * Math.max(m - 1, 1)));
+        const a2 = ang + (m > 1 ? (j / (m - 1) - 0.5) * spread : 0);
+        const ix = gx + Math.cos(a2) * r2, iy = gy + Math.sin(a2) * r2;
+        wfNodes.push({ x:ix, y:iy, label:it.title, sub:'', hasSub:false, color:it.color, size:15, glow:'0 0 0 3px '+(it.color)+'1c', labelSize:'10.5px', labelW:'500', maxW:'96px', onClick:it.onClick });
+        wfLink(gx, gy, ix, iy, true, '.4');
+      });
+    });
+    const wfEmpty = clients.length === 0 && demands.length === 0 && ideias.length === 0;
+    const wfCountLabel = (wfNodes.length - 1) + ' nós · ' + clients.length + ' clientes';
 
     // ---- ASSISTENTE ----
     // Aplica de fato uma ação que o Gemini propôs (após confirmação do usuário no chat).
@@ -2363,7 +2379,7 @@ class Component extends DCLogic {
       isIdeias: s.screen === 'ideias',
       ideias, ideiasView,
       isWorkflow: s.screen === 'workflow',
-      wfNodes,
+      wfNodes, wfLinks, wfEmpty, wfCountLabel,
       isAssistente: s.screen === 'assistente',
       chatMessages, chatSuggestions,
       showAiHistory: !!s.showAiHistory,
