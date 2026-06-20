@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Centro de Comando — o cockpit da agência solo</title>
+<meta name="description" content="ERP/PSA pra agência de uma pessoa só: demandas em kanban, clientes, financeiro, metas e um assistente de IA que age. 100% local. Baixe para Windows.">
+<meta name="theme-color" content="#08090a">
+<meta property="og:title" content="Centro de Comando">
+<meta property="og:description" content="O cockpit da agência solo — demandas, clientes, financeiro e um assistente que age. Baixe para Windows.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08090a; --surface:#111316; --surface-2:#16191d; --line:rgba(255,255,255,.08);
+    --line-2:rgba(255,255,255,.14); --text:#eceef0; --text-2:#9aa0a8; --text-3:#62686f;
+    --accent:#5285f0; --accent-2:#3f6fe0; --ok:#5cae86; --warn:#cea052; --crit:#d7796b; --info:#5e9bd6;
+    --r:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
+    font-family:'Geist',system-ui,sans-serif; line-height:1.5; overflow-x:hidden;
+  }
+  /* atmosfera de fundo */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 75% -8%, rgba(82,133,240,.18), transparent 60%),
+      radial-gradient(700px 500px at 8% 12%, rgba(92,174,134,.07), transparent 55%);
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1120px,92vw);margin-inline:auto}
+  .mono{font-family:'Geist Mono',monospace}
+
+  /* ---- header ---- */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(8,9,10,.66);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:600;font-size:15px;letter-spacing:.1px}
+  .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(150deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 4px 16px rgba(82,133,240,.45)}
+  .logo span{width:10px;height:10px;border-radius:3px;background:#fff}
+  .nav-cta{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;
+    background:var(--accent);color:#fff;font-weight:600;font-size:13.5px;transition:transform .15s,background .15s,box-shadow .15s;
+    box-shadow:0 2px 14px rgba(82,133,240,.4)}
+  .nav-cta:hover{background:var(--accent-2);transform:translateY(-1px);box-shadow:0 6px 22px rgba(82,133,240,.5)}
+
+  /* ---- hero ---- */
+  .hero{padding:84px 0 48px;text-align:center}
+  .badge{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 13px;border-radius:30px;
+    border:1px solid var(--line-2);background:var(--surface);font-size:12.5px;color:var(--text-2);
+    animation:rise .6s cubic-bezier(.16,1,.3,1) both}
+  .badge b{color:var(--text);font-weight:600}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  h1{font-size:clamp(34px,6.4vw,64px);line-height:1.04;letter-spacing:-1.4px;font-weight:700;margin:22px 0 0;
+    animation:rise .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.06s}
+  h1 .grad{background:linear-gradient(120deg,#fff 20%,#9fc0ff 75%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{max-width:640px;margin:20px auto 0;font-size:clamp(15px,2.4vw,18px);color:var(--text-2);
+    animation:rise .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.13s}
+  .cta-row{display:flex;flex-wrap:wrap;gap:13px;justify-content:center;margin-top:32px;
+    animation:rise .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.2s}
+  .btn{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 24px;border-radius:13px;
+    font-weight:600;font-size:15px;cursor:pointer;border:1px solid transparent;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 26px rgba(82,133,240,.46)}
+  .btn-primary:hover{background:var(--accent-2);transform:translateY(-2px);box-shadow:0 12px 34px rgba(82,133,240,.55)}
+  .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--line-2)}
+  .btn-ghost:hover{border-color:var(--text-3);transform:translateY(-2px)}
+  .meta{margin-top:16px;font-size:12.5px;color:var(--text-3);animation:rise .6s ease both;animation-delay:.27s}
+
+  /* ---- mockup do app ---- */
+  .preview{margin-top:54px;animation:rise .7s cubic-bezier(.16,1,.3,1) both;animation-delay:.32s}
+  .window{width:min(960px,100%);margin-inline:auto;border:1px solid var(--line-2);border-radius:var(--r);
+    overflow:hidden;background:#0d0e10;box-shadow:0 40px 120px -30px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.03)}
+  .titlebar{height:38px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#0c0d0f;border-bottom:1px solid var(--line)}
+  .tl-dot{width:11px;height:11px;border-radius:50%}
+  .app-body{display:grid;grid-template-columns:172px 1fr;min-height:340px}
+  .side{background:#0a0b0c;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:5px}
+  .side .lbl{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);padding:4px 8px}
+  .side .item{display:flex;align-items:center;gap:9px;height:30px;padding:0 9px;border-radius:7px;font-size:12px;color:var(--text-2)}
+  .side .item.on{background:rgba(82,133,240,.14);color:var(--text);font-weight:600}
+  .side .ic{width:13px;height:13px;border-radius:4px;background:currentColor;opacity:.55}
+  .content{padding:22px 24px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px}
+  .kpi .k{font-size:9.5px;color:var(--text-3);margin-bottom:7px}
+  .kpi .v{font-size:19px;font-weight:700;letter-spacing:-.5px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
+  .card-mini{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:11px;padding:13px}
+  .card-mini.flam{border-left-color:var(--crit)}
+  .card-mini .t{font-size:12.5px;font-weight:600}
+  .card-mini .m{font-size:10.5px;color:var(--text-3);margin-top:5px;display:flex;align-items:center;gap:6px}
+  .pill{margin-left:auto;font-size:9.5px;padding:2px 8px;border-radius:20px;background:rgba(82,133,240,.16);color:#84a9f5}
+
+  /* ---- features ---- */
+  section.feats{padding:70px 0 20px}
+  .eyebrow{text-align:center;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);font-weight:600;font-family:'Geist Mono',monospace}
+  .feats h2,.cta-final h2{text-align:center;font-size:clamp(26px,4.4vw,38px);letter-spacing:-.8px;font-weight:700;margin:12px auto 0;max-width:680px}
+  .feats .lead{text-align:center;color:var(--text-2);max-width:560px;margin:14px auto 0;font-size:15px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
+  .feature{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;
+    transition:transform .18s,border-color .18s,box-shadow .18s}
+  .feature:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 18px 44px -22px rgba(0,0,0,.8)}
+  .f-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;margin-bottom:16px;
+    background:rgba(82,133,240,.13);border:1px solid rgba(82,133,240,.22)}
+  .feature h3{font-size:16.5px;font-weight:600;letter-spacing:-.2px}
+  .feature p{margin-top:8px;font-size:13.5px;color:var(--text-2);line-height:1.55}
+
+  /* ---- cta final ---- */
+  .cta-final{margin:84px 0 0;padding:64px 6vw;text-align:center;border-top:1px solid var(--line);
+    background:radial-gradient(700px 300px at 50% 0%,rgba(82,133,240,.14),transparent 70%)}
+  .cta-final p{color:var(--text-2);margin:14px auto 0;max-width:480px}
+  .cta-final .cta-row{margin-top:30px}
+
+  footer{padding:40px 0;border-top:1px solid var(--line);color:var(--text-3);font-size:12.5px;
+    display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ---------- responsivo / mobile ---------- */
+  @media(max-width:760px){
+    .nav-cta span.full{display:none}
+    .hero{padding:54px 0 30px}
+    .grid{grid-template-columns:1fr;gap:13px}
+    .app-body{grid-template-columns:1fr}
+    .side{display:none}
+    .kpis{grid-template-columns:1fr 1fr;gap:9px}
+    .window{border-radius:13px}
+    .cta-final{padding:52px 7vw}
+    footer{justify-content:center;text-align:center}
+  }
+  @media(max-width:430px){
+    .kpis{grid-template-columns:1fr 1fr}
+    .cards{grid-template-columns:1fr}
+    .btn{width:100%;justify-content:center}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><div class="logo"><span></span></div>Centro de Comando</div>
+    <a class="nav-cta" href="#baixar">↓ <span class="full">Baixar para Windows</span><span style="display:none"></span></a>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" id="baixar">
+    <div class="badge"><span class="dot"></span>Para <b>Windows 10/11</b> · 100% local · grátis</div>
+    <h1>O <span class="grad">cockpit</span> da sua<br>agência de uma pessoa só.</h1>
+    <p class="sub">Demandas em kanban, clientes, financeiro, metas e um assistente de IA que <b style="color:var(--text)">de fato age</b> nos seus dados. Tudo num app que abre no seu PC — sem nuvem, sem mensalidade.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="./Centro de Comando_0.1.0_x64-setup.exe" download>↓ Baixar para Windows</a>
+      <a class="btn btn-ghost" href="#recursos">Ver recursos</a>
+    </div>
+    <div class="meta mono">v0.1.0 · ~26&nbsp;MB · instalador .exe · Windows 10/11 (64-bit)</div>
+
+    <div class="preview">
+      <div class="window">
+        <div class="titlebar">
+          <div class="tl-dot" style="background:#3a3d42"></div>
+          <div class="tl-dot" style="background:#3a3d42"></div>
+          <div class="tl-dot" style="background:#3a3d42"></div>
+          <div style="margin-left:10px;font-size:11.5px;color:var(--text-3)">Centro de Comando</div>
+        </div>
+        <div class="app-body">
+          <div class="side">
+            <div class="lbl">Trabalho</div>
+            <div class="item on"><span class="ic"></span>Início</div>
+            <div class="item"><span class="ic"></span>Demandas</div>
+            <div class="item"><span class="ic"></span>Clientes</div>
+            <div class="item"><span class="ic"></span>Ideias</div>
+            <div class="lbl" style="margin-top:8px">Negócio</div>
+            <div class="item"><span class="ic"></span>Financeiro</div>
+            <div class="item"><span class="ic"></span>Metas</div>
+          </div>
+          <div class="content">
+            <div class="kpis">
+              <div class="kpi"><div class="k">DEMANDAS ATIVAS</div><div class="v">5</div></div>
+              <div class="kpi"><div class="k">ENTREGAS</div><div class="v" style="color:var(--ok)">8</div></div>
+              <div class="kpi"><div class="k">A RECEBER</div><div class="v mono" style="color:var(--info)">R$ 6.450</div></div>
+              <div class="kpi"><div class="k">VENCENDO HOJE</div><div class="v" style="color:var(--warn)">2</div></div>
+            </div>
+            <div class="cards">
+              <div class="card-mini"><div class="t">Edição vídeo test-drive</div><div class="m"><span style="width:7px;height:7px;border-radius:2px;background:var(--accent)"></span>Luso Automóveis<span class="pill">Em produção</span></div></div>
+              <div class="card-mini flam"><div class="t">Reels: gol histórico 90+</div><div class="m"><span style="width:7px;height:7px;border-radius:2px;background:var(--crit)"></span>Flamenguismo 90+<span class="pill" style="background:rgba(206,160,82,.16);color:#d6b06a">Em revisão</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feats wrap" id="recursos">
+    <div class="eyebrow">Tudo num lugar só</div>
+    <h2>Pensado pra quem toca a agência sozinho.</h2>
+    <p class="lead">Sem abrir cinco abas. O dia inteiro do seu negócio em uma tela.</p>
+    <div class="grid">
+      <div class="feature"><div class="f-ic">🗂️</div><h3>Demandas em kanban</h3><p>Arraste cartões entre "A fazer", "Em produção", "Revisão" e "Entregue". Por status ou por cliente.</p></div>
+      <div class="feature"><div class="f-ic">👥</div><h3>Clientes & funil</h3><p>Cards de clientes com vencimento e serviço, mais um funil de prospecção do primeiro contato ao fechado.</p></div>
+      <div class="feature"><div class="f-ic">💸</div><h3>Financeiro & salário</h3><p>Recebido, a receber, custos e líquido do mês — e quanto você pode tirar de pró-labore com segurança.</p></div>
+      <div class="feature"><div class="f-ic">✨</div><h3>Assistente que age</h3><p>Peça em português ("cria a demanda X pro cliente Y"). A IA propõe a ação e só executa depois que você confirma.</p></div>
+      <div class="feature"><div class="f-ic">🌗</div><h3>Tema claro & escuro</h3><p>Alterna com um clique e lembra sua preferência. Transição suave de cores, não um corte seco.</p></div>
+      <div class="feature"><div class="f-ic">🔒</div><h3>Local & privado</h3><p>Seus dados ficam no seu PC, em SQLite. Login com senha, sessão segura. Sem nuvem obrigatória.</p></div>
+    </div>
+  </section>
+
+  <section class="cta-final">
+    <div class="eyebrow">Pronto?</div>
+    <h2>Baixe e abra em segundos.</h2>
+    <p>Instalador para Windows. Abra, defina sua senha e comece a organizar a agência hoje.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="./Centro de Comando_0.1.0_x64-setup.exe" download>↓ Baixar para Windows</a>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="brand" style="font-size:13px"><div class="logo" style="width:24px;height:24px"><span style="width:8px;height:8px"></span></div>Centro de Comando</div>
+  <div>Feito pra agências solo · © 2026</div>
+</footer>
+
+</body>
+</html>
