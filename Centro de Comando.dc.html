@@ -771,7 +771,7 @@
         </sc-if>
 
         <!-- ======= CLIENTES ======= -->
-        <sc-if value="{{ isClientes }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ isClienteList }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex; flex-direction:column; height:100%; animation:cc-fade .2s ease both;">
             <div style="padding:22px 28px 16px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-shrink:0;">
               <div>
@@ -784,7 +784,7 @@
               <div style="font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); margin:0 0 14px;">Ativos</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:14px; margin-bottom:30px;">
                 <sc-for list="{{ clientCards }}" as="cl" hint-placeholder-count="2">
-                  <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .3s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 45ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
+                  <div onClick="{{ cl.onProfile }}" style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .3s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 45ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
                       <div style="display:flex; align-items:center; gap:12px;">
                         <div style="width:44px; height:44px; border-radius:13px; background:{{ cl.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:{{ cl.color }}; flex:0 0 auto; letter-spacing:-.5px;">{{ cl.initials }}</div>
@@ -802,7 +802,7 @@
                       <div><div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">Desde</div><div style="font-size:13px; color:var(--text-2);">{{ cl.since }}</div></div>
                     </div>
                     <div style="display:flex; gap:8px;">
-                      <button onClick="{{ goDemandas }}" style="flex:1; height:33px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Ver demandas</button>
+                      <button onClick="{{ cl.onProfile }}" style="flex:1; height:33px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Ver perfil</button>
                       <button onClick="{{ cl.onEdit }}" style="height:33px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Editar</button>
                       <button onClick="{{ cl.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:33px; height:33px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ cl.deleteIcon }}</button>
                     </div>
@@ -837,6 +837,73 @@
                   </div>
                 </sc-for>
                 <button onClick="{{ openDrawerProspecto }}" style="min-height:72px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px dashed var(--border-2); background:transparent; color:var(--text-3); border-radius:14px; font:inherit; font-size:13px; cursor:pointer;" style-hover="color:var(--text-2); border-color:var(--text-3)">{{ iconUserPlus }}<span>Adicionar prospecto</span></button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ======= PERFIL DE CLIENTE ======= -->
+        <sc-if value="{{ isClienteProfile }}" hint-placeholder-val="{{ false }}">
+          <div style="height:100%; overflow-y:auto;">
+            <div style="max-width:1080px; margin:0 auto; padding:20px 30px 50px; animation:cc-fade .2s ease both;">
+              <button onClick="{{ clienteProfile.onBack }}" style="display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 11px 0 7px; border:none; background:transparent; color:var(--text-2); font:inherit; font-size:13px; cursor:pointer; border-radius:8px; margin-bottom:16px;" style-hover="background:var(--surface-2); color:var(--text)" style-active="transform:scale(.97)">{{ iconChevL }}<span>Voltar para clientes</span></button>
+
+              <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 24px; box-shadow:var(--sh-1); display:flex; align-items:flex-start; gap:18px; flex-wrap:wrap; animation:cc-rise .45s cubic-bezier(.16,1,.3,1) both;">
+                <div style="width:62px; height:62px; border-radius:17px; background:{{ clienteProfile.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:{{ clienteProfile.color }}; flex:0 0 auto; letter-spacing:-.5px;">{{ clienteProfile.initials }}</div>
+                <div style="flex:1; min-width:200px;">
+                  <h1 style="margin:0; font-size:24px; font-weight:700; letter-spacing:-.5px;">{{ clienteProfile.nome }}</h1>
+                  <div style="font-size:13px; color:var(--text-3); margin-top:5px;">{{ clienteProfile.sub }}</div>
+                  <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                    <span style="display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:7px; font-size:11px; font-weight:600; letter-spacing:.2px; color:{{ clienteProfile.tagColor }}; background:{{ clienteProfile.tagBg }}; border:1px solid {{ clienteProfile.tagBorder }};">{{ clienteProfile.tipoTag }}</span>
+                    <span style="display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px; border-radius:7px; font-size:11.5px; font-weight:500; color:{{ clienteProfile.statusColor }}; background:{{ clienteProfile.statusBg }};"><span style="width:6px;height:6px;border-radius:50%;background:{{ clienteProfile.statusColor }};"></span>{{ clienteProfile.status }}</span>
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button onClick="{{ clienteProfile.onNovaDemanda }}" style="display:flex; align-items:center; gap:7px; height:38px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
+                  <button onClick="{{ clienteProfile.onEdit }}" style="height:38px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Editar</button>
+                  <button onClick="{{ clienteProfile.onDelete }}" title="Excluir cliente" style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:9px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconClose }}</button>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-top:16px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:15px 16px; box-shadow:var(--sh-1); animation:cc-rise .34s ease both; animation-delay:.04s;"><div style="font-size:11px; color:var(--text-3); margin-bottom:8px;">Demandas abertas</div><div style="font-size:24px; font-weight:700; font-family:'Geist Mono',monospace;">{{ clienteProfile.openN }}</div></div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:15px 16px; box-shadow:var(--sh-1); animation:cc-rise .34s ease both; animation-delay:.09s;"><div style="font-size:11px; color:var(--text-3); margin-bottom:8px;">Entregues</div><div style="font-size:24px; font-weight:700; font-family:'Geist Mono',monospace; color:var(--ok);">{{ clienteProfile.doneN }}</div></div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:15px 16px; box-shadow:var(--sh-1); animation:cc-rise .34s ease both; animation-delay:.14s;"><div style="font-size:11px; color:var(--text-3); margin-bottom:8px;">Total no histórico</div><div style="font-size:24px; font-weight:700; font-family:'Geist Mono',monospace;">{{ clienteProfile.totalN }}</div></div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:15px 16px; box-shadow:var(--sh-1); animation:cc-rise .34s ease both; animation-delay:.19s;"><div style="font-size:11px; color:var(--text-3); margin-bottom:8px;">Recebido</div><div style="font-size:21px; font-weight:700; font-family:'Geist Mono',monospace; color:var(--info);">{{ clienteProfile.recebido }}</div></div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:.82fr 1.18fr; gap:16px; margin-top:16px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--sh-1); align-self:start; animation:cc-rise .38s ease both; animation-delay:.16s;">
+                  <div style="font-size:14px; font-weight:600; margin-bottom:16px;">Dados cadastrais</div>
+                  <div style="display:flex; flex-direction:column; gap:13px;">
+                    <div style="display:flex; justify-content:space-between; gap:12px; font-size:13px;"><span style="color:var(--text-3);">Tipo</span><span style="font-weight:500; text-align:right;">{{ clienteProfile.tipoLabel }}</span></div>
+                    <div style="display:flex; justify-content:space-between; gap:12px; font-size:13px;"><span style="color:var(--text-3);">Valor mensal</span><span style="font-weight:600; font-family:'Geist Mono',monospace; text-align:right;">{{ clienteProfile.valor }}</span></div>
+                    <div style="display:flex; justify-content:space-between; gap:12px; font-size:13px;"><span style="color:var(--text-3);">Pagamento</span><span style="font-weight:500; text-align:right;">{{ clienteProfile.pagDiaLabel }}</span></div>
+                    <div style="display:flex; justify-content:space-between; gap:12px; font-size:13px;"><span style="color:var(--text-3);">Cliente desde</span><span style="font-weight:500; text-align:right;">{{ clienteProfile.since }}</span></div>
+                    <div style="padding-top:13px; border-top:1px solid var(--border);"><div style="font-size:12px; color:var(--text-3); margin-bottom:6px;">Serviço contratado</div><div style="font-size:13px; line-height:1.5; color:var(--text);">{{ clienteProfile.servico }}</div></div>
+                  </div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--sh-1); animation:cc-rise .38s ease both; animation-delay:.2s;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                    <div style="font-size:14px; font-weight:600;">Demandas deste cliente</div>
+                    <button onClick="{{ clienteProfile.onNovaDemanda }}" style="display:flex; align-items:center; gap:5px; height:30px; padding:0 11px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">{{ iconPlusSm }}<span>Nova</span></button>
+                  </div>
+                  <sc-if value="{{ clienteProfile.hasDemandas }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; flex-direction:column; gap:9px;">
+                      <sc-for list="{{ clienteProfile.demandas }}" as="d" hint-placeholder-count="3">
+                        <div onClick="{{ d.onClick }}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--border); border-radius:11px; cursor:pointer; transition:border-color .12s, background .12s, transform .12s;" style-hover="border-color:var(--accent); background:var(--surface-2); transform:translateX(2px)">
+                          <span style="display:flex; color:var(--text-3); flex:0 0 auto;">{{ d.iconType }}</span>
+                          <span style="flex:1; min-width:0; font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ d.title }}</span>
+                          <span style="font-size:11.5px; color:var(--text-3); flex:0 0 auto;">{{ d.due }}</span>
+                          <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 9px; border-radius:6px; font-size:11px; font-weight:500; color:{{ d.statusColor }}; background:{{ d.statusBg }}; flex:0 0 auto;"><span style="width:6px;height:6px;border-radius:50%;background:{{ d.statusColor }};"></span>{{ d.status }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ clienteProfile.noDemandas }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:32px; text-align:center; color:var(--text-3); font-size:13px; border:1px dashed var(--border-2); border-radius:12px;">Nenhuma demanda pra este cliente ainda.</div>
+                  </sc-if>
+                </div>
               </div>
             </div>
           </div>
@@ -1789,8 +1856,34 @@ class Component extends DCLogic {
       const pagDia = parseInt(cl.pagDia, 10) || null;
       const isLate = cl.tipo === 'fixo' && pagDia && todayReal.getDate() > pagDia;
       return { id:cl.id, name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
-        deleteIcon:this.icon('close',12,2), onEdit:() => editCliente(cl), onDelete:() => deleteCliente(cl.id) };
+        deleteIcon:this.icon('close',12,2), onProfile:() => this.setState({ clientProfileId: cl.id }), onEdit:(e) => { if (e) e.stopPropagation(); editCliente(cl); }, onDelete:(e) => { if (e) e.stopPropagation(); deleteCliente(cl.id); } };
     });
+    // ---- PERFIL DE CLIENTE (ficha detalhada ao clicar num cliente) ----
+    const _cp = clients.find(c => c.id === s.clientProfileId);
+    const clienteProfile = _cp ? (() => {
+      const dd = demands.filter(d => d.clientId === _cp.id);
+      const openN = dd.filter(d => d.status !== 'done').length;
+      const doneN = dd.filter(d => d.status === 'done').length;
+      const fn = (_cp.nome || '').split(' ')[0].toLowerCase();
+      const rec = (s.lancamentos || []).filter(l => l.tipo === 'receita' && (l.label || '').toLowerCase().includes(fn)).reduce((a, l) => a + (parseFloat(String(l.valorRaw || '0').replace(',', '.')) || 0), 0);
+      const pd = parseInt(_cp.pagDia, 10) || null;
+      const late = _cp.tipo === 'fixo' && pd && todayReal.getDate() > pd;
+      const fix = _cp.tipo === 'fixo';
+      return {
+        nome: _cp.nome, initials: _cp.initials, color: _cp.color, avatarBg: _cp.color + '22',
+        sub: (fix ? 'Cliente fixo' : 'Freelance') + ' · ' + (_cp.servico ? (_cp.servico.length > 40 ? _cp.servico.slice(0, 40) + '…' : _cp.servico) : 'sem serviço definido') + ' · desde ' + (_cp.since || '—'),
+        tipoTag: fix ? 'FIXO' : 'FREELANCE', tagColor: fix ? 'var(--info)' : 'var(--text-2)', tagBg: fix ? 'var(--info-weak)' : 'var(--surface-3)', tagBorder: fix ? 'transparent' : 'var(--border-2)',
+        status: late ? 'Atrasado' : 'Ativo', statusColor: late ? 'var(--crit)' : 'var(--ok)', statusBg: late ? 'var(--crit-weak)' : 'var(--ok-weak)',
+        tipoLabel: fix ? 'Cliente fixo' : 'Freelance', valor: this.brl(parseFloat(_cp.valor) || 0), pagDiaLabel: pd ? ('Todo dia ' + pd) : '—', servico: _cp.servico || '—', since: _cp.since || '—',
+        recebido: this.brl(rec), openN: String(openN), doneN: String(doneN), totalN: String(dd.length),
+        demandas: dd.map(d => { const st = stat[d.status] || stat.todo; return { title: d.title, status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due || 'Sem prazo', iconType: this.icon(typeIcons[d.type] || 'image', 13, 1.6), onClick: () => editDemanda(d) }; }),
+        hasDemandas: dd.length > 0, noDemandas: dd.length === 0,
+        onBack: () => this.setState({ clientProfileId: null }),
+        onEdit: () => editCliente(_cp),
+        onDelete: () => { if (window.confirm('Excluir o cliente "' + _cp.nome + '"?')) { deleteCliente(_cp.id); this.setState({ clientProfileId: null }); } },
+        onNovaDemanda: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle: '', drawerDemandClientId: String(_cp.id), drawerTypeActive: [false, true, false, false, true, false, false], drawerPriority: 'media' }),
+      };
+    })() : null;
     const pipeline = [
       { label:'Prospecção', color:'var(--text-3)', bg:'transparent', count:prospectos.filter(p=>p.etapa==='Prospecção').length.toString(), names:prospectos.filter(p=>p.etapa==='Prospecção').map(p=>p.nome) },
       { label:'Proposta', color:'var(--warn)', bg:'transparent', count:prospectos.filter(p=>p.etapa==='Proposta').length.toString(), names:prospectos.filter(p=>p.etapa==='Proposta').map(p=>p.nome) },
@@ -2252,6 +2345,9 @@ class Component extends DCLogic {
       calWeekTabColor: cv === 'week' ? '#fff' : 'var(--text-2)',
       iconChevL: this.icon('chevL', 15, 1.8),
       isClientes: s.screen === 'clientes',
+      isClienteList: s.screen === 'clientes' && !clienteProfile,
+      isClienteProfile: s.screen === 'clientes' && !!clienteProfile,
+      clienteProfile,
       clientCards, pipeline, prospects,
       openSearch, closeSearch, searchInputChange, searchResults, searchHasResults, searchEmpty,
       searchOpen: !!s.searchOpen, searchQuery: s.searchQuery || '',
