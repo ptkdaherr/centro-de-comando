@@ -36,7 +36,13 @@ function loadEnv(envPath) {
   return out;
 }
 
-const env = loadEnv(path.join(__dirname, '.env'));
+// No app empacotado (Tauri), CDC_DATA_DIR aponta pra um diretório gravável.
+// Um .env do usuário ali tem prioridade; senão, usa o .env ao lado do server
+// (em dev) ou o que veio no bundle do .exe.
+const PACKAGED = !!process.env.CDC_DATA_DIR;
+const DATA_ENV = process.env.CDC_DATA_DIR ? path.join(process.env.CDC_DATA_DIR, '.env') : null;
+const ENV_PATH = DATA_ENV && fs.existsSync(DATA_ENV) ? DATA_ENV : path.join(__dirname, '.env');
+const env = loadEnv(ENV_PATH);
 const APP_PASSWORD_HASH = env.APP_PASSWORD_HASH;
 const GEMINI_API_KEY = env.GEMINI_API_KEY;
 const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-2.5-flash';
@@ -253,7 +259,7 @@ const server = http.createServer(async (req, res) => {
     fs.readFile(filePath, (e2, data) => {
       if (e2) { res.writeHead(404); res.end('404'); return; }
       if (ext === '.html') {
-        const html = data.toString('utf8').replace('</body>', LR_SNIPPET + '\n</body>');
+        const html = PACKAGED ? data.toString('utf8') : data.toString('utf8').replace('</body>', LR_SNIPPET + '\n</body>');
         res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' });
         res.end(html);
       } else {
@@ -279,10 +285,12 @@ function shouldIgnore(fn) {
   return norm.startsWith('.git') || norm.startsWith('node_modules')
     || norm.startsWith('server/data') || norm === 'server/.env';
 }
-try {
-  fs.watch(ROOT, { recursive: true }, (_evt, fn) => { if (!shouldIgnore(fn)) triggerReload(fn || 'arquivo'); });
-} catch {
-  fs.watch(ROOT, (_evt, fn) => { if (!shouldIgnore(fn)) triggerReload(fn || 'arquivo'); });
+if (!PACKAGED) {
+  try {
+    fs.watch(ROOT, { recursive: true }, (_evt, fn) => { if (!shouldIgnore(fn)) triggerReload(fn || 'arquivo'); });
+  } catch {
+    fs.watch(ROOT, (_evt, fn) => { if (!shouldIgnore(fn)) triggerReload(fn || 'arquivo'); });
+  }
 }
 
 server.listen(PORT, () => {
@@ -291,6 +299,9 @@ server.listen(PORT, () => {
   console.log(`  ➜  Local:   ${link}`);
   console.log('  ➜  Live reload ativo (salve um arquivo e o navegador atualiza)\n');
   console.log('  Ctrl+C para parar.\n');
-  const opener = process.platform === 'win32' ? `start "" "${link}"` : process.platform === 'darwin' ? `open "${link}"` : `xdg-open "${link}"`;
-  exec(opener);
+  // em dev abre o navegador; empacotado (Tauri) a janela é aberta pelo app
+  if (!PACKAGED) {
+    const opener = process.platform === 'win32' ? `start "" "${link}"` : process.platform === 'darwin' ? `open "${link}"` : `xdg-open "${link}"`;
+    exec(opener);
+  }
 });

@@ -6,6 +6,10 @@
     "dev": "node tools/dev-server.mjs",
     "setup": "node server/setup.mjs",
     "server": "node server/index.mjs",
-    "icons": "node tools/gen-icons.mjs"
+    "icons": "node tools/gen-icons.mjs",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.3"
   }
 }

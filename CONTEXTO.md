@@ -194,6 +194,35 @@ Quase tudo já era variável (1138 usos de `var(--*)`), então a paleta clara fo
 - ✅ **Início** e **badges da sidebar** — resolvidos em 2026-06-19 (ver changelog): KPIs/listas da Início e os badges agora **derivam do `state`** (0/empty quando vazio, dados reais quando há). "Atividades recentes" fica em empty state fixo (ainda não há um log de atividades real no modelo de dados).
 - ⏳ **Ainda hardcoded:** provavelmente partes de **Metas/Salário/Calendário** (cards/valores de exemplo) e a data fixa "Segunda · 15 de junho" no header da Início. Conectar conforme for necessário rumo ao app real.
 
+## Arquitetura do executável (Fase 3d, 2026-06-20) — Tauri + Node embutido
+
+O app virou um **.exe autônomo** via Tauri (núcleo Rust + WebView2 do Windows). O backend Node **não foi reescrito**: o .exe embute o `node.exe` e roda o mesmo `server/index.mjs` como sidecar.
+
+```
+src-tauri/
+  Cargo.toml, build.rs       projeto Rust
+  tauri.conf.json            janela criada via código, resources, ícones, bundle NSIS
+  src/lib.rs                 inicia o Node sidecar, espera a porta 5174, abre a janela, mata o Node ao fechar
+  src/main.rs                entrypoint
+  capabilities/default.json  permissões da janela "main"
+  ui/index.html              placeholder do frontendDist (a janela carrega http://localhost:5174)
+  icons/                     ícones gerados (`tauri icon` a partir do icon-512.png)
+  binaries/node.exe          o Node embutido (gitignored — copiar do sistema antes de buildar)
+```
+
+**Fluxo (`src/lib.rs`):** no boot, o Rust roda `node server/index.mjs` com `CDC_DATA_DIR` = diretório de dados gravável (`app_data_dir`, ~%APPDATA%), espera a porta 5174 (`wait_port`) e cria a janela em `http://localhost:5174`. Ao fechar, o Node é morto. **Pegadinha resolvida:** o `resource_dir()` do Tauri no Windows retorna caminho *verbatim* (`\\?\C:\...`) que o Node não resolve (`EISDIR lstat 'C:'`) — a função `strip_verbatim` remove o prefixo.
+
+**Backend adaptado** (`server/index.mjs` + `db.mjs`): flag `PACKAGED` (= `CDC_DATA_DIR` setado) desliga o live reload (watcher + snippet injetado) e não abre o navegador; o SQLite vai pra `CDC_DATA_DIR` (gravável) em vez de `server/data`; o `.env` é lido de `CDC_DATA_DIR/.env` se existir, senão do bundle.
+
+**Como buildar:** instalar Rust + MSVC Build Tools (já presentes na máquina — o CONTEXTO antigo dizia que faltavam, mas já estão); copiar `node.exe` pra `src-tauri/binaries/`; `npm install` (traz o `@tauri-apps/cli`); `npm run tauri build` (release) ou `... build --debug` (iteração). Gera `src-tauri/target/.../bundle/nsis/Centro de Comando_0.1.0_x64-setup.exe`.
+
+**Pendências/decisões conscientes:**
+- O `.env` (senha + chave Gemini) hoje vai **dentro do bundle** como semente — ok pro uso pessoal local, mas pra distribuir o ideal é um setup no primeiro run (não embute credenciais). Rode `npm run setup` com a SUA senha antes de buildar.
+- O `node.exe` (92 MB) é gitignored; quem clonar precisa copiá-lo de novo.
+- Validado em `--debug`; o release final (`profile.release` com LTO/strip) gera um .exe menor.
+
+**Site de download** (`site/index.html`): landing page pública e **responsiva (mobile-first)** que apresenta o app e tem o botão de download do instalador. Hospede junto com o `..._x64-setup.exe` (o link aponta pro arquivo ao lado).
+
 ## Roadmap até o .exe
 
 **Empacotamento desktop: decidido — Tauri** (2026-06-17). Núcleo Rust, sem Node exposto ao frontend (menor superfície de ataque) — só falta instalar o toolchain Rust + build tools no Windows (não estavam instalados na máquina até o momento desta decisão). Eletron e NW.js foram descartados.
@@ -203,7 +232,7 @@ Pendências antes do .exe:
 2. ~~Decidir framework de empacotamento~~ ✅ Tauri.
 3. ~~Conectar o Assistente a uma IA de fato~~ ✅ resolvido na Fase 3b (Gemini).
 4. ~~Acesso mobile robusto via PWA~~ ✅ resolvido na Fase 3c (manifest + SW + ícones). Ressalva: no celular via IP HTTP o SW não roda (precisa de HTTPS) — vide limitação de secure-context na seção da Fase 3c.
-5. Empacotar com Tauri consumindo o backend local (Fase 3d) — exige instalar Rust + build tools antes.
+5. ~~Empacotar com Tauri consumindo o backend local (Fase 3d)~~ ✅ resolvido — .exe autônomo com Node embutido (sidecar). Ver "Arquitetura do executável".
 6. Ícone, nome do app, splash, talvez abrir no boot do Windows.
 
 ## Arquivos da pasta
@@ -230,7 +259,7 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
 - **3a — Backend local + autenticação + migração de dados** ✅ concluída.
 - **3b — Assistente IA real** (Gemini, function calling, confirmação obrigatória de toda ação, log de auditoria) ✅ concluída (esta seção).
 - **3c — Acesso mobile** (PWA: manifest + service worker) ✅ concluída.
-- **3d — Empacotamento Tauri (.exe)** consumindo o mesmo backend local.
+- **3d — Empacotamento Tauri (.exe)** consumindo o mesmo backend local ✅ concluída (Node embutido como sidecar) + landing page de download responsiva.
 - *(fora do escopo por enquanto)* hospedagem pública (VPS vs PaaS) — só quando quiser acesso de fora da rede local; aí entra TLS real, domínio, hardening de servidor.
 
 ## Changelog
@@ -330,3 +359,11 @@ Ordem do mais simples/rápido pro mais difícil/complexo. Cada fase/sub-fase ter
   - **Descoberta (durante a análise):** o `fs.watch` do dev server observava `tools/`, então cada screenshot do Playwright salvo ali disparava live reload e "voltava" a navegação pra Início — não era bug do app. Testes passaram a salvar screenshots fora do projeto.
   - **Ainda hardcoded (escopo de dados, não design):** Financeiro (KPIs + gráfico de 6 meses), Salário, Metas e a notificação do sino ainda têm dados de exemplo — coerentes visualmente, mas com valores fixos. Conectar como foi feito com a Início/Assistente.
   - **Verificação (Playwright, screenshots fora do dir observado):** morph (classe liga/desliga, tema troca), login renderiza, data real na Início, Assistente com saudação dinâmica + chips derivados, tema claro coerente em todas as telas (Início/Demandas/Clientes/Financeiro/Workflow conferidos), fios do Workflow via `--wire` OK nos dois temas. **Zero erros de console.** Estado deixado vazio ao final.
+- **2026-06-20 — Fase 3d entregue (.exe autônomo via Tauri + Node embutido) + site de download:**
+  - Novo `src-tauri/` (projeto Tauri 2): `lib.rs` inicia o Node sidecar (`node server/index.mjs`) com `CDC_DATA_DIR`, espera a porta 5174 e abre a janela; mata o Node ao fechar. `tauri.conf.json` (janela via código, resources do app + node.exe, bundle NSIS, ícones). Ver "Arquitetura do executável".
+  - `server/index.mjs` + `db.mjs`: flag `PACKAGED` desliga live reload e o auto-open do navegador; SQLite e `.env` passam a usar `CDC_DATA_DIR` (gravável).
+  - `package.json`: devDep `@tauri-apps/cli`, script `npm run tauri`. `.gitignore`: `src-tauri/target|gen|binaries`.
+  - **Bug resolvido:** `resource_dir()` do Tauri retorna caminho verbatim (`\\?\C:\...`) que o Node não roda (`EISDIR lstat 'C:'`) → `strip_verbatim` no `lib.rs`.
+  - **Verificação ao vivo:** build gerou `.exe` + instalador NSIS (`Centro de Comando_0.1.0_x64-setup.exe`, ~26 MB); rodando o `.exe`, confirmado o processo do `.exe` + o **Node filho** (sidecar) servindo a porta 5174 sozinho, **sem servidor à parte**; o servidor responde no modo packaged (sem snippet de live reload); janela abre com o app. Tela de login conferida (Playwright contra o sidecar).
+  - **`site/index.html`** — landing page de download **responsiva** (testada em desktop 1300px e mobile 390px): hero, mockup do app, 6 features, CTAs de download. Aponta pro instalador ao lado.
+  - **Senha de teste atual no `.exe`: `teste123`** (vem do `server/.env` do bundle; troque com `npm run setup` antes do build final).

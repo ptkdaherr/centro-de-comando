@@ -9,7 +9,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, 'data');
+// No app empacotado (Tauri/.exe) os arquivos ficam read-only, então o banco
+// vai pra um diretório gravável passado via CDC_DATA_DIR (ex: %APPDATA%).
+// Em dev (npm run server), a variável não existe e usa server/data como sempre.
+const DATA_DIR = process.env.CDC_DATA_DIR || path.join(__dirname, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 export const DB_PATH = path.join(DATA_DIR, 'cdc.sqlite');
