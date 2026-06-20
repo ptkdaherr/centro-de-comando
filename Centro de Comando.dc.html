@@ -718,15 +718,16 @@
                 <h2 style="margin:0; font-size:16px; font-weight:600; min-width:140px; text-align:center;">{{ calMonthLabel }}</h2>
                 <button onClick="{{ calNext }}" style="display:flex; align-items:center; justify-content:center; width:30px; height:30px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:8px; cursor:pointer;" style-hover="color:var(--text)">{{ iconChevR }}</button>
               </div>
-              <button style="height:30px; padding:0 13px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Hoje</button>
+              <button onClick="{{ calToday }}" style="height:30px; padding:0 13px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Hoje</button>
               <div style="display:flex; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
                 <button onClick="{{ calToMonth }}" style="height:26px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ calMonthTabColor }}; background:{{ calMonthTabBg }};">Mês</button>
                 <button onClick="{{ calToWeek }}" style="height:26px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ calWeekTabColor }}; background:{{ calWeekTabBg }};">Semana</button>
               </div>
               <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
-                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:#5285f0;"></span>Luso Automóveis</div>
-                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:#d7796b;"></span>Flamenguismo 90+</div>
-                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Novo evento</span></button>
+                <sc-for list="{{ calLegend }}" as="lg" hint-placeholder-count="2">
+                  <div style="display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-2); white-space:nowrap;"><span style="width:8px; height:8px; border-radius:3px; background:{{ lg.color }};"></span>{{ lg.nome }}</div>
+                </sc-for>
+                <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nova demanda</span></button>
               </div>
             </div>
             <sc-if value="{{ isCalMonth }}" hint-placeholder-val="{{ true }}">
@@ -738,10 +739,10 @@
                 </div>
                 <div style="flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(5,1fr); gap:4px; min-height:0;">
                   <sc-for list="{{ calCells }}" as="cell" hint-placeholder-count="35">
-                    <div onClick="{{ openDrawer }}" style="background:{{ cell.cellBg }}; border:{{ cell.cellBorder }}; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:4px; cursor:pointer; overflow:hidden; min-height:0; transition:background .12s, transform .12s; transform:scale(1);" style-hover="background:var(--surface-2); transform:scale(1.03)">
+                    <div onClick="{{ cell.onClick }}" title="Clique para criar uma demanda neste dia" style="background:{{ cell.cellBg }}; border:{{ cell.cellBorder }}; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:4px; cursor:pointer; overflow:hidden; min-height:0; transition:background .12s, transform .12s; transform:scale(1);" style-hover="background:var(--surface-2); transform:scale(1.03)">
                       <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:8px; font-size:12.5px; font-weight:{{ cell.dayWeight }}; color:{{ cell.dayColor }}; background:{{ cell.dayNumBg }};">{{ cell.day }}</span>
                       <sc-for list="{{ cell.events }}" as="ev" hint-placeholder-count="0">
-                        <div style="font-size:10.5px; font-weight:500; color:#fff; background:{{ ev.color }}; border-radius:4px; padding:2px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.9;">{{ ev.label }}</div>
+                        <div onClick="{{ ev.onClick }}" title="Editar demanda" style="font-size:10.5px; font-weight:500; color:#fff; background:{{ ev.color }}; border-radius:4px; padding:2px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; transition:opacity .12s;" style-hover="opacity:.82">{{ ev.label }}</div>
                       </sc-for>
                     </div>
                   </sc-for>
@@ -760,9 +761,9 @@
                 </div>
                 <div style="flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; min-height:0; overflow-y:auto;">
                   <sc-for list="{{ calWeekCols }}" as="wc" hint-placeholder-count="7">
-                    <div style="display:flex; flex-direction:column; gap:6px; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; min-height:180px;">
+                    <div onClick="{{ wc.onClick }}" title="Clique para criar uma demanda neste dia" style="display:flex; flex-direction:column; gap:6px; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; min-height:180px; cursor:pointer; transition:border-color .12s;" style-hover="border-color:var(--border-2)">
                       <sc-for list="{{ wc.events }}" as="ev" hint-placeholder-count="0">
-                        <div onClick="{{ openDrawer }}" style="background:{{ ev.color }}22; border-left:3px solid {{ ev.color }}; border-radius:0 6px 6px 0; padding:7px 9px; cursor:pointer;">
+                        <div onClick="{{ ev.onClick }}" title="Editar demanda" style="background:{{ ev.color }}22; border-left:3px solid {{ ev.color }}; border-radius:0 6px 6px 0; padding:7px 9px; cursor:pointer; transition:transform .12s;" style-hover="transform:translateX(2px)">
                           <div style="font-size:12px; font-weight:600; color:{{ ev.color }};">{{ ev.time }}</div>
                           <div style="font-size:12px; font-weight:500; color:var(--text); margin-top:2px; line-height:1.3;">{{ ev.label }}</div>
                         </div>
@@ -1793,6 +1794,8 @@ class Component extends DCLogic {
       this.setState({ clients:[...clients, { id, nome, initials, color, tipo:'fixo', valor:'0', pagDia:'5', servico:'', since:'Jun 2026' }], drawerDemandClientId:String(id), drawerNewClientOpen:false, drawerNewClientName:'', toast:'Cliente “'+nome+'” criado' });
       clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast:null }), 2200);
     };
+    // abre o drawer de nova demanda já com uma data (clicar num dia do calendário)
+    const openDemandaForDate = (iso) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:iso||'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
 
     const mkCard = (d) => {
       const cl = clients.find(c => c.id === d.clientId);
@@ -1890,18 +1893,17 @@ class Component extends DCLogic {
     const calYear = calDate.getFullYear();
     const calMonthIdx = calDate.getMonth();
     const todayReal = new Date();
-    const calEvBase = {
-      16:[{label:'Edição test-drive',color:'#5285f0'},{label:'Arte de capa',color:'#d7796b'}],
-      17:[{label:'Anúncio Meta',color:'#5285f0'}],
-      18:[{label:'Legenda carrossel',color:'#d7796b'}],
-      19:[{label:'Social media',color:'#5285f0'}],
-      21:[{label:'Reels: rodada',color:'#d7796b'}],
-      24:[{label:'Vídeo institucional',color:'#5285f0'}],
-      25:[{label:'Arte especial',color:'#d7796b'}],
-      28:[{label:'Reels melhores',color:'#d7796b'}],
-      30:[{label:'Carrossel novidades',color:'#5285f0'}],
-    };
-    const calEvMap = (s.calOffset || 0) === 0 ? calEvBase : {};
+    const _iso = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const _evColorOf = (d) => { const cl = clients.find(c => c.id === d.clientId); return cl ? cl.color : (prioMeta[prioOf(d)] || prioMeta.media).color; };
+    const _evClickOf = (d) => (e) => { if (e && e.stopPropagation) e.stopPropagation(); editDemanda(d); };
+    // eventos do MÊS exibido, a partir das demandas reais (por dueDate)
+    const calMonthEvents = {};
+    for (const d of (s.demands || [])) {
+      if (!d.dueDate) continue;
+      const p = d.dueDate.split('-').map(Number);
+      if (p[0] !== calYear || (p[1] - 1) !== calMonthIdx) continue;
+      (calMonthEvents[p[2]] = calMonthEvents[p[2]] || []).push({ label: d.title, color: _evColorOf(d), time: d.dueTime || '', onClick: _evClickOf(d) });
+    }
     const calCells = (() => {
       const daysInMonth = new Date(calYear, calMonthIdx + 1, 0).getDate();
       const firstDow = new Date(calYear, calMonthIdx, 1).getDay();
@@ -1909,20 +1911,34 @@ class Component extends DCLogic {
       const cells = [];
       const prevDays = new Date(calYear, calMonthIdx, 0).getDate();
       for (let i = startOffset - 1; i >= 0; i--) {
-        cells.push({ day: String(prevDays - i), isToday: false, isCurrent: false, cellBg: 'transparent', cellBorder: '1px solid transparent', dayNumBg: 'transparent', dayColor: 'var(--text-3)', dayWeight: '400', events: [] });
+        cells.push({ day: String(prevDays - i), isToday: false, isCurrent: false, cellBg: 'transparent', cellBorder: '1px solid transparent', dayNumBg: 'transparent', dayColor: 'var(--text-3)', dayWeight: '400', events: [], onClick: () => {} });
       }
       for (let d = 1; d <= daysInMonth; d++) {
         const isToday = todayReal.getFullYear() === calYear && todayReal.getMonth() === calMonthIdx && todayReal.getDate() === d;
-        cells.push({ day: String(d), isToday, isCurrent: true, cellBg: isToday ? 'var(--accent-weak)' : 'var(--surface)', cellBorder: isToday ? '1px solid var(--accent)' : '1px solid var(--border)', dayNumBg: isToday ? 'var(--accent)' : 'transparent', dayColor: isToday ? '#fff' : 'var(--text)', dayWeight: isToday ? '700' : '400', events: calEvMap[d] || [] });
+        const iso = _iso(calYear, calMonthIdx, d);
+        cells.push({ day: String(d), isToday, isCurrent: true, cellBg: isToday ? 'var(--accent-weak)' : 'var(--surface)', cellBorder: isToday ? '1px solid var(--accent)' : '1px solid var(--border)', dayNumBg: isToday ? 'var(--accent)' : 'transparent', dayColor: isToday ? '#fff' : 'var(--text)', dayWeight: isToday ? '700' : '400', events: calMonthEvents[d] || [], onClick: () => openDemandaForDate(iso) });
       }
       const total = Math.ceil(cells.length / 7) * 7;
       let nd = 1;
-      while (cells.length < total) cells.push({ day: String(nd++), isToday: false, isCurrent: false, cellBg: 'transparent', cellBorder: '1px solid transparent', dayNumBg: 'transparent', dayColor: 'var(--text-3)', dayWeight: '400', events: [] });
+      while (cells.length < total) cells.push({ day: String(nd++), isToday: false, isCurrent: false, cellBg: 'transparent', cellBorder: '1px solid transparent', dayNumBg: 'transparent', dayColor: 'var(--text-3)', dayWeight: '400', events: [], onClick: () => {} });
       return cells;
     })();
-    const calWeekDays = [{wd:'Seg',d:15},{wd:'Ter',d:16},{wd:'Qua',d:17},{wd:'Qui',d:18},{wd:'Sex',d:19},{wd:'Sáb',d:20},{wd:'Dom',d:21}];
-    const calWeekEvMap = { 15:[], 16:[{time:'14:30',label:'Arte de capa — rodada',color:'#d7796b'},{time:'17:00',label:'Edição test-drive SUV',color:'#5285f0'}], 17:[{time:'12:00',label:'Anúncio Meta — seminovos',color:'#5285f0'}], 18:[{time:'15:00',label:'Legenda carrossel bastidores',color:'#d7796b'}], 19:[{time:'10:00',label:'Social media semana',color:'#5285f0'}], 20:[], 21:[{time:'18:00',label:'Reels rodada — Flamengo',color:'#d7796b'}] };
-    const calWeekCols = calWeekDays.map(x => { const isT = x.d === 16 && (s.calOffset||0) === 0; return { weekday: x.wd, dayNum: String(x.d), events: calWeekEvMap[x.d]||[], headerBg: isT ? 'var(--accent-weak)' : 'transparent', headerBorder: isT ? '1px solid var(--accent)' : '1px solid transparent', headerColor: isT ? 'var(--accent)' : 'var(--text)', headerColor2: isT ? 'var(--accent)' : 'var(--text-3)' }; });
+    // SEMANA dinâmica: segunda-feira da semana de hoje, deslocada por calOffset semanas
+    const _wkBase = new Date(todayReal.getFullYear(), todayReal.getMonth(), todayReal.getDate());
+    const _dow = _wkBase.getDay();
+    _wkBase.setDate(_wkBase.getDate() + (_dow === 0 ? -6 : 1 - _dow) + (s.calOffset || 0) * 7);
+    const _wkLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const calWeekCols = [];
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(_wkBase.getFullYear(), _wkBase.getMonth(), _wkBase.getDate() + i);
+      const iso = _iso(dt.getFullYear(), dt.getMonth(), dt.getDate());
+      const isT = dt.getFullYear() === todayReal.getFullYear() && dt.getMonth() === todayReal.getMonth() && dt.getDate() === todayReal.getDate();
+      const evs = (s.demands || []).filter(d => d.dueDate === iso).map(d => ({ label: d.title, time: d.dueTime || '—', color: _evColorOf(d), onClick: _evClickOf(d) }));
+      calWeekCols.push({ weekday: _wkLabels[i], dayNum: String(dt.getDate()), events: evs, headerBg: isT ? 'var(--accent-weak)' : 'transparent', headerBorder: isT ? '1px solid var(--accent)' : '1px solid transparent', headerColor: isT ? 'var(--accent)' : 'var(--text)', headerColor2: isT ? 'var(--accent)' : 'var(--text-3)', onClick: () => openDemandaForDate(iso) });
+    }
+    const _wkEnd = new Date(_wkBase.getFullYear(), _wkBase.getMonth(), _wkBase.getDate() + 6);
+    const calWeekLabel = `${_wkBase.getDate()} ${_mesAbbr[_wkBase.getMonth()]} – ${_wkEnd.getDate()} ${_mesAbbr[_wkEnd.getMonth()]}`;
+    const calLegend = clients.slice(0, 6).map(c => ({ nome: c.nome, color: c.color }));
     const cv = s.calView || 'month';
 
     // ---- CLIENTES ----
@@ -2496,12 +2512,13 @@ class Component extends DCLogic {
       isCalendario: s.screen === 'calendario',
       isCalMonth: cv === 'month',
       isCalWeek: cv === 'week',
-      calDayHeaders, calCells, calWeekCols,
-      calToMonth: () => this.setState({ calView: 'month' }),
-      calToWeek: () => this.setState({ calView: 'week' }),
+      calDayHeaders, calCells, calWeekCols, calLegend,
+      calToMonth: () => this.setState({ calView: 'month', calOffset: 0 }),
+      calToWeek: () => this.setState({ calView: 'week', calOffset: 0 }),
+      calToday: () => this.setState({ calOffset: 0 }),
       calPrev: () => this.setState({ calOffset: (s.calOffset||0) - 1 }),
       calNext: () => this.setState({ calOffset: (s.calOffset||0) + 1 }),
-      calMonthLabel: calMonthNames[calMonthIdx] + ' ' + calYear,
+      calMonthLabel: cv === 'week' ? calWeekLabel : (calMonthNames[calMonthIdx] + ' ' + calYear),
       calMonthTabBg: cv === 'month' ? 'var(--accent)' : 'transparent',
       calMonthTabColor: cv === 'month' ? '#fff' : 'var(--text-2)',
       calWeekTabBg: cv === 'week' ? 'var(--accent)' : 'transparent',
