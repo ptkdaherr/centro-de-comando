@@ -122,6 +122,8 @@
     .cc-stack { flex-direction:column !important; }
     .cc-hide-mob { display:none !important; }
     .cc-screen-flex > div { padding-left:15px !important; padding-right:15px !important; }
+    .cc-cal-month { flex:0 0 auto !important; grid-template-rows:none !important; grid-auto-rows:1fr !important; gap:5px !important; }
+    .cc-cal-cell { aspect-ratio:1 / 1 !important; min-height:0 !important; }
   }
 </style>
 </helmet>
@@ -860,9 +862,9 @@
                     <div style="text-align:center; font-size:11px; font-weight:600; letter-spacing:.4px; color:var(--text-3); text-transform:uppercase;">{{ h }}</div>
                   </sc-for>
                 </div>
-                <div style="flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(5,1fr); gap:4px; min-height:0;">
+                <div class="cc-cal-month" style="flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(5,1fr); gap:4px; min-height:0;">
                   <sc-for list="{{ calCells }}" as="cell" hint-placeholder-count="35">
-                    <div onClick="{{ cell.onClick }}" title="Clique para criar uma demanda neste dia" style="background:{{ cell.cellBg }}; border:{{ cell.cellBorder }}; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:4px; cursor:pointer; overflow:hidden; min-height:0; transition:background .12s, transform .12s; transform:scale(1);" style-hover="background:var(--surface-2); transform:scale(1.03)">
+                    <div onClick="{{ cell.onClick }}" class="cc-cal-cell" title="Clique para criar uma demanda neste dia" style="background:{{ cell.cellBg }}; border:{{ cell.cellBorder }}; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:4px; cursor:pointer; overflow:hidden; min-height:0; transition:background .12s, transform .12s; transform:scale(1);" style-hover="background:var(--surface-2); transform:scale(1.03)">
                       <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:8px; font-size:12.5px; font-weight:{{ cell.dayWeight }}; color:{{ cell.dayColor }}; background:{{ cell.dayNumBg }};">{{ cell.day }}</span>
                       <sc-for list="{{ cell.events }}" as="ev" hint-placeholder-count="0">
                         <div onClick="{{ ev.onClick }}" title="Editar demanda" style="font-size:10.5px; font-weight:500; color:#fff; background:{{ ev.color }}; border-radius:4px; padding:2px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; transition:opacity .12s;" style-hover="opacity:.82">{{ ev.label }}</div>
@@ -941,7 +943,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap:9px; flex:0 0 auto;">
                           <span style="font-size:11px; color:var(--text-3); white-space:nowrap;">{{ cl.payLabel }}</span>
-                          <span onClick="{{ cl.onTogglePay }}" title="Marcar como pago" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ cl.payTrack }}; cursor:pointer; transition:background .2s;">
+                          <span class="cc-sw" onClick="{{ cl.onTogglePay }}" title="Marcar como pago" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ cl.payTrack }}; cursor:pointer; transition:background .2s;">
                             <span style="position:absolute; top:2px; left:{{ cl.payKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
                           </span>
                         </div>
@@ -1009,7 +1011,7 @@
                   <button onClick="{{ clienteProfile.onEdit }}" style="height:38px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Editar</button>
                   <button onClick="{{ clienteProfile.onDelete }}" title="Excluir cliente" style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:9px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconClose }}</button>
                   <sc-if value="{{ clienteProfile.isFix }}" hint-placeholder-val="{{ true }}">
-                    <span onClick="{{ clienteProfile.onTogglePay }}" title="Marcar pagamento do mês" style="display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 8px 0 14px; border:1px solid var(--border-2); background:var(--surface-2); border-radius:9px; cursor:pointer;" style-hover="border-color:var(--border-2); background:var(--surface-3)">
+                    <span class="cc-sw" onClick="{{ clienteProfile.onTogglePay }}" title="Marcar pagamento do mês" style="display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 8px 0 14px; border:1px solid var(--border-2); background:var(--surface-2); border-radius:9px; cursor:pointer;" style-hover="border-color:var(--border-2); background:var(--surface-3)">
                       <span style="font-size:12px; color:var(--text-3);">Pago</span>
                       <span style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ clienteProfile.payTrack }}; transition:background .2s;">
                         <span style="position:absolute; top:2px; left:{{ clienteProfile.payKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
@@ -1408,7 +1410,7 @@
                     <div style="font-size:13.5px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ lb.title }}</div>
                     <div style="font-size:11.5px; color:var(--text-3); margin-top:2px;">{{ lb.sub }} · <span style="color:{{ lb.whenColor }};">{{ lb.whenLabel }}</span></div>
                   </div>
-                  <span onClick="{{ lb.onToggle }}" title="Desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:var(--accent); cursor:pointer;">
+                  <span class="cc-sw" onClick="{{ lb.onToggle }}" title="Desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:var(--accent); cursor:pointer;">
                     <span style="position:absolute; top:2px; left:21px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45);"></span>
                   </span>
                   <sc-if value="{{ lb.isAvulso }}" hint-placeholder-val="{{ false }}">
@@ -1487,7 +1489,7 @@
                     <div style="font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ drawerReminderHint }}</div>
                   </div>
                 </div>
-                <span onClick="{{ drawerToggleReminder }}" title="Ligar/desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ drawerReminderTrack }}; cursor:pointer; transition:background .2s;">
+                <span class="cc-sw" onClick="{{ drawerToggleReminder }}" title="Ligar/desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ drawerReminderTrack }}; cursor:pointer; transition:background .2s;">
                   <span style="position:absolute; top:2px; left:{{ drawerReminderKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
                 </span>
               </div>
@@ -1996,7 +1998,7 @@ class Component extends DCLogic {
 
     // áudio: prefs salvas + som de clique em botões (delegado, respeita soundOn)
     this._loadAudioPrefs();
-    this._onClickSfx = (e) => { const t = e.target; if (t && t.closest && t.closest('button')) this._sfx('click'); };
+    this._onClickSfx = (e) => { const t = e.target; if (!t || !t.closest) return; if (t.closest('.cc-sw')) this._sfx('toggle'); else if (t.closest('button')) this._sfx('click'); };
     document.addEventListener('click', this._onClickSfx, true);
 
     fetch('/api/me', { credentials: 'include' })
