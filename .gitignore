@@ -23,6 +23,10 @@ screenshots/
 ideias/
 *.zip
 
+# Anotações locais do deploy (tokens, códigos) — NUNCA versionar.
+*.local.txt
+DADOS-DEPLOY*
+
 # Tauri (Fase 3d) — build, código gerado e o Node embutido (sidecar)
 src-tauri/target/
 src-tauri/gen/

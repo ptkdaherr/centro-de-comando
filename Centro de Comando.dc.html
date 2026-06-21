@@ -124,6 +124,12 @@
     .cc-screen-flex > div { padding-left:15px !important; padding-right:15px !important; }
     .cc-cal-month { flex:0 0 auto !important; grid-template-rows:none !important; grid-auto-rows:1fr !important; gap:5px !important; }
     .cc-cal-cell { aspect-ratio:1 / 1 !important; min-height:0 !important; }
+    /* Conter overflow horizontal e corrigir o conteúdo deslocado pra esquerda no mobile */
+    html, body { overflow-x:hidden !important; max-width:100% !important; }
+    [data-theme-root] { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; }
+    main { overflow-x:hidden !important; }
+    /* Cabeçalhos das telas quebram linha em vez de vazar pra fora da tela */
+    .cc-screen-flex > div:first-child { flex-wrap:wrap !important; row-gap:10px !important; }
   }
 </style>
 </helmet>
@@ -215,7 +221,7 @@
       </div>
 
       <div style="display:flex; align-items:center; gap:4px; -webkit-app-region:no-drag;">
-        <button onClick="{{ toggleMusic }}" title="Player lo-fi" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:{{ musicBtnColor }}; border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconMusic }}</button>
+        <button class="cc-hide-mob" onClick="{{ toggleMusic }}" title="Player lo-fi" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:{{ musicBtnColor }}; border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconMusic }}</button>
         <button onClick="{{ toggleSound }}" title="{{ soundTitle }}" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:{{ soundColor }}; border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ soundIcon }}</button>
         <button onClick="{{ toggleTheme }}" title="{{ themeTitle }}" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconTheme }}</button>
         <!-- Design System: acesso via goSystem(), mantido como referência interna -->
@@ -3620,10 +3626,10 @@ class Component extends DCLogic {
       // ---- player lo-fi ----
       iconMusic: this.icon('headphones', 15, 1.7),
       musicBtnColor: s.musicOpen ? 'var(--accent)' : 'var(--text-2)',
-      musicOpen: !!s.musicOpen,
+      musicOpen: !!s.musicOpen && !s.isMobile,
       musicMin: !!s.musicMin,
       musicPlaying: !!s.musicPlaying,
-      toggleMusic: () => { const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; if (!s.musicPos) ns.musicPos = this._musicDefaultPos(); } this.setState(ns); },
+      toggleMusic: () => { if (s.isMobile) return; const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; if (!s.musicPos) ns.musicPos = this._musicDefaultPos(); } this.setState(ns); },
       toggleMusicMin: () => this.setState({ musicMin: !s.musicMin }),
       closeMusic: () => this.setState({ musicOpen: false }),
       musicPlayPause: () => this._musicTogglePlay(),
