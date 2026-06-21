@@ -110,6 +110,18 @@
 
 <div ref="{{ rootRef }}" data-theme-root="true" style="--accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); font-family:'Geist',system-ui,sans-serif; color:var(--text); height:100vh; width:100vw; padding:14px; background:var(--app-gradient); display:flex;">
 
+  <!-- RESIZE (janela frameless do .exe) — bordas invisíveis pra redimensionar -->
+  <sc-if value="{{ showWinControls }}" hint-placeholder-val="{{ false }}">
+    <div onMouseDown="{{ resizeN }}" style="position:fixed; top:0; left:9px; right:9px; height:5px; cursor:ns-resize; z-index:60;"></div>
+    <div onMouseDown="{{ resizeS }}" style="position:fixed; bottom:0; left:9px; right:9px; height:5px; cursor:ns-resize; z-index:60;"></div>
+    <div onMouseDown="{{ resizeW }}" style="position:fixed; left:0; top:9px; bottom:9px; width:5px; cursor:ew-resize; z-index:60;"></div>
+    <div onMouseDown="{{ resizeE }}" style="position:fixed; right:0; top:9px; bottom:9px; width:5px; cursor:ew-resize; z-index:60;"></div>
+    <div onMouseDown="{{ resizeNW }}" style="position:fixed; top:0; left:0; width:10px; height:10px; cursor:nwse-resize; z-index:61;"></div>
+    <div onMouseDown="{{ resizeNE }}" style="position:fixed; top:0; right:0; width:10px; height:10px; cursor:nesw-resize; z-index:61;"></div>
+    <div onMouseDown="{{ resizeSW }}" style="position:fixed; bottom:0; left:0; width:10px; height:10px; cursor:nesw-resize; z-index:61;"></div>
+    <div onMouseDown="{{ resizeSE }}" style="position:fixed; bottom:0; right:0; width:10px; height:10px; cursor:nwse-resize; z-index:61;"></div>
+  </sc-if>
+
   <!-- LOGIN -->
   <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ false }}">
     <div style="flex:1; display:flex; align-items:center; justify-content:center; min-width:0; border:1px solid var(--border-2); border-radius:13px; overflow:hidden; background:var(--bg); box-shadow:var(--sh-3);">
@@ -1738,6 +1750,8 @@ class Component extends DCLogic {
     try { return (window.__TAURI__ && window.__TAURI__.window) ? window.__TAURI__.window.getCurrentWindow() : null; }
     catch (e) { return null; }
   }
+  // arrasto de redimensionamento nas bordas (janela frameless do .exe)
+  _winResize(dir) { const w = this._tauriWin(); if (w && w.startResizeDragging) { try { w.startResizeDragging(dir); } catch (e) {} } }
 
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders'];
@@ -3073,6 +3087,14 @@ class Component extends DCLogic {
       winMinimize: () => { const w = this._tauriWin(); if (w) w.minimize(); },
       winMaximize: () => { const w = this._tauriWin(); if (w) w.toggleMaximize(); },
       winClose: () => { const w = this._tauriWin(); if (w) w.close(); },
+      resizeN: (e) => { e.preventDefault(); this._winResize('North'); },
+      resizeS: (e) => { e.preventDefault(); this._winResize('South'); },
+      resizeW: (e) => { e.preventDefault(); this._winResize('West'); },
+      resizeE: (e) => { e.preventDefault(); this._winResize('East'); },
+      resizeNW: (e) => { e.preventDefault(); this._winResize('NorthWest'); },
+      resizeNE: (e) => { e.preventDefault(); this._winResize('NorthEast'); },
+      resizeSW: (e) => { e.preventDefault(); this._winResize('SouthWest'); },
+      resizeSE: (e) => { e.preventDefault(); this._winResize('SouthEast'); },
       // ---- central de notificações (sino) ----
       notifOpen: !!s.notifOpen,
       toggleNotif: () => { const open = !s.notifOpen; if (open) this._requestNotifPerm(); this.setState({ notifOpen: open }); },
