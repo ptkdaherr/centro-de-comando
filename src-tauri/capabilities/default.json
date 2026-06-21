@@ -1,7 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissões base do app.",
+  "description": "Permissões base + notificações na página hospedada.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "remote": {
+    "urls": ["https://centro-de-comando-xadx.onrender.com/*"]
+  },
+  "permissions": ["core:default", "notification:default"]
 }

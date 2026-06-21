@@ -8,6 +8,7 @@
   },
   "app": {
     "windows": [],
+    "withGlobalTauri": true,
     "security": {
       "csp": null
     }
@@ -21,24 +22,6 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "resources": {
-      "binaries/node.exe": "binaries/node.exe",
-      "../server/index.mjs": "server/index.mjs",
-      "../server/db.mjs": "server/db.mjs",
-      "../server/auth.mjs": "server/auth.mjs",
-      "../server/gemini.mjs": "server/gemini.mjs",
-      "../server/tools.mjs": "server/tools.mjs",
-      "../server/.env": "server/.env",
-      "../Centro de Comando.dc.html": "Centro de Comando.dc.html",
-      "../support.js": "support.js",
-      "../manifest.webmanifest": "manifest.webmanifest",
-      "../sw.js": "sw.js",
-      "../icons/icon.svg": "icons/icon.svg",
-      "../icons/icon-192.png": "icons/icon-192.png",
-      "../icons/icon-512.png": "icons/icon-512.png",
-      "../icons/icon-maskable-512.png": "icons/icon-maskable-512.png",
-      "../icons/apple-touch-icon.png": "icons/apple-touch-icon.png"
-    }
+    ]
   }
 }

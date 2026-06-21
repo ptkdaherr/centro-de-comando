@@ -1,87 +1,78 @@
-// Centro de Comando — shell Tauri com servidor Node embutido (sidecar).
-//
-// No boot: inicia `node server/index.mjs` (empacotado nos resources), apontando
-// o banco/credenciais pra um diretório gravável (CDC_DATA_DIR = app_data_dir),
-// espera a porta 5174 responder e então abre a janela já com o app carregado.
-// Ao fechar a janela, o processo Node é encerrado.
+// Centro de Comando — app de desktop (Tauri).
+// Carrega a versão HOSPEDADA (mesmo login/dados do celular), inicia junto com o
+// Windows, fica na bandeja (fechar a janela esconde, continua rodando p/ notificar)
+// e expõe a API do Tauri pra notificações nativas.
 
-use std::net::TcpStream;
-use std::process::{Child, Command};
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
+};
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
-struct NodeProc(Mutex<Option<Child>>);
+const APP_URL: &str = "https://centro-de-comando-xadx.onrender.com";
 
-fn wait_port(port: u16, timeout: Duration) -> bool {
-    let start = Instant::now();
-    while start.elapsed() < timeout {
-        if TcpStream::connect(("127.0.0.1", port)).is_ok() {
-            return true;
-        }
-        std::thread::sleep(Duration::from_millis(150));
-    }
-    false
-}
-
-// Remove o prefixo \\?\ (verbatim/extended-length) dos paths do Windows.
-// O Node não resolve caminhos verbatim e quebra com "EISDIR lstat 'C:'".
-fn strip_verbatim(p: std::path::PathBuf) -> std::path::PathBuf {
-    let s = p.to_string_lossy().to_string();
-    if let Some(rest) = s.strip_prefix(r"\\?\") {
-        std::path::PathBuf::from(rest)
-    } else {
-        p
+fn show_main(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
     }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .setup(|app| {
             let handle = app.handle().clone();
-            let resource_dir = strip_verbatim(handle.path().resource_dir()?);
-            let data_dir = strip_verbatim(handle.path().app_data_dir()?);
-            std::fs::create_dir_all(&data_dir).ok();
 
-            let node_exe = resource_dir.join("binaries").join("node.exe");
-            let server_js = resource_dir.join("server").join("index.mjs");
+            // janela principal: carrega o app hospedado
+            WebviewWindowBuilder::new(&handle, "main", WebviewUrl::External(APP_URL.parse().unwrap()))
+                .title("Centro de Comando")
+                .inner_size(1280.0, 820.0)
+                .min_inner_size(940.0, 600.0)
+                .center()
+                .build()?;
 
-            match Command::new(&node_exe)
-                .arg(&server_js)
-                .current_dir(&resource_dir)
-                .env("PORT", "5174")
-                .env("CDC_DATA_DIR", &data_dir)
-                .spawn()
-            {
-                Ok(child) => { handle.manage(NodeProc(Mutex::new(Some(child)))); }
-                Err(e) => { eprintln!("Centro de Comando: falha ao iniciar o servidor Node: {e}"); }
-            }
+            // inicia junto com o Windows (silencioso na bandeja)
+            let _ = app.autolaunch().enable();
 
-            // espera o servidor subir e abre a janela já com o app pronto
-            wait_port(5174, Duration::from_secs(20));
-            WebviewWindowBuilder::new(
-                &handle,
-                "main",
-                WebviewUrl::External("http://localhost:5174".parse().unwrap()),
-            )
-            .title("Centro de Comando")
-            .inner_size(1280.0, 820.0)
-            .min_inner_size(940.0, 600.0)
-            .center()
-            .build()?;
+            // ícone na bandeja: Abrir / Sair
+            let abrir = MenuItem::with_id(app, "abrir", "Abrir", true, None::<&str>)?;
+            let sair = MenuItem::with_id(app, "sair", "Sair", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&abrir, &sair])?;
+
+            TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("Centro de Comando")
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "abrir" => show_main(app),
+                    "sair" => app.exit(0),
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        show_main(tray.app_handle());
+                    }
+                })
+                .build(app)?;
 
             Ok(())
         })
+        // fechar a janela só esconde pra bandeja (mantém rodando p/ notificações)
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::Destroyed = event {
-                if let Some(state) = window.app_handle().try_state::<NodeProc>() {
-                    if let Ok(mut guard) = state.0.lock() {
-                        if let Some(mut child) = guard.take() {
-                            let _ = child.kill();
-                        }
-                    }
-                }
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.hide();
+                api.prevent_close();
             }
         })
         .run(tauri::generate_context!())
