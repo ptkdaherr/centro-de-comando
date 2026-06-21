@@ -485,7 +485,7 @@
                 <div style="display:flex; align-items:stretch; padding:0 28px; border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto;">
                   <sc-for list="{{ clientTabs }}" as="ct" hint-placeholder-count="2">
                     <button onClick="{{ ct.onClick }}" onDragOver="{{ ct.onDragOver }}" onDragEnter="{{ ct.onDragEnter }}" onDragLeave="{{ ct.onDragLeave }}" onDrop="{{ ct.onDrop }}" style="display:flex; align-items:center; gap:8px; height:42px; padding:0 16px; border:none; border-bottom:2.5px solid {{ ct.borderColor }}; background:{{ ct.dropBg }}; color:{{ ct.textColor }}; font:inherit; font-size:13px; font-weight:{{ ct.weight }}; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-bottom:-1px; border-radius:8px 8px 0 0; transition:color .1s, background .12s; box-shadow:{{ ct.dropRing }};" style-hover="color:var(--text)">
-                      <span style="width:8px; height:8px; border-radius:3px; background:{{ ct.color }}; flex:0 0 auto;"></span>
+                      <sc-if value="{{ ct.hasAvatar }}" hint-placeholder-val="{{ false }}"><span style="width:19px; height:19px; border-radius:6px; overflow:hidden; background:{{ ct.avatarBg }}; flex:0 0 auto; display:inline-flex;"><img src="{{ ct.avatar }}" style="width:100%; height:100%; object-fit:cover;" /></span></sc-if><sc-if value="{{ ct.noAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:8px; height:8px; border-radius:3px; background:{{ ct.color }}; flex:0 0 auto;"></span></sc-if>
                       <span>{{ ct.name }}</span>
                       <span style="font-size:11px; font-family:'Geist Mono',monospace; padding:1px 6px; border-radius:10px; background:var(--surface-3); color:var(--text-3);">{{ ct.count }}</span>
                     </button>
@@ -542,7 +542,7 @@
                         <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
                           <div draggable="true" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s ease, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .26s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
-                              <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-2);"><span style="width:8px; height:8px; border-radius:3px; background:{{ c.clientColor }};"></span>{{ c.client }}</span>
+                              <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-2);"><sc-if value="{{ c.clHasAvatar }}" hint-placeholder-val="{{ false }}"><span style="width:17px; height:17px; border-radius:5px; overflow:hidden; background:{{ c.clAvatarBg }}; flex:0 0 auto; display:inline-flex;"><img src="{{ c.clAvatar }}" style="width:100%; height:100%; object-fit:cover;" /></span></sc-if><sc-if value="{{ c.clNoAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:8px; height:8px; border-radius:3px; background:{{ c.clientColor }};"></span></sc-if>{{ c.client }}</span>
                               <div style="display:flex; align-items:center; gap:7px;">
                                 <span title="Prioridade" style="display:inline-flex; align-items:center; gap:4px; height:20px; padding:0 7px; border-radius:6px; font-size:10.5px; font-weight:600; color:{{ c.prioColor }}; background:{{ c.prioBg }};"><span style="width:5px; height:5px; border-radius:50%; background:{{ c.prioColor }};"></span>{{ c.prioLabel }}</span>
                                 <button onClick="{{ c.onDelete }}" title="Excluir" style="display:flex; align-items:center; justify-content:center; width:18px; height:18px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ c.deleteIcon }}</button>
@@ -1792,6 +1792,7 @@
             </sc-if>
             <sc-for list="{{ calDayDemands }}" as="dd" hint-placeholder-count="0">
               <div onClick="{{ dd.onClick }}" style="display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ dd.color }}; border-radius:11px; padding:12px 14px; cursor:pointer; transition:border-color .12s;" style-hover="border-color:var(--accent)">
+                <div style="width:30px; height:30px; border-radius:9px; overflow:hidden; background:{{ dd.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:{{ dd.avColor }}; flex:0 0 auto;"><sc-if value="{{ dd.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ dd.avatar }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if><sc-if value="{{ dd.noAvatar }}" hint-placeholder-val="{{ true }}"><span>{{ dd.avInitials }}</span></sc-if></div>
                 <div style="flex:1; min-width:0;">
                   <div style="font-size:13.5px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ dd.title }}</div>
                   <div style="font-size:12px; color:var(--text-3); margin-top:2px;">{{ dd.meta }}</div>
@@ -2141,20 +2142,35 @@ class Component extends DCLogic {
   }
   _ytEnsure(cb) {
     this._ytLoadApi(() => {
+      // player já pronto → executa o callback imediatamente (mesmo gesto do clique)
       if (this._yt && this._yt.playVideo) { if (cb) cb(); return; }
+      // player ainda sendo criado → enfileira o callback pro onReady (evita criar 2 players no mesmo elemento)
+      this._ytReadyCbs = this._ytReadyCbs || [];
+      if (cb) this._ytReadyCbs.push(cb);
+      if (this._ytCreating) return;
+      this._ytCreating = true;
       let host = document.getElementById('cdc-yt');
       if (!host) { host = document.createElement('div'); host.id = 'cdc-yt'; host.style.cssText = 'position:fixed; width:1px; height:1px; left:-100px; top:-100px; opacity:0; pointer-events:none;'; document.body.appendChild(host); }
+      // passa o origin explícito: sem ele, o embed do YouTube pode ignorar os comandos
+      // dentro de webview embutido (Tauri/WebView2) por causa do handshake de origem do postMessage
+      const playerVars = { autoplay: 0, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, rel: 0, playsinline: 1, enablejsapi: 1 };
+      try { if (/^https?:/.test(window.location.origin)) playerVars.origin = window.location.origin; } catch (e) {}
       try {
         this._yt = new window.YT.Player('cdc-yt', {
           height: '1', width: '1',
-          playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, rel: 0, playsinline: 1 },
+          playerVars,
           events: {
-            onReady: () => { try { this._yt.setVolume(this.state.musicVol == null ? 65 : this.state.musicVol); } catch (e) {} if (cb) cb(); },
+            onReady: () => {
+              this._ytCreating = false;
+              try { this._yt.setVolume(this.state.musicVol == null ? 65 : this.state.musicVol); } catch (e) {}
+              const cbs = this._ytReadyCbs || []; this._ytReadyCbs = [];
+              cbs.forEach((f) => { try { f(); } catch (e) {} });
+            },
             onStateChange: (e) => this.setState({ musicPlaying: e.data === 1 }),
             onError: () => this.setState({ musicPlaying: false, musicErr: 'Essa estação não tocou — tente outra ou cole um link.' }),
           },
         });
-      } catch (e) {}
+      } catch (e) { this._ytCreating = false; }
     });
   }
   _ytId(url) {
@@ -2609,11 +2625,21 @@ class Component extends DCLogic {
     // abre o drawer de nova demanda já com uma data (clicar num dia do calendário)
     const openDemandaForDate = (iso) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:iso||'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
 
+    // avatar do cliente (foto se houver, senão dot/inicial) — campos reusados em cards/abas/calendário
+    const _clAv = (cl) => ({
+      avatar: cl && cl.avatar ? cl.avatar : null,
+      hasAvatar: !!(cl && cl.avatar),
+      noAvatar: !(cl && cl.avatar),
+      avatarBg: cl ? cl.color + '22' : 'var(--surface-3)',
+      avInitials: cl ? (cl.initials || '?') : '•',
+      avColor: cl ? cl.color : 'var(--text-3)',
+    });
     const mkCard = (d) => {
       const cl = clients.find(c => c.id === d.clientId);
+      const _av = _clAv(cl);
       const ti = typeIcons[d.type] || 'image';
       const pm = prioMeta[prioOf(d)] || prioMeta.media;
-      return { title:d.title, client:cl?cl.nome:'Pessoal', clientColor:cl?cl.color:'var(--text-3)', type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
+      return { title:d.title, client:cl?cl.nome:'Pessoal', clientColor:cl?cl.color:'var(--text-3)', clHasAvatar:_av.hasAvatar, clNoAvatar:_av.noAvatar, clAvatar:_av.avatar, clAvatarBg:_av.avatarBg, type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
         prioLabel:pm.label, prioColor:pm.color, prioBg:pm.bg,
         dragOpacity: s.draggingId===d.id ? '.35' : '1',
         deleteIcon:this.icon('close',11,2), onClick:() => editDemanda(d), onDelete:(e) => { e.stopPropagation(); deleteDemanda(d.id); },
@@ -2680,15 +2706,18 @@ class Component extends DCLogic {
       onDragLeave:()=>{ if(s.dragOverClient===key) this.setState({ dragOverClient:null }); },
       onDrop:(e)=>{ e.preventDefault(); const id=parseInt(e.dataTransfer.getData('text/plain'),10); this.setState({ dragOverClient:null, draggingId:null }); if(!id) return; this.setState({ demands: demands.map(d=>d.id===id?{...d, clientId:targetClientId}:d), toast:'Demanda movida' }); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),2200); },
     });
-    const clientTabs = clients.map((cl, i) => ({
+    const clientTabs = clients.map((cl, i) => {
+      const _av = _clAv(cl);
+      return {
       name:cl.nome, count:demands.filter(d=>d.clientId===cl.id&&d.status!=='done').length, color:cl.color,
+      hasAvatar:_av.hasAvatar, noAvatar:_av.noAvatar, avatar:_av.avatar, avatarBg:_av.avatarBg, avInitials:_av.avInitials,
       isActive:i===ac, textColor:i===ac?'var(--text)':'var(--text-2)', borderColor:i===ac?'var(--accent)':'transparent', weight:i===ac?'600':'500',
       onClick:()=>this.setState({ activeClient:i }),
       ...tabDrop(cl.id, cl.id),
-    }));
+    }; });
     if (avulsasD.length) {
       const ai = clients.length;
-      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
+      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', hasAvatar:false, noAvatar:true, avatar:null, avatarBg:'var(--surface-3)', avInitials:'•', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
     }
     // personalIdeas (ideias reais) é montado mais abaixo, após `ideias`/`editIdeia` existirem
     // ---- CALENDÁRIO ----
@@ -2801,7 +2830,8 @@ class Component extends DCLogic {
       calDayLabel = `${calWeekdayFull[_dt.getDay()]}, ${_p[2]} de ${calMonthNames[_p[1] - 1]}`;
       calDayDemands = (s.demands || []).filter(d => d.dueDate === calDaySel && passCal(d)).map(d => {
         const _cl = clients.find(c => c.id === d.clientId);
-        return { id: d.id, title: d.title, meta: (_cl ? _cl.nome : 'Pessoal') + (d.dueTime ? ' · ' + d.dueTime : ''), color: _evColorOf(d), status: d.status === 'done' ? 'Entregue' : 'Aberta', onClick: () => editDemanda(d) };
+        const _av = _clAv(_cl);
+        return { id: d.id, title: d.title, meta: (_cl ? _cl.nome : 'Pessoal') + (d.dueTime ? ' · ' + d.dueTime : ''), color: _evColorOf(d), status: d.status === 'done' ? 'Entregue' : 'Aberta', hasAvatar:_av.hasAvatar, noAvatar:_av.noAvatar, avatar:_av.avatar, avatarBg:_av.avatarBg, avInitials:_av.avInitials, avColor:_av.avColor, onClick: () => editDemanda(d) };
       });
     }
 
@@ -3778,7 +3808,7 @@ class Component extends DCLogic {
       musicOpen: !!s.musicOpen && !s.isMobile,
       musicMin: !!s.musicMin,
       musicPlaying: !!s.musicPlaying,
-      toggleMusic: () => { if (s.isMobile) return; const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; if (!s.musicPos) ns.musicPos = this._musicDefaultPos(); } this.setState(ns); },
+      toggleMusic: () => { if (s.isMobile) return; const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; if (!s.musicPos) ns.musicPos = this._musicDefaultPos(); this._ytEnsure(() => {}); } this.setState(ns); },
       toggleMusicMin: () => this.setState({ musicMin: !s.musicMin }),
       closeMusic: () => this.setState({ musicOpen: false }),
       musicPlayPause: () => this._musicTogglePlay(),
