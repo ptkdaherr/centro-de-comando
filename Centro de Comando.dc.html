@@ -130,6 +130,8 @@
     main { overflow-x:hidden !important; }
     /* Cabeçalhos das telas quebram linha em vez de vazar pra fora da tela */
     .cc-screen-flex > div:first-child { flex-wrap:wrap !important; row-gap:10px !important; }
+    /* Grupos de controles/barras que devem quebrar linha (não espremer) no mobile */
+    .cc-wrap-mob { flex-wrap:wrap !important; row-gap:8px !important; }
   }
 </style>
 </helmet>
@@ -404,7 +406,7 @@
             </div>
 
             <!-- duas colunas: futuras + atividades -->
-            <div style="display:grid; grid-template-columns:1.15fr .85fr; gap:22px;">
+            <div class="cc-grid-2" style="display:grid; grid-template-columns:1.15fr .85fr; gap:22px;">
               <div>
                 <h2 style="margin:0 0 13px; font-size:15px; font-weight:600;">Demandas futuras</h2>
                 <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
@@ -456,7 +458,7 @@
                 <h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Demandas</h1>
                 <p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">{{ demandasCount }} · {{ clientesCount }} · atualizado agora</p>
               </div>
-              <div style="display:flex; align-items:center; gap:9px;">
+              <div class="cc-wrap-mob" style="display:flex; align-items:center; gap:9px;">
                 <div style="display:flex; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
                   <button onClick="{{ viewCliente }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ clienteTabColor }}; background:{{ clienteTabBg }};">Por cliente</button>
                   <button onClick="{{ viewStatus }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ statusTabColor }}; background:{{ statusTabBg }};">Por status</button>
@@ -486,7 +488,7 @@
                   <button onClick="{{ openDrawerCliente }}" style="display:flex; align-items:center; justify-content:center; width:36px; height:42px; border:none; background:transparent; color:var(--text-3); font:inherit; font-size:19px; cursor:pointer; flex-shrink:0; margin-left:2px;" style-hover="color:var(--accent)">+</button>
                 </div>
                 <!-- active client info bar -->
-                <div style="display:flex; align-items:center; gap:12px; padding:10px 28px; border-bottom:1px solid var(--border); flex-shrink:0;">
+                <div class="cc-wrap-mob" style="display:flex; align-items:center; gap:12px; padding:10px 28px; border-bottom:1px solid var(--border); flex-shrink:0;">
                   <div style="width:30px; height:30px; border-radius:9px; background:{{ activeClientInfo.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600; color:{{ activeClientInfo.color }}; flex:0 0 auto;">{{ activeClientInfo.initials }}</div>
                   <span style="display:inline-flex; align-items:center; height:19px; padding:0 8px; border-radius:6px; font-size:10.5px; font-weight:600; letter-spacing:.2px; color:{{ activeClientInfo.tagColor }}; background:{{ activeClientInfo.tagBg }}; border:1px solid {{ activeClientInfo.tagBorder }};">{{ activeClientInfo.tag }}</span>
                   <span style="font-size:12.5px; color:var(--text-3);">{{ activeClientInfo.openLabel }} · próxima <span style="color:{{ activeClientInfo.nextColor }}; font-weight:500;">{{ activeClientInfo.next }}</span></span>
@@ -1224,7 +1226,7 @@
                 <div style="font-size:12.5px; color:var(--text-2); background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:5px 13px;">53% do mês</div>
               </div>
             </div>
-            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px;">
+            <div class="cc-grid-2" style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px;">
               <sc-for list="{{ metas }}" as="m" hint-placeholder-count="4">
                 <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s;" style-hover="border-color:var(--border-2); transform:translateY(-3px); box-shadow:var(--sh-2)">
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
@@ -1292,7 +1294,7 @@
               <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
               <span style="font-size:12px; color:var(--text-3);">arraste os nós pra organizar · arraste o fundo pra mover · role pra dar zoom · clique pra abrir</span>
             </div>
-            <div id="wf-canvas" onMouseDown="{{ wfCanvasDown }}" onWheel="{{ wfWheel }}" style="flex:1; overflow:hidden; position:relative; background-color:var(--bg); background-image:radial-gradient(var(--border-2) 1px, transparent 1px); background-size:30px 30px; cursor:grab; user-select:none; touch-action:none;">
+            <div id="wf-canvas" onMouseDown="{{ wfCanvasDown }}" onTouchStart="{{ wfCanvasDown }}" onWheel="{{ wfWheel }}" style="flex:1; overflow:hidden; position:relative; background-color:var(--bg); background-image:radial-gradient(var(--border-2) 1px, transparent 1px); background-size:30px 30px; cursor:grab; user-select:none; touch-action:none;">
               <sc-if value="{{ wfEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-3); text-align:center; padding:20px;">
                   <div style="font-size:15px; font-weight:500; color:var(--text-2);">Seu cérebro ainda está vazio</div>
@@ -1305,7 +1307,7 @@
                     <div style="position:absolute; left:{{ lk.mx }}px; top:{{ lk.my }}px; width:{{ lk.len }}px; height:0; border-top:1.5px {{ lk.lineStyle }} var(--wire); opacity:{{ lk.op }}; transform:translate(-50%,-50%) rotate({{ lk.ang }}deg); z-index:1; pointer-events:none;"></div>
                   </sc-for>
                   <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
-                    <div onMouseDown="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; cursor:grab; z-index:2; width:{{ nd.maxW }}; animation:cc-floatN {{ nd.floatDur }} ease-in-out infinite; animation-delay:{{ nd.floatDelay }};">
+                    <div onMouseDown="{{ nd.onDown }}" onTouchStart="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; cursor:grab; z-index:2; width:{{ nd.maxW }}; animation:cc-floatN {{ nd.floatDur }} ease-in-out infinite; animation-delay:{{ nd.floatDelay }};">
                       <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; background-image:radial-gradient(circle at 34% 27%, rgba(255,255,255,.6), rgba(255,255,255,0) 46%); box-shadow:{{ nd.glow }}, inset 0 -{{ nd.inset }}px {{ nd.insetBlur }}px rgba(0,0,0,.33), 0 7px 16px rgba(0,0,0,.34); flex:0 0 auto; transition:transform .24s cubic-bezier(.34,1.56,.64,1);" style-hover="transform:scale(1.28)"></div>
                       <div style="text-align:center; max-width:{{ nd.maxW }};">
                         <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }}; text-shadow:0 0 5px var(--bg), 0 0 9px var(--bg), 0 1px 2px var(--bg);">{{ nd.label }}</div>
@@ -1315,7 +1317,7 @@
                   </sc-for>
                 </div>
               </div>
-              <div onMouseDown="{{ stopProp }}" style="position:absolute; bottom:16px; right:16px; z-index:5; display:flex; flex-direction:column; gap:4px; background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:5px; box-shadow:var(--sh-2);">
+              <div onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" style="position:absolute; bottom:16px; right:16px; z-index:5; display:flex; flex-direction:column; gap:4px; background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:5px; box-shadow:var(--sh-2);">
                 <button onClick="{{ wfZoomIn }}" title="Aproximar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:18px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">+</button>
                 <div style="font-size:9.5px; text-align:center; color:var(--text-3); font-family:'Geist Mono',monospace;">{{ wfZoomPct }}</div>
                 <button onClick="{{ wfZoomOut }}" title="Afastar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:21px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">−</button>
@@ -1964,12 +1966,30 @@ class Component extends DCLogic {
   _winResize(dir) { const w = this._tauriWin(); if (w && w.startResizeDragging) { try { w.startResizeDragging(dir); } catch (e) {} } }
 
   // ---- Workflow: canvas interativo (arrastar nós, pan, zoom; posição salva local) ----
+  // ponto do evento — funciona pra mouse E pra toque (celular)
+  _wfPoint(e) { const t = e.touches && e.touches[0]; return t ? { x: t.clientX, y: t.clientY } : { x: e.clientX, y: e.clientY }; }
+  _wfBind() {
+    window.addEventListener('mousemove', this._wfMoveB);
+    window.addEventListener('mouseup', this._wfUpB);
+    window.addEventListener('touchmove', this._wfMoveB, { passive: false });
+    window.addEventListener('touchend', this._wfUpB);
+    window.addEventListener('touchcancel', this._wfUpB);
+  }
+  _wfUnbind() {
+    window.removeEventListener('mousemove', this._wfMoveB);
+    window.removeEventListener('mouseup', this._wfUpB);
+    window.removeEventListener('touchmove', this._wfMoveB);
+    window.removeEventListener('touchend', this._wfUpB);
+    window.removeEventListener('touchcancel', this._wfUpB);
+  }
   _wfEnsureHandlers() {
     if (this._wfMoveB) return;
     this._wfMoveB = (e) => {
       const d = this._wfDrag; if (!d) return;
-      const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+      const p = this._wfPoint(e);
+      const dx = p.x - d.sx, dy = p.y - d.sy;
       if (!d.moved && (Math.abs(dx) + Math.abs(dy)) > 3) d.moved = true;
+      if (d.moved && e.touches && e.cancelable) e.preventDefault(); // no celular, não rola a página ao arrastar
       if (d.kind === 'node') {
         const z = this.state.wfZoom || 1;
         const pos = { ...(this.state.wfPos || {}) };
@@ -1981,25 +2001,35 @@ class Component extends DCLogic {
     };
     this._wfUpB = () => {
       const d = this._wfDrag;
-      window.removeEventListener('mousemove', this._wfMoveB);
-      window.removeEventListener('mouseup', this._wfUpB);
+      this._wfUnbind();
       this._wfDrag = null;
       if (d && d.moved) { if (d.kind === 'node') this._wfSuppressClick = true; this._wfScheduleSave(); }
     };
   }
   _wfNodeDown(e, id, ox, oy) {
-    e.preventDefault(); e.stopPropagation();
+    e.stopPropagation();
+    if (!(e.touches && e.touches[0])) e.preventDefault(); // no toque, preserva o "tocar pra abrir"
     this._wfEnsureHandlers();
-    this._wfDrag = { kind: 'node', id, ox, oy, sx: e.clientX, sy: e.clientY, moved: false };
-    window.addEventListener('mousemove', this._wfMoveB);
-    window.addEventListener('mouseup', this._wfUpB);
+    const p = this._wfPoint(e);
+    this._wfDrag = { kind: 'node', id, ox, oy, sx: p.x, sy: p.y, moved: false };
+    this._wfBind();
   }
   _wfCanvasDown(e) {
     this._wfEnsureHandlers();
-    const p = this.state.wfPan || { x: 0, y: 0 };
-    this._wfDrag = { kind: 'pan', ox: p.x, oy: p.y, sx: e.clientX, sy: e.clientY, moved: false };
-    window.addEventListener('mousemove', this._wfMoveB);
-    window.addEventListener('mouseup', this._wfUpB);
+    const pan = this.state.wfPan || { x: 0, y: 0 };
+    const p = this._wfPoint(e);
+    this._wfDrag = { kind: 'pan', ox: pan.x, oy: pan.y, sx: p.x, sy: p.y, moved: false };
+    this._wfBind();
+  }
+  // centraliza/encaixa o canvas na área visível (essencial no celular, onde o canvas 1120x800 nasce fora da tela)
+  _wfFit() {
+    const el = document.getElementById('wf-canvas');
+    if (!el) return;
+    const cw = el.clientWidth, ch = el.clientHeight;
+    if (!cw || !ch) return;
+    const CW = 1120, CH = 800, pad = 20;
+    const zoom = Math.max(0.25, Math.min(1, Math.min((cw - pad) / CW, (ch - pad) / CH)));
+    this.setState({ wfZoom: zoom, wfPan: { x: (cw - CW * zoom) / 2, y: (ch - CH * zoom) / 2 } });
   }
   _wfWheelImpl(e) {
     const s = this.state; const zoom = s.wfZoom || 1;
@@ -2291,7 +2321,7 @@ class Component extends DCLogic {
     return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  go(screen) { this.setState({ screen, drawer: false, navOpen: false }); }
+  go(screen) { this.setState({ screen, drawer: false, navOpen: false }); if (screen === 'workflow' && this.state.isMobile) setTimeout(() => this._wfFit(), 90); }
 
   themes = {
     'Azul':    { a: '#5285f0', a2: '#3f6fe0', w: 'rgba(82,133,240,.14)' },
@@ -3573,7 +3603,7 @@ class Component extends DCLogic {
       wfWheel: (e) => this._wfWheelImpl(e),
       wfZoomIn: () => { const z = Math.min(2, (s.wfZoom || 1) + 0.15); this.setState({ wfZoom: z }); this._wfScheduleSave(); },
       wfZoomOut: () => { const z = Math.max(0.4, (s.wfZoom || 1) - 0.15); this.setState({ wfZoom: z }); this._wfScheduleSave(); },
-      wfReset: () => { this.setState({ wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1 }); this._wfScheduleSave(); },
+      wfReset: () => { this.setState({ wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1 }); if (s.isMobile) setTimeout(() => { this._wfFit(); this._wfScheduleSave(); }, 30); else this._wfScheduleSave(); },
       stopProp: (e) => e.stopPropagation(),
       isAssistente: s.screen === 'assistente',
       chatMessages, chatSuggestions,
