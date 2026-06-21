@@ -318,10 +318,13 @@
 
         <!-- user footer -->
         <div style="border-top:1px solid var(--border); padding:10px; display:flex; align-items:center; gap:10px;">
-          <div style="flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:linear-gradient(150deg,#3a4252,#272d38); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--text); border:1px solid var(--border-2);">{{ userInitials }}</div>
+          <div onClick="{{ openProfile }}" title="Editar perfil" style="flex:0 0 auto; width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(150deg,#3a4252,#272d38); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--text); border:1px solid var(--border-2); cursor:pointer;" style-hover="border-color:var(--accent)">
+            <sc-if value="{{ hasUserAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ userAvatar }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if>
+            <sc-if value="{{ noUserAvatar }}" hint-placeholder-val="{{ true }}"><span>{{ userInitials }}</span></sc-if>
+          </div>
           <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
-            <div style="min-width:0; flex:1;">
-              <div style="font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ username }}</div>
+            <div onClick="{{ openProfile }}" style="min-width:0; flex:1; cursor:pointer;" title="Editar perfil">
+              <div style="font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ userDisplayName }}</div>
               <div style="font-size:11px; color:var(--text-3); white-space:nowrap;">Agência · plano solo</div>
             </div>
             <button onClick="{{ logout }}" title="Sair da conta" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border:1px solid var(--border); background:var(--surface); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconLogout }}</button>
@@ -338,7 +341,7 @@
             <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:22px;">
               <div>
                 <div style="font-size:13px; color:var(--text-3); margin-bottom:4px;">{{ hojeLabel }}</div>
-                <h1 style="margin:0; font-size:25px; font-weight:600; letter-spacing:-.4px;">{{ saudacao }}, Rafael</h1>
+                <h1 style="margin:0; font-size:25px; font-weight:600; letter-spacing:-.4px;">{{ saudacao }}{{ greetName }}</h1>
                 <p style="margin:6px 0 0; font-size:13.5px; color:var(--text-2);">{{ inicioResumo }}</p>
               </div>
               <button onClick="{{ openDrawer }}" style="display:flex; align-items:center; gap:8px; height:38px; padding:0 16px; border:none; border-radius:9px; background:var(--accent); color:#fff; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 10px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
@@ -921,7 +924,7 @@
                   <div onClick="{{ cl.onProfile }}" style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .3s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 45ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
                       <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:44px; height:44px; border-radius:13px; background:{{ cl.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:{{ cl.color }}; flex:0 0 auto; letter-spacing:-.5px;">{{ cl.initials }}</div>
+                        <div style="width:44px; height:44px; border-radius:13px; overflow:hidden; background:{{ cl.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:{{ cl.color }}; flex:0 0 auto; letter-spacing:-.5px;"><sc-if value="{{ cl.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ cl.avatar }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if><sc-if value="{{ cl.noAvatar }}" hint-placeholder-val="{{ true }}"><span>{{ cl.initials }}</span></sc-if></div>
                         <div>
                           <div style="font-size:15px; font-weight:600; margin-bottom:5px;">{{ cl.name }}</div>
                           <span style="display:inline-flex; align-items:center; height:19px; padding:0 8px; border-radius:6px; font-size:10.5px; font-weight:600; letter-spacing:.2px; color:{{ cl.tagColor }}; background:{{ cl.tagBg }}; border:1px solid {{ cl.tagBorder }};">{{ cl.tag }}</span>
@@ -997,7 +1000,7 @@
               <button onClick="{{ clienteProfile.onBack }}" style="display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 11px 0 7px; border:none; background:transparent; color:var(--text-2); font:inherit; font-size:13px; cursor:pointer; border-radius:8px; margin-bottom:16px;" style-hover="background:var(--surface-2); color:var(--text)" style-active="transform:scale(.97)">{{ iconChevL }}<span>Voltar para clientes</span></button>
 
               <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 24px; box-shadow:var(--sh-1); display:flex; align-items:flex-start; gap:18px; flex-wrap:wrap; animation:cc-rise .45s cubic-bezier(.16,1,.3,1) both;">
-                <div style="width:62px; height:62px; border-radius:17px; background:{{ clienteProfile.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:{{ clienteProfile.color }}; flex:0 0 auto; letter-spacing:-.5px;">{{ clienteProfile.initials }}</div>
+                <div style="width:62px; height:62px; border-radius:17px; overflow:hidden; background:{{ clienteProfile.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:{{ clienteProfile.color }}; flex:0 0 auto; letter-spacing:-.5px;"><sc-if value="{{ clienteProfile.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ clienteProfile.avatar }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if><sc-if value="{{ clienteProfile.noAvatar }}" hint-placeholder-val="{{ true }}"><span>{{ clienteProfile.initials }}</span></sc-if></div>
                 <div style="flex:1; min-width:200px;">
                   <h1 style="margin:0; font-size:24px; font-weight:700; letter-spacing:-.5px;">{{ clienteProfile.nome }}</h1>
                   <div style="font-size:13px; color:var(--text-3); margin-top:5px;">{{ clienteProfile.sub }}</div>
@@ -1580,6 +1583,16 @@
           <!-- ===== MODO: CLIENTE ===== -->
           <sc-if value="{{ isDrawerCliente }}" hint-placeholder-val="{{ false }}">
           <div style="flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div style="width:56px; height:56px; border-radius:16px; overflow:hidden; background:linear-gradient(150deg,#3a4252,#272d38); border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; color:var(--text-3); flex:0 0 auto;">
+                <sc-if value="{{ hasClienteAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ clienteAvatarPreview }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if>
+                <sc-if value="{{ noClienteAvatar }}" hint-placeholder-val="{{ true }}">{{ iconUserPlus }}</sc-if>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                <label style="display:inline-flex; align-items:center; gap:7px; height:32px; padding:0 12px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:8px; font-size:12px; font-weight:500; cursor:pointer;" style-hover="border-color:var(--accent)"><span>Escolher foto</span><input type="file" accept="image/*" onChange="{{ clienteAvatarChange }}" style="display:none;" /></label>
+                <sc-if value="{{ hasClienteAvatar }}" hint-placeholder-val="{{ false }}"><button onClick="{{ removeClienteAvatar }}" style="border:none; background:transparent; color:var(--text-3); font:inherit; font-size:11.5px; cursor:pointer; padding:0;" style-hover="color:var(--crit)">Remover foto</button></sc-if>
+              </div>
+            </div>
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Nome do cliente</label>
               <input value="{{ clienteNome }}" onInput="{{ clienteNomeChange }}" placeholder="Ex: Luso Automóveis" style="width:100%; height:38px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
@@ -1699,6 +1712,34 @@
         </div>
       </sc-if>
 
+      <!-- EDITAR PERFIL -->
+      <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeProfile }}" style="position:absolute; inset:0; background:rgba(5,6,7,.6); backdrop-filter:blur(3px); z-index:55; animation:cc-scrim .18s ease both;"></div>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(380px,90%); background:var(--bg); border:1px solid var(--border-2); border-radius:18px; box-shadow:var(--sh-3); z-index:56; overflow:hidden; animation:cc-pop .28s cubic-bezier(.4,0,.2,1) both;">
+          <div style="padding:22px 24px 20px;">
+            <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:5px;">Perfil</div>
+            <h2 style="margin:0 0 18px; font-size:19px; font-weight:600;">Editar perfil</h2>
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px;">
+              <div style="width:72px; height:72px; border-radius:20px; overflow:hidden; background:linear-gradient(150deg,#3a4252,#272d38); border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; flex:0 0 auto;">
+                <sc-if value="{{ hasProfileAvatarPreview }}" hint-placeholder-val="{{ false }}"><img src="{{ profileAvatarPreview }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if>
+                <sc-if value="{{ noProfileAvatarPreview }}" hint-placeholder-val="{{ true }}"><span>{{ userInitials }}</span></sc-if>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:7px; align-items:flex-start;">
+                <label style="display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:9px; font-size:12.5px; font-weight:500; cursor:pointer;" style-hover="border-color:var(--accent)"><span>Escolher foto</span><input type="file" accept="image/*" onChange="{{ profileAvatarChange }}" style="display:none;" /></label>
+                <sc-if value="{{ hasProfileAvatarPreview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ removeProfileAvatar }}" style="border:none; background:transparent; color:var(--text-3); font:inherit; font-size:12px; cursor:pointer; padding:0;" style-hover="color:var(--crit)">Remover foto</button></sc-if>
+              </div>
+            </div>
+            <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Seu nome</label>
+            <input value="{{ profileNameInput }}" onInput="{{ profileNameChange }}" placeholder="Ex: Rafael" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+            <div style="font-size:11.5px; color:var(--text-3); margin-top:8px;">É assim que o app vai te chamar (ex: “Bom dia, Rafael”).</div>
+          </div>
+          <div style="display:flex; gap:10px; padding:0 24px 22px;">
+            <button onClick="{{ saveProfile }}" style="flex:1; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.97)">Salvar</button>
+            <button onClick="{{ closeProfile }}" style="height:42px; padding:0 18px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:10px; font:inherit; font-size:13px; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
+          </div>
+        </div>
+      </sc-if>
+
       <!-- PLAYER LO-FI (mini janela arrastável estilo Spotify) -->
       <sc-if value="{{ musicOpen }}" hint-placeholder-val="{{ false }}">
         <div style="position:fixed; left:{{ musicLeft }}; top:{{ musicTop }}; width:280px; background:var(--bg); border:1px solid var(--border-2); border-radius:16px; box-shadow:var(--sh-3); z-index:60; overflow:hidden; animation:cc-fade .16s ease both;">
@@ -1769,7 +1810,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, musicOpen: false, musicPlaying: false, musicMin: false, musicStation: 0, musicVol: 65, musicPos: null, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, musicOpen: false, musicPlaying: false, musicMin: false, musicStation: 0, musicVol: 65, musicPos: null, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -1973,8 +2014,31 @@ class Component extends DCLogic {
   _saveAudioPrefs() { clearTimeout(this._audioSaveT); this._audioSaveT = setTimeout(() => { try { localStorage.setItem('cdc-audio', JSON.stringify({ soundOn: this.state.soundOn, station: this.state.musicStation, vol: this.state.musicVol, pos: this.state.musicPos })); } catch (e) {} }, 150); }
   _loadAudioPrefs() { try { const r = localStorage.getItem('cdc-audio'); if (r) { const v = JSON.parse(r); this.setState({ soundOn: v.soundOn !== false, musicStation: v.station || 0, musicVol: (v.vol == null ? 65 : v.vol), musicPos: v.pos || null }); } } catch (e) {} }
 
+  // redimensiona uma imagem (File) pra um quadrado pequeno -> data URL base64 (leve, cabe no estado)
+  _imgToDataUrl(file, size, cb) {
+    if (!file) { cb(null); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas'); c.width = size; c.height = size;
+          const ctx = c.getContext('2d');
+          const s = Math.min(img.width, img.height);
+          const sx = (img.width - s) / 2, sy = (img.height - s) / 2;
+          ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+          cb(c.toDataURL('image/jpeg', 0.82));
+        } catch (e) { cb(null); }
+      };
+      img.onerror = () => cb(null);
+      img.src = reader.result;
+    };
+    reader.onerror = () => cb(null);
+    reader.readAsDataURL(file);
+  }
+
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
-  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders'];
+  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders', 'profile'];
   _hydrating = false;
   _saveTimer = null;
 
@@ -2486,7 +2550,7 @@ class Component extends DCLogic {
     const cv = s.calView || 'month';
 
     // ---- CLIENTES ----
-    const editCliente = (cl) => this.setState({ drawer:true, drawerMode:'cliente', drawerEditId:cl.id, clienteNome:cl.nome, clienteTipo:cl.tipo||'fixo', clienteValor:String(cl.valor||''), clientePagDia:cl.pagDia||'5', clienteServico:cl.servico||'' });
+    const editCliente = (cl) => this.setState({ drawer:true, drawerMode:'cliente', drawerEditId:cl.id, clienteNome:cl.nome, clienteTipo:cl.tipo||'fixo', clienteValor:String(cl.valor||''), clientePagDia:cl.pagDia||'5', clienteServico:cl.servico||'', clienteAvatar: cl.avatar || null });
     const deleteCliente = (id) => { if (window.confirm('Excluir este cliente? Essa ação não pode ser desfeita.')) this.setState({ clients: clients.filter(x=>x.id!==id) }); };
     const editProspecto = (p) => this.setState({ drawer:true, drawerMode:'prospecto', drawerEditId:p.id, prospectoNome:p.nome, prospectoSegmento:p.segmento||'', prospectoObs:p.obs||'' });
     const deleteProspecto = (id) => { if (window.confirm('Excluir este prospecto? Essa ação não pode ser desfeita.')) this.setState({ prospectos: prospectos.filter(x=>x.id!==id) }); };
@@ -2496,7 +2560,7 @@ class Component extends DCLogic {
       const openD = clD.filter(d => d.status !== 'done');
       const first = openD[0];
       const _ps = payStatus(cl);
-      return { id:cl.id, name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:_ps.label, statusColor:_ps.color, statusBg:_ps.bg, open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
+      return { id:cl.id, name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', avatar:cl.avatar||null, hasAvatar:!!cl.avatar, noAvatar:!cl.avatar, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:_ps.label, statusColor:_ps.color, statusBg:_ps.bg, open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
         isFix: cl.tipo==='fixo', paid:_ps.key==='pago', payLabel:_ps.key==='pago'?'Pago':'Marcar pago', payTrack:_ps.key==='pago'?'var(--ok)':'var(--border-2)', payKnob:_ps.key==='pago'?'21px':'2px', onTogglePay:(e)=>{ if(e)e.stopPropagation(); (_ps.key==='pago'?unmarkPaid(cl):markPaid(cl)); },
         deleteIcon:this.icon('close',12,2), onProfile:() => this.setState({ clientProfileId: cl.id }), onEdit:(e) => { if (e) e.stopPropagation(); editCliente(cl); }, onDelete:(e) => { if (e) e.stopPropagation(); deleteCliente(cl.id); } };
     });
@@ -2512,7 +2576,7 @@ class Component extends DCLogic {
       const _cps = payStatus(_cp);
       const fix = _cp.tipo === 'fixo';
       return {
-        nome: _cp.nome, initials: _cp.initials, color: _cp.color, avatarBg: _cp.color + '22',
+        nome: _cp.nome, initials: _cp.initials, color: _cp.color, avatarBg: _cp.color + '22', avatar: _cp.avatar || null, hasAvatar: !!_cp.avatar, noAvatar: !_cp.avatar,
         sub: (fix ? 'Cliente fixo' : 'Freelance') + ' · ' + (_cp.servico ? (_cp.servico.length > 40 ? _cp.servico.slice(0, 40) + '…' : _cp.servico) : 'sem serviço definido') + ' · desde ' + (_cp.since || '—'),
         tipoTag: fix ? 'FIXO' : 'FREELANCE', tagColor: fix ? 'var(--info)' : 'var(--text-2)', tagBg: fix ? 'var(--info-weak)' : 'var(--surface-3)', tagBorder: fix ? 'transparent' : 'var(--border-2)',
         status: _cps.label, statusColor: _cps.color, statusBg: _cps.bg,
@@ -3073,7 +3137,7 @@ class Component extends DCLogic {
       goSystem: () => this.go('system'),
       goDemandas: () => this.go('demandas'),
       openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }),
-      openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
+      openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'', clienteAvatar:null }),
       openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', drawerEditId: null, prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
       openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', drawerEditId: null, lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
       openDrawerIdeia: () => this.setState({ drawer: true, drawerMode: 'ideia', drawerEditId: null, ideiaTitulo:'', ideiaCategoria:'Pessoal', ideiaObs:'' }),
@@ -3124,12 +3188,12 @@ class Component extends DCLogic {
         } else if (mode === 'cliente') {
           const nome = s.clienteNome||'Novo cliente';
           if (editId) {
-            updates.clients = clients.map(cl => cl.id===editId ? { ...cl, nome, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'' } : cl);
+            updates.clients = clients.map(cl => cl.id===editId ? { ...cl, nome, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', avatar: s.clienteAvatar || null } : cl);
           } else {
             const words = nome.trim().split(/\s+/);
             const initials = words.length>=2?(words[0][0]+words[words.length-1][0]).toUpperCase():nome.slice(0,2).toUpperCase();
             const color = palette[clients.length % palette.length];
-            updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', since:'Jun 2026', paidMonths:[], startYM:nowYM, startDay:todayReal.getDate() }];
+            updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', avatar: s.clienteAvatar || null, since:'Jun 2026', paidMonths:[], startYM:nowYM, startDay:todayReal.getDate() }];
           }
           updates.clienteNome = ''; updates.clienteValor = ''; updates.clienteServico = '';
         } else if (mode === 'prospecto') {
@@ -3185,6 +3249,11 @@ class Component extends DCLogic {
       lancDesc: s.lancDesc || '', lancValor: s.lancValor || '', lancData: s.lancData || '',
       ideiaTitulo: s.ideiaTitulo || '', ideiaObs: s.ideiaObs || '',
       clienteNomeChange: (e) => this.setState({ clienteNome: e.target.value }),
+      clienteAvatarPreview: s.clienteAvatar || null,
+      hasClienteAvatar: !!s.clienteAvatar,
+      noClienteAvatar: !s.clienteAvatar,
+      clienteAvatarChange: (e) => { const f = e.target.files && e.target.files[0]; this._imgToDataUrl(f, 160, (url) => { if (url) this.setState({ clienteAvatar: url }); }); },
+      removeClienteAvatar: () => this.setState({ clienteAvatar: null }),
       clienteValorChange: (e) => this.setState({ clienteValor: sanitizeMoney(e.target.value) }),
       clientePagDiaChange: (e) => this.setState({ clientePagDia: sanitizeDia(e.target.value) }),
       clienteServicoChange: (e) => this.setState({ clienteServico: e.target.value }),
@@ -3242,7 +3311,7 @@ class Component extends DCLogic {
       drawerDemandClientId: s.drawerDemandClientId || '',
       drawerDemandClientChange: (e) => this.setState({ drawerDemandClientId: e.target.value }),
       drawerClientOptions: clients.map(c => ({ id: String(c.id), nome: c.nome, color: c.color })),
-      addClient: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
+      addClient: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'', clienteAvatar:null }),
       // ---- DRAWER DEMANDA: cliente inline ----
       inlineClientOpen: !!s.drawerNewClientOpen,
       inlineClientClosed: !s.drawerNewClientOpen,
@@ -3327,7 +3396,23 @@ class Component extends DCLogic {
       authCta: s.authBusy ? 'Aguarde…' : (s.authMode === 'signup' ? 'Criar conta' : 'Entrar'),
       authToggleLabel: s.authMode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma',
       username: s.username || '',
-      userInitials: ((s.username || '?').trim().slice(0, 2) || '?').toUpperCase(),
+      userInitials: ((((s.profile && s.profile.name) || s.username || '?').trim().slice(0, 2)) || '?').toUpperCase(),
+      userAvatar: (s.profile && s.profile.avatar) || null,
+      hasUserAvatar: !!(s.profile && s.profile.avatar),
+      noUserAvatar: !(s.profile && s.profile.avatar),
+      userDisplayName: (((s.profile && s.profile.name) || '').trim()) || (s.username || ''),
+      greetName: ', ' + (((((s.profile && s.profile.name) || '').trim()) || (s.username || 'você')).split(' ')[0] || 'você'),
+      profileOpen: !!s.profileOpen,
+      openProfile: () => this.setState({ profileOpen: true, profileNameInput: (((s.profile && s.profile.name) || '').trim()) || (s.username || ''), profileAvatarInput: (s.profile && s.profile.avatar) || null }),
+      closeProfile: () => this.setState({ profileOpen: false }),
+      profileNameInput: s.profileNameInput || '',
+      profileNameChange: (e) => this.setState({ profileNameInput: e.target.value }),
+      profileAvatarChange: (e) => { const f = e.target.files && e.target.files[0]; this._imgToDataUrl(f, 160, (url) => { if (url) this.setState({ profileAvatarInput: url }); }); },
+      profileAvatarPreview: s.profileAvatarInput || null,
+      hasProfileAvatarPreview: !!s.profileAvatarInput,
+      noProfileAvatarPreview: !s.profileAvatarInput,
+      removeProfileAvatar: () => this.setState({ profileAvatarInput: null }),
+      saveProfile: () => { this.setState({ profile: { name: (s.profileNameInput || '').trim(), avatar: s.profileAvatarInput || null }, profileOpen: false, toast: 'Perfil salvo' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000); },
       iconLogout: this.icon('logout', 15, 1.8),
       logout: () => {
         fetch('/api/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
