@@ -106,6 +106,7 @@
   @keyframes cc-dot { 0%, 80%, 100% { opacity:.25; transform: scale(.8); } 40% { opacity:1; transform: scale(1); } }
   @keyframes cc-search-pop { from { transform: translateX(-50%) translateY(-10px) scale(.98); opacity:0; } to { transform: translateX(-50%) translateY(0) scale(1); opacity:1; } }
   @keyframes cc-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+  @keyframes cc-floatN { 0%, 100% { transform: translate(-50%,-50%) translateY(0); } 50% { transform: translate(-50%,-50%) translateY(-7px); } }
 
   /* ===== Responsivo (mobile ≤ 760px) ===== inline-styles são sobrescritos com !important ===== */
   @media (max-width: 760px) {
@@ -1227,21 +1228,21 @@
               <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
               <span style="font-size:12px; color:var(--text-3);">arraste os nós pra organizar · arraste o fundo pra mover · role pra dar zoom · clique pra abrir</span>
             </div>
-            <div id="wf-canvas" onMouseDown="{{ wfCanvasDown }}" onWheel="{{ wfWheel }}" style="flex:1; overflow:hidden; position:relative; background:radial-gradient(820px 600px at 50% 50%, var(--surface) 0%, var(--bg) 72%); cursor:grab; user-select:none;">
+            <div id="wf-canvas" onMouseDown="{{ wfCanvasDown }}" onWheel="{{ wfWheel }}" style="flex:1; overflow:hidden; position:relative; background-color:var(--bg); background-image:radial-gradient(circle at 50% 42%, var(--surface), transparent 60%), radial-gradient(var(--border-2) 1px, transparent 1px); background-size:auto, 30px 30px; cursor:grab; user-select:none; touch-action:none;">
               <sc-if value="{{ wfEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-3); text-align:center; padding:20px;">
                   <div style="font-size:15px; font-weight:500; color:var(--text-2);">Seu cérebro ainda está vazio</div>
                   <div style="font-size:12.5px; max-width:340px; line-height:1.5;">Cadastre clientes e demandas — eles aparecem aqui conectados automaticamente, como num mapa mental.</div>
                 </div>
               </sc-if>
-              <div style="position:absolute; top:0; left:0; transform-origin:0 0; transform:translate({{ wfPanX }}px, {{ wfPanY }}px) scale({{ wfZoom }}); will-change:transform;">
-                <div style="position:relative; width:1120px; height:800px; background-image:radial-gradient(var(--border-2) 1px, transparent 1px); background-size:28px 28px;">
+              <div style="position:absolute; top:0; left:0; transform-origin:0 0; transform:translate({{ wfPanX }}px, {{ wfPanY }}px) scale({{ wfZoom }});">
+                <div style="position:relative; width:1120px; height:800px;">
                   <sc-for list="{{ wfLinks }}" as="lk" hint-placeholder-count="0">
                     <div style="position:absolute; left:{{ lk.mx }}px; top:{{ lk.my }}px; width:{{ lk.len }}px; height:0; border-top:1.5px {{ lk.lineStyle }} var(--wire); opacity:{{ lk.op }}; transform:translate(-50%,-50%) rotate({{ lk.ang }}deg); z-index:1; pointer-events:none;"></div>
                   </sc-for>
                   <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
-                    <div onMouseDown="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:8px; cursor:grab; z-index:2; width:{{ nd.maxW }};">
-                      <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; box-shadow:{{ nd.glow }}; border:2px solid var(--content); flex:0 0 auto; transition:transform .16s ease, box-shadow .16s ease;" style-hover="transform:scale(1.18)"></div>
+                    <div onMouseDown="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; cursor:grab; z-index:2; width:{{ nd.maxW }}; animation:cc-floatN {{ nd.floatDur }} ease-in-out infinite; animation-delay:{{ nd.floatDelay }};">
+                      <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; background-image:radial-gradient(circle at 34% 27%, rgba(255,255,255,.6), rgba(255,255,255,0) 46%); box-shadow:{{ nd.glow }}, inset 0 -{{ nd.inset }}px {{ nd.insetBlur }}px rgba(0,0,0,.33), 0 7px 16px rgba(0,0,0,.34); flex:0 0 auto; transition:transform .24s cubic-bezier(.34,1.56,.64,1);" style-hover="transform:scale(1.28)"></div>
                       <div style="text-align:center; max-width:{{ nd.maxW }};">
                         <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }};">{{ nd.label }}</div>
                         <sc-if value="{{ nd.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px; color:var(--text-3); margin-top:2px;">{{ nd.sub }}</div></sc-if>
@@ -2705,7 +2706,13 @@ class Component extends DCLogic {
     const wfLink = (x1, y1, x2, y2, dash, op) => { const dx = x2 - x1, dy = y2 - y1; wfLinks.push({ mx:(x1 + x2) / 2, my:(y1 + y2) / 2, len:Math.sqrt(dx * dx + dy * dy), ang:Math.atan2(dy, dx) * 180 / Math.PI, lineStyle:dash ? 'dashed' : 'solid', op }); };
     // clique navega, mas é suprimido logo após um arraste
     const wfClick = (fn) => () => { if (this._wfSuppressClick) { this._wfSuppressClick = false; return; } fn(); };
-    const wfPush = (id, x, y, meta, click) => wfNodes.push({ id, x, y, ...meta, onDown:(e) => this._wfNodeDown(e, id, x, y), onClick: wfClick(click) });
+    const wfPush = (id, x, y, meta, click) => {
+      const sz = meta.size || 20;
+      wfNodes.push({ id, x, y, ...meta, onDown:(e) => this._wfNodeDown(e, id, x, y), onClick: wfClick(click),
+        inset: Math.max(2, Math.round(sz * 0.16)), insetBlur: Math.max(3, Math.round(sz * 0.26)),
+        floatDur: (3.4 + (Math.abs(Math.round(x) + Math.round(y)) % 16) / 10).toFixed(1) + 's',
+        floatDelay: ((Math.abs(Math.round(x * 7 + y * 3)) % 24) / 10).toFixed(1) + 's' });
+    };
     // centro (agência)
     const rp = wfFinal('root', wfCx, wfCy);
     wfPush('root', rp.x, rp.y, { label:'Minha agência', sub:clients.length+' clientes · '+demands.length+' demandas', hasSub:true, color:'var(--accent)', size:84, glow:'0 0 0 7px var(--accent-weak)', labelSize:'13px', labelW:'700', maxW:'140px' }, () => this.setState({ screen:'inicio' }));
