@@ -494,7 +494,7 @@
                 </div>
                 <!-- active client info bar -->
                 <div class="cc-wrap-mob" style="display:flex; align-items:center; gap:12px; padding:10px 28px; border-bottom:1px solid var(--border); flex-shrink:0;">
-                  <div style="width:30px; height:30px; border-radius:9px; background:{{ activeClientInfo.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600; color:{{ activeClientInfo.color }}; flex:0 0 auto;">{{ activeClientInfo.initials }}</div>
+                  <div style="width:30px; height:30px; border-radius:9px; overflow:hidden; background:{{ activeClientInfo.avatarBg }}; border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600; color:{{ activeClientInfo.color }}; flex:0 0 auto;"><sc-if value="{{ activeClientInfo.hasAvatar }}" hint-placeholder-val="{{ false }}"><img src="{{ activeClientInfo.avatar }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if><sc-if value="{{ activeClientInfo.noAvatar }}" hint-placeholder-val="{{ true }}"><span>{{ activeClientInfo.initials }}</span></sc-if></div>
                   <span style="display:inline-flex; align-items:center; height:19px; padding:0 8px; border-radius:6px; font-size:10.5px; font-weight:600; letter-spacing:.2px; color:{{ activeClientInfo.tagColor }}; background:{{ activeClientInfo.tagBg }}; border:1px solid {{ activeClientInfo.tagBorder }};">{{ activeClientInfo.tag }}</span>
                   <span style="font-size:12.5px; color:var(--text-3);">{{ activeClientInfo.openLabel }} · próxima <span style="color:{{ activeClientInfo.nextColor }}; font-weight:500;">{{ activeClientInfo.next }}</span></span>
                   <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
@@ -521,7 +521,6 @@
                         </div>
                       </div>
                     </sc-for>
-                    <button onClick="{{ openDrawer }}" style="min-height:116px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px dashed var(--border-2); background:transparent; color:var(--text-3); border-radius:11px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text-2); border-color:var(--text-3)">{{ iconPlusSm }}<span>Adicionar demanda</span></button>
                   </div>
                 </div>
               </div>
@@ -2417,7 +2416,11 @@ class Component extends DCLogic {
     this._root.style.setProperty('--accent-weak', t.w);
   }
 
-  componentDidUpdate() { this.applyTheme(); }
+  componentDidUpdate() {
+    this.applyTheme();
+    // trava o scroll do fundo quando a sidebar (drawer) está aberta no mobile
+    try { const lock = !!(this.state.navOpen && this.state.isMobile); document.documentElement.style.overflow = lock ? 'hidden' : ''; document.body.style.overflow = lock ? 'hidden' : ''; } catch (e) {}
+  }
 
   navData() {
     const nD = (this.state.demands || []).length;
@@ -2653,13 +2656,13 @@ class Component extends DCLogic {
       const openD = clD.filter(d => d.status !== 'done');
       const first = openD[0];
       const avatarBg = cl.color + '22';
-      return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', cards:clD.filter(passPrio).map(mkLane) };
+      return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', avatar:cl.avatar||null, hasAvatar:!!cl.avatar, noAvatar:!cl.avatar, cards:clD.filter(passPrio).map(mkLane) };
     });
     // demandas sem cliente (ou cujo cliente foi removido) — aba "Avulsas" pra nunca sumirem do board por cliente
     const avulsasD = demands.filter(d => !clients.some(c => c.id === d.clientId));
     if (avulsasD.length) {
       const ab = avulsasD.filter(d => d.status !== 'done').length;
-      clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', cards:avulsasD.filter(passPrio).map(d => mkLane(d, true)) });
+      clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', hasAvatar:false, noAvatar:true, cards:avulsasD.filter(passPrio).map(d => mkLane(d, true)) });
     }
 
     // Projetos pessoais = demandas sem cliente (reais, editáveis) — não os mocks antigos
@@ -2667,7 +2670,7 @@ class Component extends DCLogic {
     const personalEmpty = personal.length === 0;
 
     const ac = s.activeClient || 0;
-    const activeLane = clientLanes[ac] || clientLanes[0] || { cards:[], openLabel:'0 abertas', next:'', nextColor:'var(--text-3)', color:'var(--accent)', initials:'?', avatarBg:'var(--surface)', tag:'', tagColor:'var(--text-3)', tagBg:'var(--surface)', tagBorder:'var(--border)' };
+    const activeLane = clientLanes[ac] || clientLanes[0] || { cards:[], openLabel:'0 abertas', next:'', nextColor:'var(--text-3)', color:'var(--accent)', initials:'?', noAvatar:true, hasAvatar:false, avatarBg:'var(--surface)', tag:'', tagColor:'var(--text-3)', tagBg:'var(--surface)', tagBorder:'var(--border)' };
     // arrastar um card de demanda e soltar numa aba reatribui o cliente da demanda
     const tabDrop = (key, targetClientId) => ({
       dropBg: s.dragOverClient===key ? 'var(--accent-weak)' : 'transparent',

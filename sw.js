@@ -12,7 +12,7 @@
 //  - /__livereload é um stream SSE keep-alive; cachear/!respondWith
 //    quebraria o live reload. Para ambos, deixamos o browser cuidar.
 // =============================================================
-const VERSION = 'cdc-pwa-v1';
+const VERSION = 'cdc-pwa-v2';
 const CACHE = VERSION;
 
 // App shell same-origin: o mínimo pra abrir a casca do app.
@@ -59,6 +59,9 @@ self.addEventListener('fetch', (event) => {
 
   // nunca tocar na API nem no canal de live reload
   if (sameOrigin && (url.pathname.startsWith('/api/') || url.pathname === '/__livereload')) return;
+  // nunca interceptar o YouTube/áudio: o player de música precisa ir DIRETO na rede
+  // (cachear resposta opaca do YouTube quebrava a reprodução)
+  if (!sameOrigin && /(^|\.)(youtube\.com|youtube-nocookie\.com|ytimg\.com|googlevideo\.com)$/i.test(url.hostname)) return;
 
   event.respondWith(
     fetch(req)
