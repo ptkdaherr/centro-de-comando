@@ -164,7 +164,48 @@
       <div style="display:flex; align-items:center; gap:4px; -webkit-app-region:no-drag;">
         <button onClick="{{ toggleTheme }}" title="{{ themeTitle }}" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconTheme }}</button>
         <!-- Design System: acesso via goSystem(), mantido como referência interna -->
-        <button title="Notificações" style="position:relative; display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2)">{{ iconBell }}<span style="position:absolute; top:5px; right:6px; width:5px; height:5px; border-radius:50%; background:var(--accent);"></span></button>
+        <div style="position:relative; display:flex;">
+          <button onClick="{{ toggleNotif }}" title="Notificações" style="position:relative; display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconBell }}<sc-if value="{{ hasAvisos }}" hint-placeholder-val="{{ true }}"><span style="position:absolute; top:5px; right:6px; width:6px; height:6px; border-radius:50%; background:var(--crit); box-shadow:0 0 0 2px var(--titlebar);"></span></sc-if></button>
+          <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ closeNotif }}" style="position:fixed; inset:0; z-index:49; -webkit-app-region:no-drag;"></div>
+            <div style="position:absolute; top:36px; right:0; width:340px; max-height:72vh; overflow-y:auto; background:var(--bg); border:1px solid var(--border-2); border-radius:13px; box-shadow:var(--sh-3); z-index:50; animation:cc-pop .16s cubic-bezier(.4,0,.2,1) both; -webkit-app-region:no-drag;">
+              <div style="padding:13px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:14px; font-weight:600;">Notificações</span>
+                <span style="font-size:11.5px; color:var(--text-3);">{{ avisosCountLabel }}</span>
+              </div>
+              <div style="padding:7px 8px 3px;">
+                <sc-for list="{{ avisos }}" as="av" hint-placeholder-count="3">
+                  <div style="display:flex; align-items:flex-start; gap:10px; padding:9px 8px; border-radius:9px; transition:background .12s;" style-hover="background:var(--surface-2)">
+                    <span style="width:8px; height:8px; border-radius:50%; background:{{ av.color }}; margin-top:4px; flex:0 0 auto;"></span>
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-size:12.5px; font-weight:500; line-height:1.35;">{{ av.title }}</div>
+                      <div style="font-size:11px; color:{{ av.subColor }}; margin-top:2px;">{{ av.sub }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ avisosEmpty }}" hint-placeholder-val="{{ true }}">
+                  <div style="padding:16px 10px; font-size:12px; color:var(--text-3); text-align:center;">Nada pra avisar agora 🎉</div>
+                </sc-if>
+              </div>
+              <div style="padding:12px 14px 14px; border-top:1px solid var(--border);">
+                <div style="font-size:10.5px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3); margin-bottom:8px;">Novo lembrete</div>
+                <input value="{{ reminderTitle }}" onInput="{{ reminderTitleChange }}" onKeyDown="{{ reminderKeyDown }}" placeholder="Ex: ligar pro cliente novo" style="width:100%; height:36px; padding:0 11px; background:var(--surface); border:1px solid var(--border-2); border-radius:8px; color:var(--text); font:inherit; font-size:12.5px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                <div style="display:flex; gap:6px; margin-top:7px;">
+                  <input type="datetime-local" value="{{ reminderWhen }}" onInput="{{ reminderWhenChange }}" style="flex:1; min-width:0; height:36px; padding:0 10px; background:var(--surface); border:1px solid var(--border-2); border-radius:8px; color:var(--text); font:inherit; font-size:12px; outline:none; cursor:pointer; color-scheme:{{ colorScheme }};" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                  <button onClick="{{ addReminder }}" title="Adicionar lembrete" style="flex:0 0 auto; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; background:var(--accent); color:#fff; border-radius:8px; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.92)">{{ iconPlusSm }}</button>
+                </div>
+                <sc-if value="{{ reminderErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px; color:var(--crit); margin-top:6px;">{{ reminderErr }}</div></sc-if>
+                <sc-for list="{{ remindersList }}" as="rm" hint-placeholder-count="0">
+                  <div style="display:flex; align-items:center; gap:9px; padding:8px 2px; border-top:1px solid var(--border); margin-top:2px;">
+                    <span style="width:6px; height:6px; border-radius:50%; background:{{ rm.color }}; flex:0 0 auto;"></span>
+                    <div style="flex:1; min-width:0;"><div style="font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ rm.title }}</div><div style="font-size:10.5px; color:{{ rm.whenColor }}; margin-top:1px;">{{ rm.whenLabel }}</div></div>
+                    <button onClick="{{ rm.onDelete }}" title="Remover" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ iconXsm }}</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
         <div style="width:1px; height:18px; background:var(--border); margin:0 4px;"></div>
         <div style="display:flex; gap:2px;">
           <button title="Minimizar" style="display:flex; align-items:center; justify-content:center; width:30px; height:26px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2)">{{ iconMin }}</button>
@@ -1546,7 +1587,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -1555,8 +1596,70 @@ class Component extends DCLogic {
       .catch(() => {});
   }
 
+  // ---- MOTOR DE NOTIFICAÇÕES (desktop nativo via Tauri, ou Web Notification) ----
+  _notifTimer = null;
+  _requestNotifPerm() {
+    try {
+      const T = window.__TAURI__;
+      if (T && T.notification && T.notification.requestPermission) { T.notification.requestPermission().catch(() => {}); return; }
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') Notification.requestPermission().catch(() => {});
+    } catch (e) {}
+  }
+  _fireNotif(title, body) {
+    try {
+      const T = window.__TAURI__;
+      if (T && T.notification && typeof T.notification.sendNotification === 'function') { T.notification.sendNotification({ title, body }); return; }
+    } catch (e) {}
+    try { if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification(title, { body }); } catch (e) {}
+  }
+  _loadNotified() { try { return JSON.parse(localStorage.getItem('cdc-notified') || '{}'); } catch (e) { return {}; } }
+  _saveNotified(o) {
+    // poda chaves com mais de 40 dias pra não crescer pra sempre
+    const cut = Date.now() - 40 * 86400000;
+    for (const k of Object.keys(o)) if (o[k] < cut) delete o[k];
+    try { localStorage.setItem('cdc-notified', JSON.stringify(o)); } catch (e) {}
+  }
+  _checkNotifications() {
+    const s = this.state;
+    if (!s.authed) return;
+    const notified = this._loadNotified();
+    const now = new Date();
+    const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+    const tk = `${today0.getFullYear()}-${String(today0.getMonth() + 1).padStart(2, '0')}-${String(today0.getDate()).padStart(2, '0')}`;
+    let changed = false;
+    const fire = (key, title, body) => { if (notified[key]) return; notified[key] = Date.now(); changed = true; this._fireNotif(title, body); };
+
+    const demands = s.demands || [], clients = s.clients || [], reminders = s.reminders || [];
+    // resumo do dia (1x/dia, a partir das 6h)
+    if (now.getHours() >= 6) {
+      const venceHoje = demands.filter((d) => d.status !== 'done' && d.dueDate === tk).length;
+      const abertas = demands.filter((d) => d.status !== 'done').length;
+      if (abertas > 0 || venceHoje > 0) fire('resumo-' + tk, 'Bom dia! Sua agenda', `${abertas} demanda(s) aberta(s)` + (venceHoje ? ` · ${venceHoje} vence(m) hoje` : ' · nada vencendo hoje'));
+    }
+    for (const d of demands) {
+      if (d.status === 'done' || d.dueDate !== tk) continue;
+      fire('dem-' + d.id + '-' + tk, 'Demanda vence hoje', d.title + (d.dueTime ? ' · ' + d.dueTime : ''));
+    }
+    for (const c of clients) {
+      if ((c.tipo || 'fixo') !== 'fixo') continue;
+      if (parseInt(c.pagDia, 10) !== today0.getDate()) continue;
+      fire('pag-' + c.id + '-' + tk, 'Dia de pagamento', `${c.nome} — recebimento hoje (cliente fixo)`);
+    }
+    for (const r of reminders) {
+      if (r.done || !r.when) continue;
+      const t = new Date(r.when).getTime();
+      if (!isNaN(t) && t <= Date.now()) fire('rem-' + r.id, 'Lembrete', r.title);
+    }
+    if (changed) this._saveNotified(notified);
+  }
+  _startNotifEngine() {
+    if (this._notifTimer) return;
+    this._notifTimer = setInterval(() => this._checkNotifications(), 60000);
+    setTimeout(() => this._checkNotifications(), 4500); // 1ª checada após hidratar os dados
+  }
+
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
-  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
+  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders'];
   _hydrating = false;
   _saveTimer = null;
 
@@ -1578,7 +1681,7 @@ class Component extends DCLogic {
       .then((r) => r.json().catch(() => ({ ok: false })))
       .then((d) => {
         this.setState({ authed: !!d.ok, authChecked: true, username: d.username || '', authMode: d.hasUsers ? 'login' : 'signup' });
-        if (d.ok) { this._loadState(); this._loadConfig(); }
+        if (d.ok) { this._loadState(); this._loadConfig(); this._startNotifEngine(); }
       })
       .catch(() => this.setState({ authed: false, authChecked: true }));
   }
@@ -2190,7 +2293,7 @@ class Component extends DCLogic {
       fetch(signup ? '/api/signup' : '/api/login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         .then(async (r) => {
           const d = await r.json().catch(() => ({}));
-          if (r.ok && d.ok) { this.setState({ authed: true, username: d.username || username, loginUsername: '', loginPassword: '', loginError: '', authBusy: false }); this._loadState(); this._loadConfig(); }
+          if (r.ok && d.ok) { this.setState({ authed: true, username: d.username || username, loginUsername: '', loginPassword: '', loginError: '', authBusy: false }); this._loadState(); this._loadConfig(); this._startNotifEngine(); }
           else { this.setState({ loginError: d.error || (signup ? 'Não consegui criar a conta' : 'Usuário ou senha incorretos'), loginPassword: '', authBusy: false }); }
         })
         .catch(() => this.setState({ loginError: 'Não foi possível conectar ao servidor', authBusy: false }));
@@ -2422,6 +2525,66 @@ class Component extends DCLogic {
       const on = dta[i];
       return { label, color: on ? 'var(--accent)' : 'var(--text-2)', bg: on ? 'var(--accent-weak)' : 'var(--surface)', border: on ? 'var(--accent)' : 'var(--border-2)', onClick: () => { this.setState({ drawerTypeActive: drawerTypeLabels.map((_, j) => j === i) }); } };
     });
+
+    // ============ NOTIFICAÇÕES / LEMBRETES (central do sino) ============
+    const reminders = s.reminders || [];
+    const _msDay = 86400000;
+    const _today0 = new Date(); _today0.setHours(0, 0, 0, 0);
+    const _nowMs = Date.now();
+    const _diaMes = _today0.getDate();
+    const _diasNoMes = new Date(_today0.getFullYear(), _today0.getMonth() + 1, 0).getDate();
+    const _fmtWhen = (iso) => {
+      if (!iso) return '';
+      const dt = new Date(iso); if (isNaN(dt.getTime())) return iso;
+      const d0 = new Date(dt); d0.setHours(0, 0, 0, 0);
+      const diff = Math.round((d0 - _today0) / _msDay);
+      const hh = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+      let day;
+      if (diff === 0) day = 'hoje'; else if (diff === 1) day = 'amanhã'; else if (diff === -1) day = 'ontem';
+      else day = dt.getDate() + ' ' + (_mesAbbr[dt.getMonth()] || '');
+      return day + ' ' + hh;
+    };
+    const avisos = [];
+    // 1) demandas vencendo (hoje/próximos 2 dias) ou atrasadas
+    for (const d of (s.demands || [])) {
+      if (d.status === 'done' || !d.dueDate) continue;
+      const p = d.dueDate.split('-').map(Number);
+      const dd = new Date(p[0], p[1] - 1, p[2]); dd.setHours(0, 0, 0, 0);
+      const diff = Math.round((dd - _today0) / _msDay);
+      if (diff < 0) avisos.push({ key: 'dem-' + d.id, color: 'var(--crit)', title: d.title, sub: 'Demanda atrasada · venceu ' + (d.due || ''), subColor: 'var(--crit)', ts: dd.getTime() });
+      else if (diff <= 2) { const q = diff === 0 ? 'vence hoje' : diff === 1 ? 'vence amanhã' : 'vence em 2 dias'; avisos.push({ key: 'dem-' + d.id, color: diff === 0 ? 'var(--warn)' : 'var(--info)', title: d.title, sub: 'Demanda ' + q + (d.dueTime ? ' · ' + d.dueTime : ''), subColor: 'var(--text-3)', ts: dd.getTime() }); }
+    }
+    // 2) pagamento de clientes fixos (dia de pagamento hoje/próximos 3 dias)
+    for (const c of (s.clients || [])) {
+      if ((c.tipo || 'fixo') !== 'fixo') continue;
+      const pd = parseInt(c.pagDia, 10);
+      if (!pd || pd < 1 || pd > 31) continue;
+      let diff = pd - _diaMes; if (diff < 0) diff += _diasNoMes;
+      if (diff <= 3) { const q = diff === 0 ? 'é hoje' : diff === 1 ? 'é amanhã' : 'em ' + diff + ' dias'; avisos.push({ key: 'pag-' + c.id + '-' + _today0.getMonth(), color: 'var(--ok)', title: 'Pagamento · ' + c.nome, sub: 'Recebimento ' + q + ' (dia ' + pd + ')', subColor: 'var(--text-3)', ts: _today0.getTime() + diff * _msDay }); }
+    }
+    // 3) lembretes do usuário (atrasados há <1 dia até +30 dias)
+    for (const r of reminders) {
+      if (r.done || !r.when) continue;
+      const t = new Date(r.when).getTime(); if (isNaN(t)) continue;
+      const dms = t - _nowMs;
+      if (dms >= -_msDay && dms <= 30 * _msDay) { const od = dms < 0; avisos.push({ key: 'rem-' + r.id, color: od ? 'var(--crit)' : 'var(--accent)', title: 'Lembrete · ' + r.title, sub: (od ? 'Passou · ' : '') + _fmtWhen(r.when), subColor: 'var(--text-3)', ts: t }); }
+    }
+    avisos.sort((a, b) => a.ts - b.ts);
+    const hasAvisos = avisos.length > 0;
+    const avisosCountLabel = avisos.length ? (avisos.length + (avisos.length === 1 ? ' aviso' : ' avisos')) : 'tudo em dia';
+    const remindersList = [...reminders].filter(r => !r.done).sort((a, b) => new Date(a.when || 0) - new Date(b.when || 0)).map(r => {
+      const t = r.when ? new Date(r.when).getTime() : 0;
+      const od = t && t < _nowMs;
+      return { title: r.title, whenLabel: _fmtWhen(r.when), whenColor: od ? 'var(--crit)' : 'var(--text-3)', color: od ? 'var(--crit)' : 'var(--accent)', onDelete: () => this.setState({ reminders: reminders.filter(x => x.id !== r.id) }) };
+    });
+    const addReminderFn = () => {
+      const title = (s.reminderTitle || '').trim();
+      const when = s.reminderWhen || '';
+      if (!title) { this.setState({ reminderErr: 'Escreva o lembrete.' }); return; }
+      if (!when) { this.setState({ reminderErr: 'Escolha a data e a hora.' }); return; }
+      this.setState({ reminders: [...reminders, { id: Date.now(), title, when, done: false }], reminderTitle: '', reminderWhen: '', reminderErr: '', toast: 'Lembrete criado' });
+      clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000);
+    };
 
     return {
       rootRef: (el) => { this._root = el; this.applyTheme(); },
@@ -2741,6 +2904,18 @@ class Component extends DCLogic {
       iconSearch: this.icon('search', 14, 1.7),
       iconGrid: this.icon('grid', 14, 1.7),
       iconBell: this.icon('bell', 15, 1.7),
+      // ---- central de notificações (sino) ----
+      notifOpen: !!s.notifOpen,
+      toggleNotif: () => { const open = !s.notifOpen; if (open) this._requestNotifPerm(); this.setState({ notifOpen: open }); },
+      closeNotif: () => this.setState({ notifOpen: false }),
+      hasAvisos, avisos, avisosEmpty: !hasAvisos, avisosCountLabel, remindersList,
+      reminderTitle: s.reminderTitle || '',
+      reminderTitleChange: (e) => this.setState({ reminderTitle: e.target.value, reminderErr: '' }),
+      reminderWhen: s.reminderWhen || '',
+      reminderWhenChange: (e) => this.setState({ reminderWhen: e.target.value, reminderErr: '' }),
+      reminderErr: s.reminderErr || '',
+      reminderKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); addReminderFn(); } },
+      addReminder: addReminderFn,
       iconMin: this.icon('min', 15, 1.7),
       iconMax: this.icon('max', 13, 1.7),
       iconClose: this.icon('close', 15, 1.8),

@@ -99,7 +99,7 @@ export async function listActions(userId, limit = 50) {
 }
 
 // ---- state (snapshot por usuário) ----
-export const STATE_KEYS = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra'];
+export const STATE_KEYS = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders'];
 
 export async function getState(userId) {
   const r = await db.execute({ sql: 'SELECT key, value FROM state_store WHERE user_id = ?', args: [userId] });
