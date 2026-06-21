@@ -1,0 +1,19 @@
+# Centro de Comando — deploy no Render (plano grátis)
+# Banco: Turso (libSQL) na nuvem — passe TURSO_DATABASE_URL e TURSO_AUTH_TOKEN
+# como variáveis secretas no painel do Render.
+services:
+  - type: web
+    name: centro-de-comando
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/index.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TURSO_DATABASE_URL
+        sync: false   # cole no painel (secreto)
+      - key: TURSO_AUTH_TOKEN
+        sync: false   # cole no painel (secreto)
+      - key: SIGNUP_CODE
+        sync: false   # opcional — código de convite pro cadastro

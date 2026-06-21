@@ -6,10 +6,17 @@
     "dev": "node tools/dev-server.mjs",
     "setup": "node server/setup.mjs",
     "server": "node server/index.mjs",
+    "start": "node server/index.mjs",
     "icons": "node tools/gen-icons.mjs",
     "tauri": "tauri"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.3"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.4"
   }
 }

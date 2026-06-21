@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exec } from 'node:child_process';
 import {
-  getState, saveState, logAction, updateActionStatus, listActions,
+  initDb, getState, saveState, logAction, updateActionStatus, listActions,
   createUser, getUserByUsername, getUserById, setUserGeminiKey, userCount,
 } from './db.mjs';
 import {
@@ -42,7 +42,9 @@ function loadEnv(envPath) {
 // No app empacotado (Tauri), CDC_DATA_DIR aponta pra um diretório gravável.
 // Um .env do usuário ali tem prioridade; senão, usa o .env ao lado do server
 // (em dev) ou o que veio no bundle do .exe.
-const PACKAGED = !!process.env.CDC_DATA_DIR;
+// Modo "hospedado/produção": serve o PWA, sem live-reload nem abrir navegador.
+// Liga quando rodando empacotado (CDC_DATA_DIR) OU hospedado (NODE_ENV=production, ex.: Render).
+const PACKAGED = process.env.NODE_ENV === 'production' || !!process.env.CDC_DATA_DIR;
 const DATA_ENV = process.env.CDC_DATA_DIR ? path.join(process.env.CDC_DATA_DIR, '.env') : null;
 const ENV_PATH = DATA_ENV && fs.existsSync(DATA_ENV) ? DATA_ENV : path.join(__dirname, '.env');
 const env = loadEnv(ENV_PATH);
@@ -143,8 +145,8 @@ async function handleApi(req, res, url) {
     if (SIGNUP_CODE && body.code !== SIGNUP_CODE) return sendJson(res, 403, { error: 'código de convite inválido' });
     if (!USERNAME_RE.test(username)) return sendJson(res, 400, { error: 'usuário: 3 a 30 caracteres (letras, números, . _ -)' });
     if (password.length < 6) return sendJson(res, 400, { error: 'a senha precisa ter pelo menos 6 caracteres' });
-    if (getUserByUsername(username)) return sendJson(res, 409, { error: 'esse usuário já existe — faça login' });
-    const userId = createUser(username, hashPassword(password));
+    if (await getUserByUsername(username)) return sendJson(res, 409, { error: 'esse usuário já existe — faça login' });
+    const userId = await createUser(username, hashPassword(password));
     const token = createSession(userId);
     res.setHeader('Set-Cookie', buildSessionCookie(token));
     return sendJson(res, 200, { ok: true, username });
@@ -156,7 +158,7 @@ async function handleApi(req, res, url) {
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     const username = typeof body.username === 'string' ? body.username.trim() : '';
     const password = typeof body.password === 'string' ? body.password : '';
-    const user = username ? getUserByUsername(username) : null;
+    const user = username ? await getUserByUsername(username) : null;
     const ok = user && verifyPassword(password, user.password_hash);
     if (!ok) { recordFailure(ip); return sendJson(res, 401, { error: 'usuário ou senha incorretos' }); }
     recordSuccess(ip);
@@ -173,27 +175,27 @@ async function handleApi(req, res, url) {
 
   if (url === '/api/me' && req.method === 'GET') {
     const uid = getSessionUserId(getSessionToken(req));
-    const user = uid ? getUserById(uid) : null;
-    return sendJson(res, 200, { ok: !!user, username: user ? user.username : null, hasUsers: userCount() > 0 });
+    const user = uid ? await getUserById(uid) : null;
+    return sendJson(res, 200, { ok: !!user, username: user ? user.username : null, hasUsers: (await userCount()) > 0 });
   }
 
   if (url === '/api/state' && req.method === 'GET') {
     const uid = authUserId(req, res); if (!uid) return;
-    return sendJson(res, 200, getState(uid));
+    return sendJson(res, 200, await getState(uid));
   }
 
   if (url === '/api/state' && req.method === 'PUT') {
     const uid = authUserId(req, res); if (!uid) return;
     let body;
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
-    saveState(uid, body);
+    await saveState(uid, body);
     return sendJson(res, 200, { ok: true });
   }
 
   // estado de configuração (nunca devolve a chave em si, só se está configurada)
   if (url === '/api/config' && req.method === 'GET') {
     const uid = authUserId(req, res); if (!uid) return;
-    const user = getUserById(uid);
+    const user = await getUserById(uid);
     return sendJson(res, 200, { geminiConfigured: !!(user && user.gemini_key), model: GEMINI_MODEL });
   }
   // cada usuário cola a PRÓPRIA chave do Gemini; guardada na conta dele (DB), nunca compartilhada
@@ -203,7 +205,7 @@ async function handleApi(req, res, url) {
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     const key = typeof body.key === 'string' ? body.key.trim() : '';
     if (key && key.length < 20) return sendJson(res, 400, { error: 'essa chave parece curta demais — confira e cole de novo' });
-    setUserGeminiKey(uid, key);
+    await setUserGeminiKey(uid, key);
     return sendJson(res, 200, { ok: true, geminiConfigured: !!key });
   }
 
@@ -214,7 +216,7 @@ async function handleApi(req, res, url) {
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     const history = Array.isArray(body.history) ? body.history.slice(-30) : [];
 
-    const user = getUserById(uid);
+    const user = await getUserById(uid);
     const apiKey = user && user.gemini_key;
     if (!apiKey) {
       return sendJson(res, 200, {
@@ -223,7 +225,7 @@ async function handleApi(req, res, url) {
       });
     }
 
-    const currentState = getState(uid);
+    const currentState = await getState(uid);
     let result;
     try {
       result = await askGemini({ history, currentState, apiKey, model: GEMINI_MODEL });
@@ -235,7 +237,7 @@ async function handleApi(req, res, url) {
     if (result.functionCall) {
       const { name, args } = result.functionCall;
       const summary = summarizeAction(name, args, currentState);
-      const id = logAction(uid, name, args, summary);
+      const id = await logAction(uid, name, args, summary);
       pendingAction = { id, tool: name, args, summary };
     }
     return sendJson(res, 200, { reply: result.text, pendingAction });
@@ -248,13 +250,13 @@ async function handleApi(req, res, url) {
     if (!Number.isInteger(body.id) || !['applied', 'rejected'].includes(body.status)) {
       return sendJson(res, 400, { error: 'parâmetros inválidos' });
     }
-    updateActionStatus(uid, body.id, body.status);
+    await updateActionStatus(uid, body.id, body.status);
     return sendJson(res, 200, { ok: true });
   }
 
   if (url === '/api/audit' && req.method === 'GET') {
     const uid = authUserId(req, res); if (!uid) return;
-    return sendJson(res, 200, { items: listActions(uid, 50) });
+    return sendJson(res, 200, { items: await listActions(uid, 50) });
   }
 
   sendJson(res, 404, { error: 'rota não encontrada' });
@@ -337,6 +339,9 @@ if (!PACKAGED) {
     fs.watch(ROOT, (_evt, fn) => { if (!shouldIgnore(fn)) triggerReload(fn || 'arquivo'); });
   }
 }
+
+// cria as tabelas antes de aceitar requisições (Turso na nuvem ou arquivo local)
+await initDb();
 
 server.listen(PORT, () => {
   const link = `http://localhost:${PORT}/`;
