@@ -1181,28 +1181,37 @@
             <div style="padding:13px 22px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border);">
               <span style="font-size:14px; font-weight:600; color:var(--text);">Cérebro da agência</span>
               <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
-              <span style="font-size:12px; color:var(--text-3);">clientes, demandas e ideias conectados — clique num nó pra abrir</span>
+              <span style="font-size:12px; color:var(--text-3);">arraste os nós pra organizar · arraste o fundo pra mover · role pra dar zoom · clique pra abrir</span>
             </div>
-            <div style="flex:1; overflow:auto; position:relative; background:radial-gradient(820px 600px at 50% 50%, var(--surface) 0%, var(--bg) 72%);" id="wf-canvas">
+            <div id="wf-canvas" onMouseDown="{{ wfCanvasDown }}" onWheel="{{ wfWheel }}" style="flex:1; overflow:hidden; position:relative; background:radial-gradient(820px 600px at 50% 50%, var(--surface) 0%, var(--bg) 72%); cursor:grab; user-select:none;">
               <sc-if value="{{ wfEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-3); text-align:center; padding:20px;">
                   <div style="font-size:15px; font-weight:500; color:var(--text-2);">Seu cérebro ainda está vazio</div>
                   <div style="font-size:12.5px; max-width:340px; line-height:1.5;">Cadastre clientes e demandas — eles aparecem aqui conectados automaticamente, como num mapa mental.</div>
                 </div>
               </sc-if>
-              <div style="position:relative; width:1120px; height:800px; margin:0 auto;">
-                <sc-for list="{{ wfLinks }}" as="lk" hint-placeholder-count="0">
-                  <div style="position:absolute; left:{{ lk.mx }}px; top:{{ lk.my }}px; width:{{ lk.len }}px; height:0; border-top:1.5px {{ lk.lineStyle }} var(--wire); opacity:{{ lk.op }}; transform:translate(-50%,-50%) rotate({{ lk.ang }}deg); z-index:1; pointer-events:none;"></div>
-                </sc-for>
-                <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
-                  <div onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; z-index:2; width:{{ nd.maxW }};" style-active="transform:translate(-50%,-50%) scale(.94)">
-                    <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; box-shadow:{{ nd.glow }}; border:2px solid var(--content); flex:0 0 auto; transition:transform .16s ease, box-shadow .16s ease;" style-hover="transform:scale(1.18)"></div>
-                    <div style="text-align:center; max-width:{{ nd.maxW }};">
-                      <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }};">{{ nd.label }}</div>
-                      <sc-if value="{{ nd.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px; color:var(--text-3); margin-top:2px;">{{ nd.sub }}</div></sc-if>
+              <div style="position:absolute; top:0; left:0; transform-origin:0 0; transform:translate({{ wfPanX }}px, {{ wfPanY }}px) scale({{ wfZoom }}); will-change:transform;">
+                <div style="position:relative; width:1120px; height:800px; background-image:radial-gradient(var(--border-2) 1px, transparent 1px); background-size:28px 28px;">
+                  <sc-for list="{{ wfLinks }}" as="lk" hint-placeholder-count="0">
+                    <div style="position:absolute; left:{{ lk.mx }}px; top:{{ lk.my }}px; width:{{ lk.len }}px; height:0; border-top:1.5px {{ lk.lineStyle }} var(--wire); opacity:{{ lk.op }}; transform:translate(-50%,-50%) rotate({{ lk.ang }}deg); z-index:1; pointer-events:none;"></div>
+                  </sc-for>
+                  <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
+                    <div onMouseDown="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:8px; cursor:grab; z-index:2; width:{{ nd.maxW }};">
+                      <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; box-shadow:{{ nd.glow }}; border:2px solid var(--content); flex:0 0 auto; transition:transform .16s ease, box-shadow .16s ease;" style-hover="transform:scale(1.18)"></div>
+                      <div style="text-align:center; max-width:{{ nd.maxW }};">
+                        <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }};">{{ nd.label }}</div>
+                        <sc-if value="{{ nd.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px; color:var(--text-3); margin-top:2px;">{{ nd.sub }}</div></sc-if>
+                      </div>
                     </div>
-                  </div>
-                </sc-for>
+                  </sc-for>
+                </div>
+              </div>
+              <div onMouseDown="{{ stopProp }}" style="position:absolute; bottom:16px; right:16px; z-index:5; display:flex; flex-direction:column; gap:4px; background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:5px; box-shadow:var(--sh-2);">
+                <button onClick="{{ wfZoomIn }}" title="Aproximar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:18px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">+</button>
+                <div style="font-size:9.5px; text-align:center; color:var(--text-3); font-family:'Geist Mono',monospace;">{{ wfZoomPct }}</div>
+                <button onClick="{{ wfZoomOut }}" title="Afastar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:21px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">−</button>
+                <div style="height:1px; background:var(--border); margin:1px 3px;"></div>
+                <button onClick="{{ wfReset }}" title="Resetar posições e zoom" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:15px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">⟲</button>
               </div>
             </div>
           </div>
@@ -1669,7 +1678,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -1753,6 +1762,57 @@ class Component extends DCLogic {
   // arrasto de redimensionamento nas bordas (janela frameless do .exe)
   _winResize(dir) { const w = this._tauriWin(); if (w && w.startResizeDragging) { try { w.startResizeDragging(dir); } catch (e) {} } }
 
+  // ---- Workflow: canvas interativo (arrastar nós, pan, zoom; posição salva local) ----
+  _wfEnsureHandlers() {
+    if (this._wfMoveB) return;
+    this._wfMoveB = (e) => {
+      const d = this._wfDrag; if (!d) return;
+      const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+      if (!d.moved && (Math.abs(dx) + Math.abs(dy)) > 3) d.moved = true;
+      if (d.kind === 'node') {
+        const z = this.state.wfZoom || 1;
+        const pos = { ...(this.state.wfPos || {}) };
+        pos[d.id] = { x: d.ox + dx / z, y: d.oy + dy / z };
+        this.setState({ wfPos: pos });
+      } else {
+        this.setState({ wfPan: { x: d.ox + dx, y: d.oy + dy } });
+      }
+    };
+    this._wfUpB = () => {
+      const d = this._wfDrag;
+      window.removeEventListener('mousemove', this._wfMoveB);
+      window.removeEventListener('mouseup', this._wfUpB);
+      this._wfDrag = null;
+      if (d && d.moved) { if (d.kind === 'node') this._wfSuppressClick = true; this._wfScheduleSave(); }
+    };
+  }
+  _wfNodeDown(e, id, ox, oy) {
+    e.preventDefault(); e.stopPropagation();
+    this._wfEnsureHandlers();
+    this._wfDrag = { kind: 'node', id, ox, oy, sx: e.clientX, sy: e.clientY, moved: false };
+    window.addEventListener('mousemove', this._wfMoveB);
+    window.addEventListener('mouseup', this._wfUpB);
+  }
+  _wfCanvasDown(e) {
+    this._wfEnsureHandlers();
+    const p = this.state.wfPan || { x: 0, y: 0 };
+    this._wfDrag = { kind: 'pan', ox: p.x, oy: p.y, sx: e.clientX, sy: e.clientY, moved: false };
+    window.addEventListener('mousemove', this._wfMoveB);
+    window.addEventListener('mouseup', this._wfUpB);
+  }
+  _wfWheelImpl(e) {
+    const s = this.state; const zoom = s.wfZoom || 1;
+    const nz = Math.max(0.4, Math.min(2, zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const pan = s.wfPan || { x: 0, y: 0 };
+    this.setState({ wfZoom: nz, wfPan: { x: cx - ((cx - pan.x) / zoom) * nz, y: cy - ((cy - pan.y) / zoom) * nz } });
+    this._wfScheduleSave();
+  }
+  _wfSaveNow() { try { const s = this.state; localStorage.setItem('cdc-wf', JSON.stringify({ pos: s.wfPos || {}, pan: s.wfPan || { x: 0, y: 0 }, zoom: s.wfZoom || 1 })); } catch (e) {} }
+  _wfScheduleSave() { clearTimeout(this._wfSaveT); this._wfSaveT = setTimeout(() => this._wfSaveNow(), 250); }
+  _loadWfView() { try { const raw = localStorage.getItem('cdc-wf'); if (raw) { const v = JSON.parse(raw); this.setState({ wfPos: v.pos || {}, wfPan: v.pan || { x: 0, y: 0 }, wfZoom: v.zoom || 1 }); } } catch (e) {} }
+
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders'];
   _hydrating = false;
@@ -1768,6 +1828,7 @@ class Component extends DCLogic {
 
     // sincroniza o modo (claro/escuro) já aplicado pelo script do <head>
     this.setState({ mode: document.documentElement.getAttribute('data-theme') || 'dark' });
+    this._loadWfView(); // posições/zoom salvos do canvas Workflow
 
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json().catch(() => ({ ok: false })))
@@ -2418,41 +2479,53 @@ class Component extends DCLogic {
       else if (e.key === 'Enter' && searchResults.length) { e.preventDefault(); searchResults[0].onClick(); }
     };
 
-    // ---- WORKFLOW NODES ----
-    // ---- WORKFLOW = grafo "cérebro" (estilo Obsidian) derivado do state ----
+    // ---- WORKFLOW = canvas interativo (arrastar nós, pan, zoom) ----
     // Centro = a agência; grupos = clientes (+ Avulsas, + Ideias); folhas = demandas/ideias.
+    // Layout-base radial; o usuário pode arrastar qualquer nó (override salvo em wfPos).
     const wfGroups = clients.map(cl => ({
       key:'c'+cl.id, label:cl.nome, color:cl.color,
-      items: demands.filter(d => d.clientId === cl.id).map(d => ({ title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })),
+      items: demands.filter(d => d.clientId === cl.id).map(d => ({ id:'d'+d.id, title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })),
       onClick: () => this.setState({ screen:'clientes', clientProfileId:cl.id }),
     }));
     const wfAvul = demands.filter(d => !clients.some(c => c.id === d.clientId));
-    if (wfAvul.length) wfGroups.push({ key:'avul', label:'Avulsas', color:'var(--text-3)', items: wfAvul.map(d => ({ title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })), onClick:() => this.setState({ screen:'demandas' }) });
-    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map(it => ({ title:it.title, color:'var(--warn)', onClick:() => this.setState({ screen:'ideias' }) })), onClick:() => this.setState({ screen:'ideias' }) });
+    if (wfAvul.length) wfGroups.push({ key:'avul', label:'Avulsas', color:'var(--text-3)', items: wfAvul.map(d => ({ id:'d'+d.id, title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })), onClick:() => this.setState({ screen:'demandas' }) });
+    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map((it, ii) => ({ id:'i'+ii, title:it.title, color:'var(--warn)', onClick:() => this.setState({ screen:'ideias' }) })), onClick:() => this.setState({ screen:'ideias' }) });
 
     const wfCx = 560, wfCy = 380, wfR1 = 210;
+    const wfPosOv = s.wfPos || {};
+    const wfFinal = (id, bx, by) => { const o = wfPosOv[id]; return o ? { x:o.x, y:o.y } : { x:bx, y:by }; };
     const wfNodes = []; const wfLinks = [];
     // linha = div fino rotacionado (o framework DC não interpola atributos x1/y1 de <line> SVG)
     const wfLink = (x1, y1, x2, y2, dash, op) => { const dx = x2 - x1, dy = y2 - y1; wfLinks.push({ mx:(x1 + x2) / 2, my:(y1 + y2) / 2, len:Math.sqrt(dx * dx + dy * dy), ang:Math.atan2(dy, dx) * 180 / Math.PI, lineStyle:dash ? 'dashed' : 'solid', op }); };
-    wfNodes.push({ x:wfCx, y:wfCy, label:'Minha agência', sub:clients.length+' clientes · '+demands.length+' demandas', hasSub:true, color:'var(--accent)', size:84, glow:'0 0 0 7px var(--accent-weak)', labelSize:'13px', labelW:'700', maxW:'140px', onClick:() => this.setState({ screen:'inicio' }) });
+    // clique navega, mas é suprimido logo após um arraste
+    const wfClick = (fn) => () => { if (this._wfSuppressClick) { this._wfSuppressClick = false; return; } fn(); };
+    const wfPush = (id, x, y, meta, click) => wfNodes.push({ id, x, y, ...meta, onDown:(e) => this._wfNodeDown(e, id, x, y), onClick: wfClick(click) });
+    // centro (agência)
+    const rp = wfFinal('root', wfCx, wfCy);
+    wfPush('root', rp.x, rp.y, { label:'Minha agência', sub:clients.length+' clientes · '+demands.length+' demandas', hasSub:true, color:'var(--accent)', size:84, glow:'0 0 0 7px var(--accent-weak)', labelSize:'13px', labelW:'700', maxW:'140px' }, () => this.setState({ screen:'inicio' }));
     const wfN = Math.max(wfGroups.length, 1);
     wfGroups.forEach((g, i) => {
       const ang = (i / wfN) * Math.PI * 2 - Math.PI / 2;
-      const gx = wfCx + Math.cos(ang) * wfR1, gy = wfCy + Math.sin(ang) * wfR1;
-      wfNodes.push({ x:gx, y:gy, label:g.label, sub:g.items.length+(g.key==='ideias'?' ideias':' demandas'), hasSub:true, color:g.color, size:56, glow:'0 0 0 5px '+g.color+'22', labelSize:'12px', labelW:'600', maxW:'120px', onClick:g.onClick });
-      wfLink(wfCx, wfCy, gx, gy, false, '.55');
+      const gbx = wfCx + Math.cos(ang) * wfR1, gby = wfCy + Math.sin(ang) * wfR1;
+      const gp = wfFinal('g:'+g.key, gbx, gby);
+      wfPush('g:'+g.key, gp.x, gp.y, { label:g.label, sub:g.items.length+(g.key==='ideias'?' ideias':' demandas'), hasSub:true, color:g.color, size:56, glow:'0 0 0 5px '+g.color+'22', labelSize:'12px', labelW:'600', maxW:'120px' }, g.onClick);
+      wfLink(rp.x, rp.y, gp.x, gp.y, false, '.55');
       const m = g.items.length;
       const r2 = 92 + Math.min(m, 6) * 11;
       g.items.forEach((it, j) => {
         const spread = Math.min(2.2, Math.max(0.95, 0.66 * Math.max(m - 1, 1)));
         const a2 = ang + (m > 1 ? (j / (m - 1) - 0.5) * spread : 0);
-        const ix = gx + Math.cos(a2) * r2, iy = gy + Math.sin(a2) * r2;
-        wfNodes.push({ x:ix, y:iy, label:it.title, sub:'', hasSub:false, color:it.color, size:15, glow:'0 0 0 3px '+(it.color)+'1c', labelSize:'10.5px', labelW:'500', maxW:'96px', onClick:it.onClick });
-        wfLink(gx, gy, ix, iy, true, '.4');
+        const ibx = gp.x + Math.cos(a2) * r2, iby = gp.y + Math.sin(a2) * r2;
+        const lid = 'l:' + g.key + ':' + it.id;
+        const ip = wfFinal(lid, ibx, iby);
+        wfPush(lid, ip.x, ip.y, { label:it.title, sub:'', hasSub:false, color:it.color, size:15, glow:'0 0 0 3px '+(it.color)+'1c', labelSize:'10.5px', labelW:'500', maxW:'96px' }, it.onClick);
+        wfLink(gp.x, gp.y, ip.x, ip.y, true, '.4');
       });
     });
     const wfEmpty = clients.length === 0 && demands.length === 0 && ideias.length === 0;
     const wfCountLabel = (wfNodes.length - 1) + ' nós · ' + clients.length + ' clientes';
+    const wfPanX = (s.wfPan || {}).x || 0, wfPanY = (s.wfPan || {}).y || 0, wfZoom = s.wfZoom || 1;
+    const wfZoomPct = Math.round(wfZoom * 100) + '%';
 
     // ---- ASSISTENTE ----
     // Aplica de fato uma ação que o Gemini propôs (após confirmação do usuário no chat).
@@ -3052,7 +3125,13 @@ class Component extends DCLogic {
       isIdeias: s.screen === 'ideias',
       ideias, ideiasView,
       isWorkflow: s.screen === 'workflow',
-      wfNodes, wfLinks, wfEmpty, wfCountLabel,
+      wfNodes, wfLinks, wfEmpty, wfCountLabel, wfPanX, wfPanY, wfZoom, wfZoomPct,
+      wfCanvasDown: (e) => this._wfCanvasDown(e),
+      wfWheel: (e) => this._wfWheelImpl(e),
+      wfZoomIn: () => { const z = Math.min(2, (s.wfZoom || 1) + 0.15); this.setState({ wfZoom: z }); this._wfScheduleSave(); },
+      wfZoomOut: () => { const z = Math.max(0.4, (s.wfZoom || 1) - 0.15); this.setState({ wfZoom: z }); this._wfScheduleSave(); },
+      wfReset: () => { this.setState({ wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1 }); this._wfScheduleSave(); },
+      stopProp: (e) => e.stopPropagation(),
       isAssistente: s.screen === 'assistente',
       chatMessages, chatSuggestions,
       showAiHistory: !!s.showAiHistory,
