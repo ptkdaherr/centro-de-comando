@@ -1280,6 +1280,54 @@
           </div>
         </sc-if>
 
+        <!-- ======= LEMBRETES ======= -->
+        <sc-if value="{{ isLembretes }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:720px; animation:cc-fade .2s ease both;">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px;">
+              <div>
+                <h1 style="margin:0 0 5px; font-size:24px; font-weight:600; letter-spacing:-.02em;">Lembretes</h1>
+                <p style="margin:0; font-size:13px; color:var(--text-2);">{{ lembretesSub }}</p>
+              </div>
+              <span style="flex:0 0 auto; display:inline-flex; align-items:center; height:28px; padding:0 13px; border-radius:20px; background:var(--surface); border:1px solid var(--border); font-size:12px; color:var(--text-2); white-space:nowrap;">{{ lembretesCountLabel }}</span>
+            </div>
+
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:var(--sh-1);">
+              <div style="font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); margin-bottom:11px;">Novo lembrete</div>
+              <input value="{{ reminderTitle }}" onInput="{{ reminderTitleChange }}" onKeyDown="{{ reminderKeyDown }}" placeholder="Ex: ligar pro cliente novo" style="width:100%; height:40px; padding:0 13px; background:var(--bg); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13px; outline:none; margin-bottom:9px;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+              <div style="display:flex; gap:8px;">
+                <input type="datetime-local" value="{{ reminderWhen }}" onInput="{{ reminderWhenChange }}" style="flex:1; min-width:0; height:40px; padding:0 13px; background:var(--bg); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:12.5px; outline:none; cursor:pointer; color-scheme:{{ colorScheme }};" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                <button onClick="{{ addReminder }}" style="flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 17px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Adicionar</span></button>
+              </div>
+              <sc-if value="{{ reminderErr }}" hint-placeholder-val="{{ '' }}"><div style="margin-top:8px; font-size:12px; color:var(--crit);">{{ reminderErr }}</div></sc-if>
+            </div>
+
+            <sc-if value="{{ lembretesEmpty }}" hint-placeholder-val="{{ true }}">
+              <div style="text-align:center; padding:44px 20px; color:var(--text-3); border:1px dashed var(--border-2); border-radius:14px;">
+                <div style="margin-bottom:11px; display:flex; justify-content:center; color:var(--text-3);">{{ iconBellBig }}</div>
+                <div style="font-size:14px; color:var(--text-2); font-weight:500;">Nenhum lembrete ativo</div>
+                <div style="font-size:12.5px; margin-top:4px;">Crie um acima, ou ligue o lembrete dentro de uma demanda.</div>
+              </div>
+            </sc-if>
+            <div style="display:flex; flex-direction:column; gap:9px;">
+              <sc-for list="{{ lembretesAll }}" as="lb" hint-placeholder-count="0">
+                <div style="display:flex; align-items:center; gap:13px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:13px 15px; box-shadow:var(--sh-1);">
+                  <span style="flex:0 0 auto; width:9px; height:9px; border-radius:50%; background:{{ lb.dot }};"></span>
+                  <div onClick="{{ lb.onOpen }}" style="flex:1; min-width:0; cursor:{{ lb.openCursor }};">
+                    <div style="font-size:13.5px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ lb.title }}</div>
+                    <div style="font-size:11.5px; color:var(--text-3); margin-top:2px;">{{ lb.sub }} · <span style="color:{{ lb.whenColor }};">{{ lb.whenLabel }}</span></div>
+                  </div>
+                  <span onClick="{{ lb.onToggle }}" title="Desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:var(--accent); cursor:pointer;">
+                    <span style="position:absolute; top:2px; left:21px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45);"></span>
+                  </span>
+                  <sc-if value="{{ lb.isAvulso }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ lb.onDelete }}" title="Excluir lembrete" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:30px; height:30px; border:1px solid var(--border-2); background:var(--bg); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconXsm }}</button>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
         <!-- ======= STUBS ======= -->
         <sc-if value="{{ isStub }}" hint-placeholder-val="{{ false }}">
           <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; animation:cc-fade .2s ease both;">
@@ -1337,6 +1385,32 @@
                   <input type="time" value="{{ drawerDemandTime }}" onInput="{{ drawerDemandTimeChange }}" style="flex:0 0 76px; width:76px; height:38px; padding:0 9px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:12.5px; outline:none; cursor:pointer; color-scheme:{{ colorScheme }};" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
                 </div>
               </div>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:13px 14px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                  <span style="flex:0 0 auto; color:{{ drawerReminderIconColor }}; display:flex;">{{ iconBellSm }}</span>
+                  <div style="min-width:0;">
+                    <div style="font-size:13px; font-weight:500; color:var(--text);">Lembrete</div>
+                    <div style="font-size:11px; color:var(--text-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ drawerReminderHint }}</div>
+                  </div>
+                </div>
+                <span onClick="{{ drawerToggleReminder }}" title="Ligar/desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ drawerReminderTrack }}; cursor:pointer; transition:background .2s;">
+                  <span style="position:absolute; top:2px; left:{{ drawerReminderKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
+                </span>
+              </div>
+              <sc-if value="{{ drawerReminderOn }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:11px;">
+                  <input type="datetime-local" value="{{ drawerReminderAt }}" onInput="{{ drawerReminderAtChange }}" style="width:100%; height:38px; padding:0 11px; background:var(--bg); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:12.5px; outline:none; cursor:pointer; color-scheme:{{ colorScheme }};" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                  <sc-if value="{{ hasReminderPresets }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+                      <sc-for list="{{ drawerReminderPresets }}" as="rp" hint-placeholder-count="3">
+                        <span onClick="{{ rp.onClick }}" style="display:inline-flex; align-items:center; height:26px; padding:0 11px; border:1px solid var(--border-2); background:var(--bg); color:var(--text-2); border-radius:7px; font-size:11.5px; cursor:pointer; transition:all .12s;" style-hover="border-color:var(--accent); color:var(--accent)">{{ rp.label }}</span>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
             </div>
             <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Tipo de entrega</label>
@@ -1650,6 +1724,12 @@ class Component extends DCLogic {
       const t = new Date(r.when).getTime();
       if (!isNaN(t) && t <= Date.now()) fire('rem-' + r.id, 'Lembrete', r.title);
     }
+    // lembretes ligados dentro de cada demanda
+    for (const d of demands) {
+      if (d.status === 'done' || !d.reminderAt) continue;
+      const t = new Date(d.reminderAt).getTime();
+      if (!isNaN(t) && t <= Date.now()) fire('demrem-' + d.id + '-' + d.reminderAt, 'Lembrete de demanda', d.title);
+    }
     if (changed) this._saveNotified(notified);
   }
   _startNotifEngine() {
@@ -1803,6 +1883,7 @@ class Component extends DCLogic {
         { id: 'inicio', label: 'Início', icon: 'home' },
         { id: 'demandas', label: 'Demandas', icon: 'board', badge: nD ? String(nD) : null },
         { id: 'calendario', label: 'Calendário', icon: 'calendar' },
+        { id: 'lembretes', label: 'Lembretes', icon: 'bell' },
         { id: 'clientes', label: 'Clientes', icon: 'users', badge: nC ? String(nC) : null },
         { id: 'pessoal', label: 'Pessoal', icon: 'folder' },
         { id: 'ideias', label: 'Ideias', icon: 'bulb' },
@@ -1849,7 +1930,7 @@ class Component extends DCLogic {
       workflow: { t: 'Workflow', d: 'Canvas de nós conectáveis estilo mapa mental, onde ideias viram etapas de produção.', i: 'workflow' },
       assistente: { t: 'Assistente', d: 'Apoio pra planejar a semana, escrever legendas e organizar as demandas do dia.', i: 'spark' },
     };
-    const isBuilt = ['inicio','demandas','pessoal','system','calendario','clientes','financeiro','salario','metas','ideias','workflow','assistente'].includes(s.screen);
+    const isBuilt = ['inicio','demandas','pessoal','system','calendario','clientes','financeiro','salario','metas','ideias','workflow','assistente','lembretes'].includes(s.screen);
     const stub = stubMap[s.screen];
 
     const dueRed = 'var(--crit)', dueAmber = 'var(--warn)', dueMute = 'var(--text-3)';
@@ -1960,6 +2041,7 @@ class Component extends DCLogic {
         drawerDemandTitle:d.title, drawerDemandClientId: d.clientId!=null?String(d.clientId):'',
         drawerTypeActive:arr, drawerPriority: prioOf(d),
         drawerDemandDate: d.dueDate||'', drawerDemandTime: d.dueTime||'',
+        drawerReminderOn: !!d.reminderAt, drawerReminderAt: d.reminderAt || '',
         drawerBrief: d.brief||'', drawerAttachments: (d.attachments||[]).map(a => ({ name: a.name || a })),
         drawerChecklist: hasCk ? d.checklist.map(c => !!c.done) : [false],
         drawerChecklistLabels: hasCk ? d.checklist.map(c => c.label) : ['Aprovação do cliente'],
@@ -1978,7 +2060,7 @@ class Component extends DCLogic {
       clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast:null }), 2200);
     };
     // abre o drawer de nova demanda já com uma data (clicar num dia do calendário)
-    const openDemandaForDate = (iso) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:iso||'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
+    const openDemandaForDate = (iso) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:iso||'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
 
     const mkCard = (d) => {
       const cl = clients.find(c => c.id === d.clientId);
@@ -2263,7 +2345,7 @@ class Component extends DCLogic {
     const ideias = s.ideias || ideiasDefault;
     const editIdeia = (idea) => this.setState({ drawer:true, drawerMode:'ideia', drawerEditId:idea.id, ideiaTitulo:idea.title||'', ideiaCategoria:(idea.tags&&idea.tags[0]&&idea.tags[0].label)||'Pessoal', ideiaObs:idea.obs||'' });
     // "Virar projeto": abre o drawer de nova demanda já com o título/obs da ideia
-    const projetoFromIdeia = (idea) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle: idea.title||'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief: idea.obs||'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
+    const projetoFromIdeia = (idea) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle: idea.title||'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief: idea.obs||'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
     // Ideias rascunho da aba Pessoal = ideias reais (clicáveis pra editar / virar projeto)
     const personalIdeas = ideias.map(idea => ({
       title: idea.title,
@@ -2569,6 +2651,13 @@ class Component extends DCLogic {
       const dms = t - _nowMs;
       if (dms >= -_msDay && dms <= 30 * _msDay) { const od = dms < 0; avisos.push({ key: 'rem-' + r.id, color: od ? 'var(--crit)' : 'var(--accent)', title: 'Lembrete · ' + r.title, sub: (od ? 'Passou · ' : '') + _fmtWhen(r.when), subColor: 'var(--text-3)', ts: t }); }
     }
+    // 4) lembretes ligados dentro de demandas
+    for (const d of (s.demands || [])) {
+      if (d.status === 'done' || !d.reminderAt) continue;
+      const t = new Date(d.reminderAt).getTime(); if (isNaN(t)) continue;
+      const dms = t - _nowMs;
+      if (dms >= -_msDay && dms <= 30 * _msDay) { const od = dms < 0; avisos.push({ key: 'demrem-' + d.id, color: od ? 'var(--crit)' : 'var(--info)', title: 'Lembrete · ' + d.title, sub: (od ? 'Passou · ' : '') + _fmtWhen(d.reminderAt), subColor: 'var(--text-3)', ts: t }); }
+    }
     avisos.sort((a, b) => a.ts - b.ts);
     const hasAvisos = avisos.length > 0;
     const avisosCountLabel = avisos.length ? (avisos.length + (avisos.length === 1 ? ' aviso' : ' avisos')) : 'tudo em dia';
@@ -2585,6 +2674,58 @@ class Component extends DCLogic {
       this.setState({ reminders: [...reminders, { id: Date.now(), title, when, done: false }], reminderTitle: '', reminderWhen: '', reminderErr: '', toast: 'Lembrete criado' });
       clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000);
     };
+    // mini-toast helper
+    const _flash = (extra, msg) => { this.setState({ ...extra, toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000); };
+    // ---- aba Lembretes: agrega avulsos + os ligados nas demandas ----
+    const _lembretesRaw = [];
+    for (const r of reminders) {
+      if (r.done) continue;
+      const t = r.when ? new Date(r.when).getTime() : 0;
+      _lembretesRaw.push({ kind: 'avulso', id: r.id, title: r.title, sub: 'Lembrete avulso', whenLabel: _fmtWhen(r.when), ts: t || 0, late: !!(t && t < _nowMs) });
+    }
+    for (const d of (s.demands || [])) {
+      if (d.status === 'done' || !d.reminderAt) continue;
+      const t = new Date(d.reminderAt).getTime();
+      const cl = (s.clients || []).find((c) => c.id === d.clientId);
+      _lembretesRaw.push({ kind: 'demanda', id: d.id, title: d.title, sub: 'Demanda' + (cl ? ' · ' + cl.nome : ''), whenLabel: _fmtWhen(d.reminderAt), ts: isNaN(t) ? 0 : t, late: !isNaN(t) && t < _nowMs });
+    }
+    _lembretesRaw.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    const lembretesAll = _lembretesRaw.map((x) => ({
+      title: x.title, sub: x.sub, whenLabel: x.whenLabel,
+      whenColor: x.late ? 'var(--crit)' : 'var(--text-3)',
+      dot: x.late ? 'var(--crit)' : (x.kind === 'demanda' ? 'var(--info)' : 'var(--accent)'),
+      isDemanda: x.kind === 'demanda', isAvulso: x.kind === 'avulso',
+      openCursor: x.kind === 'demanda' ? 'pointer' : 'default',
+      onOpen: x.kind === 'demanda' ? () => editDemand((s.demands || []).find((d) => d.id === x.id)) : null,
+      onToggle: x.kind === 'avulso'
+        ? () => _flash({ reminders: reminders.map((r) => r.id === x.id ? { ...r, done: true } : r) }, 'Lembrete concluído')
+        : () => _flash({ demands: (s.demands || []).map((d) => d.id === x.id ? { ...d, reminderAt: '' } : d) }, 'Lembrete da demanda desligado'),
+      onDelete: x.kind === 'avulso' ? () => _flash({ reminders: reminders.filter((r) => r.id !== x.id) }, 'Lembrete excluído') : null,
+    }));
+    const lembretesEmpty = lembretesAll.length === 0;
+    const lembretesCount = lembretesAll.length;
+    const lembretesCountLabel = lembretesCount + (lembretesCount === 1 ? ' ativo' : ' ativos');
+    const lembretesSub = lembretesEmpty ? 'Tudo em dia — nenhum lembrete ativo.' : 'Seus lembretes avulsos e os ligados nas demandas, num lugar só.';
+
+    // ---- switch de lembrete do drawer de demanda ----
+    const _pad2 = (n) => String(n).padStart(2, '0');
+    const _toLocalInput = (dt) => `${dt.getFullYear()}-${_pad2(dt.getMonth() + 1)}-${_pad2(dt.getDate())}T${_pad2(dt.getHours())}:${_pad2(dt.getMinutes())}`;
+    const _drawerReminderDefault = () => {
+      if (s.drawerDemandDate) return s.drawerDemandDate + 'T' + (s.drawerDemandTime || '09:00');
+      const dt = new Date(Date.now() + 3600000); dt.setSeconds(0, 0);
+      return _toLocalInput(dt);
+    };
+    const _drawerPrazo = s.drawerDemandDate ? new Date(s.drawerDemandDate + 'T' + (s.drawerDemandTime || '09:00')) : null;
+    const drawerReminderPresets = [];
+    if (_drawerPrazo && !isNaN(_drawerPrazo.getTime())) {
+      drawerReminderPresets.push({ label: 'No prazo', onClick: () => this.setState({ drawerReminderAt: _toLocalInput(_drawerPrazo) }) });
+      drawerReminderPresets.push({ label: '1h antes', onClick: () => this.setState({ drawerReminderAt: _toLocalInput(new Date(_drawerPrazo.getTime() - 3600000)) }) });
+      drawerReminderPresets.push({ label: '1 dia antes', onClick: () => this.setState({ drawerReminderAt: _toLocalInput(new Date(_drawerPrazo.getTime() - 86400000)) }) });
+    }
+    const drawerReminderOnV = !!s.drawerReminderOn;
+    const drawerReminderHint = drawerReminderOnV
+      ? (s.drawerReminderAt ? 'Avisa ' + _fmtWhen(s.drawerReminderAt) : 'Escolha quando te avisar')
+      : 'Desligado — sem aviso';
 
     return {
       rootRef: (el) => { this._root = el; this.applyTheme(); },
@@ -2624,7 +2765,7 @@ class Component extends DCLogic {
       go: (id) => this.go(id),
       goSystem: () => this.go('system'),
       goDemandas: () => this.go('demandas'),
-      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }),
+      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }),
       openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'' }),
       openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', drawerEditId: null, prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
       openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', drawerEditId: null, lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
@@ -2654,20 +2795,22 @@ class Component extends DCLogic {
           const dueDate = s.drawerDemandDate || '';
           const dueTime = s.drawerDemandTime || '';
           const due = fmtDue(dueDate, dueTime);
+          const reminderAt = s.drawerReminderOn ? (s.drawerReminderAt || '') : '';
           const ckLabels = s.drawerChecklistLabels || ['Aprovação do cliente'];
           const ckDone = s.drawerChecklist || [false];
           const checklist = ckLabels.map((label,i) => ({ label, done: !!ckDone[i] })).filter(c => (c.label||'').trim());
           const attachments = (s.drawerAttachments||[]).map(a => ({ name: a.name }));
           if (editId) {
-            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag, priority, dueDate, dueTime, due, brief:s.drawerBrief||'', checklist, attachments } : d);
+            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag, priority, dueDate, dueTime, due, reminderAt, brief:s.drawerBrief||'', checklist, attachments } : d);
           } else {
-            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due, dueDate, dueTime, flag, priority, brief:s.drawerBrief||'', checklist, attachments }];
+            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due, dueDate, dueTime, reminderAt, flag, priority, brief:s.drawerBrief||'', checklist, attachments }];
           }
           updates.drawerDemandTitle = '';
           updates.drawerDemandClientId = '';
           updates.drawerTypeActive = [false,true,false,false,false,false,false,false];
           updates.drawerPriority = 'media';
           updates.drawerDemandDate = ''; updates.drawerDemandTime = '';
+          updates.drawerReminderOn = false; updates.drawerReminderAt = '';
           updates.drawerBrief = ''; updates.drawerAttachments = []; updates.drawerNewClientOpen = false; updates.drawerNewClientName = '';
           updates.drawerChecklist = [false];
           updates.drawerChecklistLabels = ['Aprovação do cliente'];
@@ -2771,6 +2914,8 @@ class Component extends DCLogic {
       drawer: s.drawer,
       toast: s.toast,
       isInicio: s.screen === 'inicio',
+      isLembretes: s.screen === 'lembretes',
+      lembretesAll, lembretesEmpty, lembretesCount, lembretesCountLabel, lembretesSub,
       isDemandas: s.screen === 'demandas',
       isSystem: s.screen === 'system',
       isStub: !isBuilt,
@@ -2806,6 +2951,20 @@ class Component extends DCLogic {
       drawerDemandDateChange: (e) => this.setState({ drawerDemandDate: e.target.value }),
       drawerDemandTime: s.drawerDemandTime || '',
       drawerDemandTimeChange: (e) => this.setState({ drawerDemandTime: e.target.value }),
+      drawerReminderOn: drawerReminderOnV,
+      drawerReminderAt: s.drawerReminderAt || '',
+      drawerReminderAtChange: (e) => this.setState({ drawerReminderAt: e.target.value }),
+      drawerToggleReminder: () => {
+        const on = !s.drawerReminderOn;
+        const at = on ? (s.drawerReminderAt || _drawerReminderDefault()) : (s.drawerReminderAt || '');
+        this.setState({ drawerReminderOn: on, drawerReminderAt: at });
+      },
+      drawerReminderTrack: drawerReminderOnV ? 'var(--accent)' : 'var(--border-2)',
+      drawerReminderKnob: drawerReminderOnV ? '21px' : '2px',
+      drawerReminderIconColor: drawerReminderOnV ? 'var(--accent)' : 'var(--text-3)',
+      drawerReminderHint,
+      drawerReminderPresets,
+      hasReminderPresets: drawerReminderPresets.length > 0,
       // ---- DRAWER DEMANDA: briefing ----
       drawerBrief: s.drawerBrief || '',
       drawerBriefChange: (e) => this.setState({ drawerBrief: e.target.value }),
@@ -2817,7 +2976,7 @@ class Component extends DCLogic {
       isCreatingDemanda: s.drawer && (s.drawerMode||'demanda')==='demanda' && !s.drawerEditId,
       isEditingDemanda: s.drawer && (s.drawerMode||'demanda')==='demanda' && !!s.drawerEditId,
       // ---- DRAWER DEMANDA: limpar/reset (criar) e excluir (editar) ----
-      resetDrawerDemanda: () => this.setState({ drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'], toast:'Campos limpos' }),
+      resetDrawerDemanda: () => this.setState({ drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'], toast:'Campos limpos' }),
       deleteDrawerDemanda: () => { const id = s.drawerEditId; if (id && window.confirm('Excluir esta demanda? Essa ação não pode ser desfeita.')) { this.setState({ demands:(s.demands||[]).filter(x=>x.id!==id), drawer:false, drawerEditId:null, toast:'Demanda excluída' }); clearTimeout(this._t); this._t = setTimeout(()=>this.setState({ toast:null }), 2200); } },
       // ---- DEMANDAS: filtro de prioridade ----
       prioFilterAll: () => this.setState({ demandPrio:'all' }),
@@ -2904,6 +3063,8 @@ class Component extends DCLogic {
       iconSearch: this.icon('search', 14, 1.7),
       iconGrid: this.icon('grid', 14, 1.7),
       iconBell: this.icon('bell', 15, 1.7),
+      iconBellSm: this.icon('bell', 16, 1.7),
+      iconBellBig: this.icon('bell', 28, 1.5),
       // ---- central de notificações (sino) ----
       notifOpen: !!s.notifOpen,
       toggleNotif: () => { const open = !s.notifOpen; if (open) this._requestNotifPerm(); this.setState({ notifOpen: open }); },
