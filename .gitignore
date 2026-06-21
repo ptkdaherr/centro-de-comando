@@ -18,6 +18,11 @@ out/
 server/.env
 server/data/
 
+# Prints/capturas — podem ter dados pessoais (conta, billing). Nunca versionar.
+screenshots/
+ideias/
+*.zip
+
 # Tauri (Fase 3d) — build, código gerado e o Node embutido (sidecar)
 src-tauri/target/
 src-tauri/gen/
