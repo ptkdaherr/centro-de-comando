@@ -922,6 +922,20 @@
                       <div><div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">Último pagamento</div><div style="font-size:13px; font-weight:500; font-family:'Geist Mono',monospace; color:var(--ok);">{{ cl.lastPay }}</div></div>
                       <div><div style="font-size:11px; color:var(--text-3); margin-bottom:4px;">Desde</div><div style="font-size:13px; color:var(--text-2);">{{ cl.since }}</div></div>
                     </div>
+                    <sc-if value="{{ cl.isFix }}" hint-placeholder-val="{{ true }}">
+                      <div onClick="{{ stopProp }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 13px; background:var(--bg); border:1px solid var(--border); border-radius:10px; cursor:default;">
+                        <div style="min-width:0;">
+                          <div style="font-size:10.5px; color:var(--text-3);">Pagamento do mês</div>
+                          <div style="font-size:12.5px; font-weight:600; color:{{ cl.statusColor }};">{{ cl.status }}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:9px; flex:0 0 auto;">
+                          <span style="font-size:11px; color:var(--text-3); white-space:nowrap;">{{ cl.payLabel }}</span>
+                          <span onClick="{{ cl.onTogglePay }}" title="Marcar como pago" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ cl.payTrack }}; cursor:pointer; transition:background .2s;">
+                            <span style="position:absolute; top:2px; left:{{ cl.payKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </sc-if>
                     <div style="display:flex; gap:8px;">
                       <button onClick="{{ cl.onProfile }}" style="flex:1; height:33px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Ver perfil</button>
                       <button onClick="{{ cl.onEdit }}" style="height:33px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text)">Editar</button>
@@ -983,6 +997,14 @@
                   <button onClick="{{ clienteProfile.onNovaDemanda }}" style="display:flex; align-items:center; gap:7px; height:38px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:9px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlus }}<span>Nova demanda</span></button>
                   <button onClick="{{ clienteProfile.onEdit }}" style="height:38px; padding:0 15px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:9px; font:inherit; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:var(--surface-3)">Editar</button>
                   <button onClick="{{ clienteProfile.onDelete }}" title="Excluir cliente" style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:9px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconClose }}</button>
+                  <sc-if value="{{ clienteProfile.isFix }}" hint-placeholder-val="{{ true }}">
+                    <span onClick="{{ clienteProfile.onTogglePay }}" title="Marcar pagamento do mês" style="display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 8px 0 14px; border:1px solid var(--border-2); background:var(--surface-2); border-radius:9px; cursor:pointer;" style-hover="border-color:var(--border-2); background:var(--surface-3)">
+                      <span style="font-size:12px; color:var(--text-3);">Pago</span>
+                      <span style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ clienteProfile.payTrack }}; transition:background .2s;">
+                        <span style="position:absolute; top:2px; left:{{ clienteProfile.payKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
+                      </span>
+                    </span>
+                  </sc-if>
                 </div>
               </div>
 
@@ -2150,7 +2172,7 @@ class Component extends DCLogic {
       const initials = words.length>=2 ? (words[0][0]+words[words.length-1][0]).toUpperCase() : nome.slice(0,2).toUpperCase();
       const color = palette[clients.length % palette.length];
       const id = Date.now();
-      this.setState({ clients:[...clients, { id, nome, initials, color, tipo:'fixo', valor:'0', pagDia:'5', servico:'', since:'Jun 2026' }], drawerDemandClientId:String(id), drawerNewClientOpen:false, drawerNewClientName:'', toast:'Cliente “'+nome+'” criado' });
+      this.setState({ clients:[...clients, { id, nome, initials, color, tipo:'fixo', valor:'0', pagDia:'5', servico:'', since:'Jun 2026', paidMonths:[], startYM:nowYM, startDay:todayReal.getDate() }], drawerDemandClientId:String(id), drawerNewClientOpen:false, drawerNewClientName:'', toast:'Cliente “'+nome+'” criado' });
       clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast:null }), 2200);
     };
     // abre o drawer de nova demanda já com uma data (clicar num dia do calendário)
@@ -2247,6 +2269,42 @@ class Component extends DCLogic {
     const calMonthIdx = calDate.getMonth();
     const todayReal = new Date();
     const _iso = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    // ---- pagamento mensal dos clientes fixos (status + corrige "entra atrasado") ----
+    const _ymOf = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    const _now = new Date();
+    const nowYM = _ymOf(_now);
+    const _payToday = todayReal.getDate();
+    const _ymdToday = _iso(todayReal.getFullYear(), todayReal.getMonth(), todayReal.getDate());
+    // No mês de entrada, se o cliente entrou DEPOIS do dia de pagamento, esse mês não conta
+    // (era o que fazia cliente novo já aparecer "atrasado"). Pago = registrado no Financeiro.
+    const payStatus = (c) => {
+      if ((c.tipo || 'fixo') !== 'fixo') return { key: 'na', label: 'Ativo', color: 'var(--ok)', bg: 'var(--ok-weak)' };
+      const pd = parseInt(c.pagDia, 10) || null;
+      if (Array.isArray(c.paidMonths) && c.paidMonths.includes(nowYM)) return { key: 'pago', label: 'Pago', color: 'var(--ok)', bg: 'var(--ok-weak)' };
+      const startYM = c.startYM || '2000-01';
+      const startDay = parseInt(c.startDay, 10) || 1;
+      const skipFirst = (nowYM === startYM) && pd && startDay > pd;
+      if (!pd || skipFirst) return { key: 'novo', label: 'Em dia', color: 'var(--text-2)', bg: 'var(--surface-3)' };
+      if (_payToday >= pd) return { key: 'vencido', label: 'A receber', color: 'var(--warn)', bg: 'var(--warn-weak)' };
+      return { key: 'aguardando', label: 'A receber', color: 'var(--info)', bg: 'var(--info-weak)' };
+    };
+    const _mesAbbrPay = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    // marcar pago → lança a receita no Financeiro (reflete em recebido / a receber / salário / Início)
+    const markPaid = (c) => {
+      const val = parseFloat(String(c.valor || '0').replace(',', '.')) || 0;
+      const lanc = { id: Date.now(), label: c.nome + ' · mensalidade', meta: 'Recebido · ' + todayReal.getDate() + ' ' + _mesAbbrPay[todayReal.getMonth()], amount: '+ ' + this.brl(val), amountColor: 'var(--ok)', ic: 'dollar', color: 'var(--ok)', bg: 'var(--ok-weak)', tipo: 'receita', valorRaw: String(c.valor || '0'), dataRaw: _ymdToday, clientId: c.id, kind: 'mensalidade', ym: nowYM };
+      const cls = this.state.clients || [];
+      const nc = cls.map(x => x.id === c.id ? { ...x, paidMonths: [...((x.paidMonths) || []), nowYM] } : x);
+      this.setState({ clients: nc, lancamentos: [lanc, ...(this.state.lancamentos || [])], toast: c.nome + ' — pagamento lançado no Financeiro' });
+      clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2200);
+    };
+    const unmarkPaid = (c) => {
+      const cls = this.state.clients || [];
+      const nc = cls.map(x => x.id === c.id ? { ...x, paidMonths: ((x.paidMonths) || []).filter(m => m !== nowYM) } : x);
+      const nl = (this.state.lancamentos || []).filter(l => !(l.kind === 'mensalidade' && l.clientId === c.id && l.ym === nowYM));
+      this.setState({ clients: nc, lancamentos: nl, toast: c.nome + ' — pagamento desfeito' });
+      clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2200);
+    };
     const _evColorOf = (d) => { const cl = clients.find(c => c.id === d.clientId); return cl ? cl.color : (prioMeta[prioOf(d)] || prioMeta.media).color; };
     const _evClickOf = (d) => (e) => { if (e && e.stopPropagation) e.stopPropagation(); editDemanda(d); };
     // eventos do MÊS exibido, a partir das demandas reais (por dueDate)
@@ -2304,9 +2362,9 @@ class Component extends DCLogic {
       const clD = demands.filter(d => d.clientId === cl.id);
       const openD = clD.filter(d => d.status !== 'done');
       const first = openD[0];
-      const pagDia = parseInt(cl.pagDia, 10) || null;
-      const isLate = cl.tipo === 'fixo' && pagDia && todayReal.getDate() > pagDia;
-      return { id:cl.id, name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:isLate?'Atrasado':'Ativo', statusColor:isLate?'var(--crit)':'var(--ok)', statusBg:isLate?'var(--crit-weak)':'var(--ok-weak)', open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
+      const _ps = payStatus(cl);
+      return { id:cl.id, name:cl.nome, initials:cl.initials, color:cl.color, avatarBg:cl.color+'22', tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', status:_ps.label, statusColor:_ps.color, statusBg:_ps.bg, open:openD.length.toString(), next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', lastPay:'+ '+this.brl(parseFloat(cl.valor)||0), since:cl.since||'Jun 2026',
+        isFix: cl.tipo==='fixo', paid:_ps.key==='pago', payLabel:_ps.key==='pago'?'Pago':'Marcar pago', payTrack:_ps.key==='pago'?'var(--ok)':'var(--border-2)', payKnob:_ps.key==='pago'?'21px':'2px', onTogglePay:(e)=>{ if(e)e.stopPropagation(); (_ps.key==='pago'?unmarkPaid(cl):markPaid(cl)); },
         deleteIcon:this.icon('close',12,2), onProfile:() => this.setState({ clientProfileId: cl.id }), onEdit:(e) => { if (e) e.stopPropagation(); editCliente(cl); }, onDelete:(e) => { if (e) e.stopPropagation(); deleteCliente(cl.id); } };
     });
     // ---- PERFIL DE CLIENTE (ficha detalhada ao clicar num cliente) ----
@@ -2318,13 +2376,14 @@ class Component extends DCLogic {
       const fn = (_cp.nome || '').split(' ')[0].toLowerCase();
       const rec = (s.lancamentos || []).filter(l => l.tipo === 'receita' && (l.label || '').toLowerCase().includes(fn)).reduce((a, l) => a + (parseFloat(String(l.valorRaw || '0').replace(',', '.')) || 0), 0);
       const pd = parseInt(_cp.pagDia, 10) || null;
-      const late = _cp.tipo === 'fixo' && pd && todayReal.getDate() > pd;
+      const _cps = payStatus(_cp);
       const fix = _cp.tipo === 'fixo';
       return {
         nome: _cp.nome, initials: _cp.initials, color: _cp.color, avatarBg: _cp.color + '22',
         sub: (fix ? 'Cliente fixo' : 'Freelance') + ' · ' + (_cp.servico ? (_cp.servico.length > 40 ? _cp.servico.slice(0, 40) + '…' : _cp.servico) : 'sem serviço definido') + ' · desde ' + (_cp.since || '—'),
         tipoTag: fix ? 'FIXO' : 'FREELANCE', tagColor: fix ? 'var(--info)' : 'var(--text-2)', tagBg: fix ? 'var(--info-weak)' : 'var(--surface-3)', tagBorder: fix ? 'transparent' : 'var(--border-2)',
-        status: late ? 'Atrasado' : 'Ativo', statusColor: late ? 'var(--crit)' : 'var(--ok)', statusBg: late ? 'var(--crit-weak)' : 'var(--ok-weak)',
+        status: _cps.label, statusColor: _cps.color, statusBg: _cps.bg,
+        isFix: fix, paid: _cps.key === 'pago', payTrack: _cps.key === 'pago' ? 'var(--ok)' : 'var(--border-2)', payKnob: _cps.key === 'pago' ? '21px' : '2px', onTogglePay: () => (_cps.key === 'pago' ? unmarkPaid(_cp) : markPaid(_cp)),
         tipoLabel: fix ? 'Cliente fixo' : 'Freelance', valor: this.brl(parseFloat(String(_cp.valor).replace(',', '.')) || 0), pagDiaLabel: pd ? ('Todo dia ' + pd) : '—', servico: _cp.servico || '—', since: _cp.since || '—',
         recebido: this.brl(rec), openN: String(openN), doneN: String(doneN), totalN: String(dd.length),
         demandas: dd.map(d => { const st = stat[d.status] || stat.todo; return { title: d.title, status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due || 'Sem prazo', iconType: this.icon(typeIcons[d.type] || 'image', 13, 1.6), onClick: () => editDemanda(d) }; }),
@@ -2364,10 +2423,7 @@ class Component extends DCLogic {
 
     // ---- AGREGADOS FINANCEIROS REAIS (a partir dos lançamentos/clientes) ----
     const _lval = (t) => parseFloat(String(t.valorRaw || '0').replace(',', '.')) || 0;
-    const _ym = (raw) => (raw || '').slice(0, 7); // 'AAAA-MM'
-    const _now = new Date();
-    const _ymOf = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-    const nowYM = _ymOf(_now);
+    const _ym = (raw) => (raw || '').slice(0, 7); // 'AAAA-MM' (nowYM/_ymOf/_now já definidos no bloco de pagamentos)
     const recOfMonth = (ym) => lancamentos.filter(t => t.tipo === 'receita' && _ym(t.dataRaw) === ym).reduce((a, t) => a + _lval(t), 0);
     const despOfMonth = (ym) => lancamentos.filter(t => t.tipo === 'despesa' && _ym(t.dataRaw) === ym).reduce((a, t) => a + _lval(t), 0);
     const recMes = recOfMonth(nowYM);
@@ -2934,7 +2990,7 @@ class Component extends DCLogic {
             const words = nome.trim().split(/\s+/);
             const initials = words.length>=2?(words[0][0]+words[words.length-1][0]).toUpperCase():nome.slice(0,2).toUpperCase();
             const color = palette[clients.length % palette.length];
-            updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', since:'Jun 2026' }];
+            updates.clients = [...clients, { id:Date.now(), nome, initials, color, tipo:s.clienteTipo||'fixo', valor:s.clienteValor||'0', pagDia:s.clientePagDia||'5', servico:s.clienteServico||'', since:'Jun 2026', paidMonths:[], startYM:nowYM, startDay:todayReal.getDate() }];
           }
           updates.clienteNome = ''; updates.clienteValor = ''; updates.clienteServico = '';
         } else if (mode === 'prospecto') {
