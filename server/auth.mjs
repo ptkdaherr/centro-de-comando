@@ -4,6 +4,7 @@
 // rate limit de login por IP. Zero dependências externas.
 // =============================================================
 import crypto from 'node:crypto';
+import { createSessionRow, getSessionRow, touchSessionRow, deleteSessionRow } from './db.mjs';
 
 const SCRYPT_KEYLEN = 64;
 
@@ -22,31 +23,34 @@ export function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(candidate, expected);
 }
 
-// ---- sessões (token opaco em memória — não sobrevive a restart do servidor,
-// o que é aceitável e até desejável para "segurança máxima": reinício força novo login) ----
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
-const sessions = new Map();
+// ---- sessões persistentes no banco (sobrevivem a restart/sleep/deploy do
+// servidor — o usuário NÃO precisa logar de novo após ociosidade ou fechar o app) ----
+const SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 dias
 
 export const SESSION_COOKIE = 'cdc_session';
 
 // sessão guarda o userId dono dela (multiusuário)
-export function createSession(userId) {
+export async function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { userId, expiresAt: Date.now() + SESSION_TTL_MS });
+  await createSessionRow(token, userId, Date.now() + SESSION_TTL_MS);
   return token;
 }
 
-// devolve o userId da sessão (ou null se inválida/expirada)
-export function getSessionUserId(token) {
+// devolve o userId da sessão (ou null se inválida/expirada); renova de forma
+// deslizante quando passou da metade da validade, mantendo o uso ativo logado.
+export async function getSessionUserId(token) {
   if (!token) return null;
-  const s = sessions.get(token);
+  let s;
+  try { s = await getSessionRow(token); } catch (e) { return null; }
   if (!s) return null;
-  if (Date.now() > s.expiresAt) { sessions.delete(token); return null; }
-  return s.userId;
+  const exp = Number(s.expires_at);
+  if (Date.now() > exp) { try { await deleteSessionRow(token); } catch (e) {} return null; }
+  if (exp - Date.now() < SESSION_TTL_MS / 2) { try { await touchSessionRow(token, Date.now() + SESSION_TTL_MS); } catch (e) {} }
+  return Number(s.user_id);
 }
 
-export function destroySession(token) {
-  if (token) sessions.delete(token);
+export async function destroySession(token) {
+  if (token) { try { await deleteSessionRow(token); } catch (e) {} }
 }
 
 export function buildSessionCookie(token) {

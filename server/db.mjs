@@ -52,7 +52,34 @@ export async function initDb() {
       summary TEXT NOT NULL,
       status TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `);
+}
+
+// ---- sessões persistentes (sobrevivem a restart/sleep/deploy do servidor) ----
+export async function createSessionRow(token, userId, expiresAt) {
+  await db.execute({
+    sql: 'INSERT INTO sessions (token, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)',
+    args: [token, userId, expiresAt, new Date().toISOString()],
+  });
+}
+export async function getSessionRow(token) {
+  const r = await db.execute({ sql: 'SELECT user_id, expires_at FROM sessions WHERE token = ?', args: [token] });
+  return r.rows[0] || null;
+}
+export async function touchSessionRow(token, expiresAt) {
+  await db.execute({ sql: 'UPDATE sessions SET expires_at = ? WHERE token = ?', args: [expiresAt, token] });
+}
+export async function deleteSessionRow(token) {
+  await db.execute({ sql: 'DELETE FROM sessions WHERE token = ?', args: [token] });
+}
+export async function pruneSessions() {
+  try { await db.execute({ sql: 'DELETE FROM sessions WHERE expires_at < ?', args: [Date.now()] }); } catch (e) { /* ignora */ }
 }
 
 // ---- usuários ----

@@ -110,8 +110,8 @@ function getSessionToken(req) {
 }
 
 // devolve o userId da sessão, ou null já tendo respondido 401
-function authUserId(req, res) {
-  const uid = getSessionUserId(getSessionToken(req));
+async function authUserId(req, res) {
+  const uid = await getSessionUserId(getSessionToken(req));
   if (!uid) { sendJson(res, 401, { error: 'não autenticado' }); return null; }
   return uid;
 }
@@ -147,7 +147,7 @@ async function handleApi(req, res, url) {
     if (password.length < 6) return sendJson(res, 400, { error: 'a senha precisa ter pelo menos 6 caracteres' });
     if (await getUserByUsername(username)) return sendJson(res, 409, { error: 'esse usuário já existe — faça login' });
     const userId = await createUser(username, hashPassword(password));
-    const token = createSession(userId);
+    const token = await createSession(userId);
     res.setHeader('Set-Cookie', buildSessionCookie(token));
     return sendJson(res, 200, { ok: true, username });
   }
@@ -162,30 +162,30 @@ async function handleApi(req, res, url) {
     const ok = user && verifyPassword(password, user.password_hash);
     if (!ok) { recordFailure(ip); return sendJson(res, 401, { error: 'usuário ou senha incorretos' }); }
     recordSuccess(ip);
-    const token = createSession(user.id);
+    const token = await createSession(user.id);
     res.setHeader('Set-Cookie', buildSessionCookie(token));
     return sendJson(res, 200, { ok: true, username: user.username });
   }
 
   if (url === '/api/logout' && req.method === 'POST') {
-    destroySession(getSessionToken(req));
+    await destroySession(getSessionToken(req));
     res.setHeader('Set-Cookie', buildClearCookie());
     return sendJson(res, 200, { ok: true });
   }
 
   if (url === '/api/me' && req.method === 'GET') {
-    const uid = getSessionUserId(getSessionToken(req));
+    const uid = await getSessionUserId(getSessionToken(req));
     const user = uid ? await getUserById(uid) : null;
     return sendJson(res, 200, { ok: !!user, username: user ? user.username : null, hasUsers: (await userCount()) > 0 });
   }
 
   if (url === '/api/state' && req.method === 'GET') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     return sendJson(res, 200, await getState(uid));
   }
 
   if (url === '/api/state' && req.method === 'PUT') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     let body;
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     await saveState(uid, body);
@@ -194,13 +194,13 @@ async function handleApi(req, res, url) {
 
   // estado de configuração (nunca devolve a chave em si, só se está configurada)
   if (url === '/api/config' && req.method === 'GET') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     const user = await getUserById(uid);
     return sendJson(res, 200, { geminiConfigured: !!(user && user.gemini_key), model: GEMINI_MODEL });
   }
   // cada usuário cola a PRÓPRIA chave do Gemini; guardada na conta dele (DB), nunca compartilhada
   if (url === '/api/config/gemini' && req.method === 'POST') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     let body;
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     const key = typeof body.key === 'string' ? body.key.trim() : '';
@@ -210,7 +210,7 @@ async function handleApi(req, res, url) {
   }
 
   if (url === '/api/chat' && req.method === 'POST') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     if (chatRateLimited(ip)) return sendJson(res, 429, { error: 'muitas mensagens nessa hora — aguarde um pouco' });
     let body;
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
@@ -244,7 +244,7 @@ async function handleApi(req, res, url) {
   }
 
   if (url === '/api/chat/resolve' && req.method === 'POST') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     let body;
     try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
     if (!Number.isInteger(body.id) || !['applied', 'rejected'].includes(body.status)) {
@@ -255,7 +255,7 @@ async function handleApi(req, res, url) {
   }
 
   if (url === '/api/audit' && req.method === 'GET') {
-    const uid = authUserId(req, res); if (!uid) return;
+    const uid = await authUserId(req, res); if (!uid) return;
     return sendJson(res, 200, { items: await listActions(uid, 50) });
   }
 
