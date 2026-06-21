@@ -2099,15 +2099,19 @@ class Component extends DCLogic {
   _loadWfView() { try { const raw = localStorage.getItem('cdc-wf'); if (raw) { const v = JSON.parse(raw); this.setState({ wfPos: v.pos || {}, wfPan: v.pan || { x: 0, y: 0 }, wfZoom: v.zoom || 1 }); } } catch (e) {} }
 
   // ===================== ÁUDIO (sons de UI + player lo-fi) =====================
-  // Rádios lo-fi/chill do SomaFM — livres pra streaming (financiado por doação).
-  // categorias de som (via YouTube). O usuário também pode colar qualquer link.
+  // Estações via YouTube (lives 24/7 + 1 mix estável). O usuário também pode colar qualquer link.
+  // IMPORTANTE: lives de lofi rotacionam de ID quando reiniciam e o ID antigo passa a dar
+  // erro 150 (embed bloqueado) — daí "não toca". Estes IDs foram verificados (embed OK) em 2026-06-21;
+  // se algum parar, testar de novo a embedabilidade e trocar. Os mais calmos vêm primeiro (o índice 0 é o padrão).
   _lofiCats = [
-    { emoji: '📚', name: 'Lofi pra estudar', id: 'jfKfPfyJRdk' },
-    { emoji: '☕', name: 'Lofi pra relaxar', id: '28KRPhVzCus' },
-    { emoji: '🌌', name: 'Synthwave / foco', id: '4xDzrJKXOOY' },
-    { emoji: '🌧️', name: 'Chuva', id: 'mPZkdNFkNps' },
-    { emoji: '🔥', name: 'Fogueira', id: 'L_LUpnjgPso' },
-    { emoji: '🌊', name: 'Cachoeira / natureza', id: 'BHntJ_zlYCQ' },
+    { emoji: '📚', name: 'Lofi pra estudar', id: '7NOSDKb0HlU' },     // Chillhop — study/relax 24/7
+    { emoji: '☕', name: 'Lofi jazzy', id: '5yx6BWlEVcY' },           // Chillhop — jazzy & lofi 24/7
+    { emoji: '🌙', name: 'Lofi pra dormir', id: 'qH3fETPsqXU' },      // 24/7 Chill Lofi — sleep/relax
+    { emoji: '🎧', name: 'Lofi sessão calma', id: 'lTRiuFIWV54' },    // Lofi Girl — 1 A.M Study Session
+    { emoji: '🌃', name: 'Dark ambient', id: 'S_MOd40zlYU' },         // Lofi Girl — dark ambient
+    { emoji: '🌌', name: 'Synthwave / foco', id: '4xDzrJKXOOY' },     // Lofi Girl — synthwave
+    { emoji: '🌧️', name: 'Chuva com trovão', id: 'mPZkdNFkNps' },   // ASMR — chuva + trovão
+    { emoji: '🔥', name: 'Lareira', id: 'L_LUpnjgPso' },              // lareira / fogueira
   ];
   // som curto sintetizado (sem arquivos) p/ cliques/toggles/sucesso
   _sfx(kind) {
@@ -3841,8 +3845,8 @@ class Component extends DCLogic {
       musicErr: s.musicErr || '',
       hasMusicErr: !!s.musicErr,
       musicDragDown: (e) => this._musicDragDown(e),
-      musicLeft: this._musicClampPos(s.musicPos).x + 'px',
-      musicTop: this._musicClampPos(s.musicPos).y + 'px',
+      musicLeft: ((s.musicPos ? s.musicPos.x : this._musicDefaultPos().x)) + 'px',
+      musicTop: ((s.musicPos ? s.musicPos.y : this._musicDefaultPos().y)) + 'px',
       musicEqOpacity: s.musicPlaying ? '1' : '.35',
       musicStatusLabel: s.musicPlaying ? 'Tocando' : 'Pausado',
       musicStatusColor: s.musicPlaying ? 'var(--ok)' : 'var(--text-3)',
