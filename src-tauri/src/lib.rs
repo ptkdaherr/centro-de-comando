@@ -33,6 +33,7 @@ pub fn run() {
                 .title("Centro de Comando")
                 .inner_size(1280.0, 820.0)
                 .min_inner_size(940.0, 600.0)
+                .decorations(false) // sem barra nativa: a barra própria do app (frameless) é a única
                 .center()
                 .build()?;
 

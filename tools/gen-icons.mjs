@@ -1,11 +1,12 @@
 // =============================================================
 // Gerador de ícones do PWA — zero dependências (só node:zlib).
-// Reproduz o logo do app: quadrado com gradiente azul
-// (--accent #5285f0 → --accent-2 #3f6fe0) e um quadrado branco
-// arredondado no centro. Antialias por supersampling 4x4.
+// Marca "Centro de Comando": tile com gradiente azul
+// (--accent #5285f0 → --accent-2 #3f6fe0) e um CHEVRON DUPLO branco
+// (❯❯ — avanço/comando) no centro. Antialias por supersampling 4x4.
 //
 // Rode com:  npm run icons   (ou: node tools/gen-icons.mjs)
 // Gera PNGs em /icons. É reproduzível — não precisa rodar no boot.
+// O icon-1024.png serve de fonte pro `tauri icon` (ícones do .exe).
 // =============================================================
 import fs from 'node:fs';
 import path from 'node:path';
@@ -53,7 +54,6 @@ function encodePNG(N, rgba) {
   ihdr.writeUInt32BE(N, 4);
   ihdr[8] = 8;  // bit depth
   ihdr[9] = 6;  // color type: RGBA
-  // 10,11,12 = compression/filter/interlace = 0
   const raw = Buffer.alloc((N * 4 + 1) * N);
   for (let y = 0; y < N; y++) {
     const rowStart = y * (N * 4 + 1);
@@ -73,13 +73,37 @@ function insideRoundedRect(px, py, x0, y0, x1, y1, r) {
   return dx * dx + dy * dy <= r * r;
 }
 
-function render(N, { transparentOutside, bgRadius, whiteFrac }) {
+// menor distância de um ponto a um segmento (dá cantos/pontas arredondados de graça)
+function distSeg(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const L2 = dx * dx + dy * dy;
+  let t = L2 ? ((px - x1) * dx + (py - y1) * dy) / L2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  const qx = x1 + t * dx, qy = y1 + t * dy;
+  const ex = px - qx, ey = py - qy;
+  return Math.sqrt(ex * ex + ey * ey);
+}
+
+// dentro do traço do chevron duplo "❯❯" (centralizado), com cantos redondos
+function inChevron(px, py, N, scale) {
+  const h = 0.190 * N * scale;   // meia-altura de cada chevron
+  const w = 0.150 * N * scale;   // profundidade (ponta)
+  const step = 0.150 * N * scale; // distância entre os dois chevrons
+  const half = 0.052 * N * scale; // meia-espessura do traço
+  const cy = N / 2;
+  const xA = (N - step - w) / 2;
+  const xB = xA + step;
+  const segs = [
+    [xA, cy - h, xA + w, cy], [xA + w, cy, xA, cy + h], // chevron da frente
+    [xB, cy - h, xB + w, cy], [xB + w, cy, xB, cy + h], // chevron de trás
+  ];
+  for (const s of segs) if (distSeg(px, py, s[0], s[1], s[2], s[3]) <= half) return true;
+  return false;
+}
+
+function render(N, { transparentOutside, bgRadius, chevronScale = 1 }) {
   const SS = 4; // 4x4 subamostras por pixel
   const rgba = Buffer.alloc(N * N * 4);
-  const whiteSide = N * whiteFrac;
-  const wx0 = (N - whiteSide) / 2, wy0 = (N - whiteSide) / 2;
-  const wx1 = wx0 + whiteSide, wy1 = wy0 + whiteSide;
-  const wR = whiteSide * 0.26;
   const bgR = bgRadius * N;
   for (let y = 0; y < N; y++) {
     for (let x = 0; x < N; x++) {
@@ -91,7 +115,7 @@ function render(N, { transparentOutside, bgRadius, whiteFrac }) {
           const bgIn = transparentOutside ? insideRoundedRect(fx, fy, 0, 0, N, N, bgR) : true;
           if (!bgIn) continue; // fora do fundo => transparente
           let col;
-          if (insideRoundedRect(fx, fy, wx0, wy0, wx1, wy1, wR)) {
+          if (inChevron(fx, fy, N, chevronScale)) {
             col = WHITE;
           } else {
             const t = (fx + fy) / (2 * N); // gradiente diagonal
@@ -116,12 +140,14 @@ function render(N, { transparentOutside, bgRadius, whiteFrac }) {
 
 const targets = [
   // ícones "any" (Android / desktop): cantos arredondados + transparência fora
-  { file: 'icon-192.png', N: 192, opts: { transparentOutside: true, bgRadius: 0.23, whiteFrac: 0.34 } },
-  { file: 'icon-512.png', N: 512, opts: { transparentOutside: true, bgRadius: 0.23, whiteFrac: 0.34 } },
+  { file: 'icon-192.png', N: 192, opts: { transparentOutside: true, bgRadius: 0.23 } },
+  { file: 'icon-512.png', N: 512, opts: { transparentOutside: true, bgRadius: 0.23 } },
   // maskable: fundo cheio (a plataforma arredonda), miolo dentro da safe zone
-  { file: 'icon-maskable-512.png', N: 512, opts: { transparentOutside: false, bgRadius: 0, whiteFrac: 0.30 } },
+  { file: 'icon-maskable-512.png', N: 512, opts: { transparentOutside: false, bgRadius: 0, chevronScale: 0.82 } },
   // iOS: sem transparência (iOS põe preto atrás) e sem arredondar (iOS arredonda)
-  { file: 'apple-touch-icon.png', N: 180, opts: { transparentOutside: false, bgRadius: 0, whiteFrac: 0.34 } },
+  { file: 'apple-touch-icon.png', N: 180, opts: { transparentOutside: false, bgRadius: 0 } },
+  // fonte p/ o `tauri icon` (gera os ícones do .exe a partir deste)
+  { file: 'icon-1024.png', N: 1024, opts: { transparentOutside: true, bgRadius: 0.23 } },
 ];
 
 for (const t of targets) {
@@ -129,4 +155,4 @@ for (const t of targets) {
   fs.writeFileSync(path.join(OUT, t.file), png);
   console.log(`  ✓ icons/${t.file}  (${t.N}×${t.N}, ${png.length} bytes)`);
 }
-console.log('\n  Ícones gerados em /icons.\n');
+console.log('\n  Ícones (chevron ❯❯) gerados em /icons.\n');
