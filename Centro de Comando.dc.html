@@ -2205,6 +2205,15 @@ class Component extends DCLogic {
   }
   _musicSetVol(v) { const vol = Math.max(0, Math.min(100, parseInt(v, 10) || 0)); this.setState({ musicVol: vol }); try { if (this._yt && this._yt.setVolume) this._yt.setVolume(vol); } catch (e) {} this._saveAudioPrefs(); }
   _musicDefaultPos() { return { x: Math.max(12, (window.innerWidth || 1200) - 300), y: Math.max(12, Math.min((window.innerHeight || 800) - 360, (window.innerHeight || 800) * 0.35)) }; }
+  // garante que a posição (salva no localStorage) caiba no viewport ATUAL — sem isso, uma
+  // posição salva numa janela maior/outro monitor faz o painel abrir fora da tela ("não aparece nada")
+  _musicClampPos(p) {
+    const w = window.innerWidth || 1200, h = window.innerHeight || 800;
+    const PW = 280, PH = 372, M = 8;
+    const x = Math.min(Math.max(M, (p && typeof p.x === 'number') ? p.x : (w - 300)), Math.max(M, w - PW - M));
+    const y = Math.min(Math.max(M, (p && typeof p.y === 'number') ? p.y : 120), Math.max(M, h - PH));
+    return { x, y };
+  }
   _musicDragDown(e) {
     const touch = e.touches && e.touches[0];
     const cx = touch ? touch.clientX : e.clientX, cy = touch ? touch.clientY : e.clientY;
@@ -3808,7 +3817,7 @@ class Component extends DCLogic {
       musicOpen: !!s.musicOpen && !s.isMobile,
       musicMin: !!s.musicMin,
       musicPlaying: !!s.musicPlaying,
-      toggleMusic: () => { if (s.isMobile) return; const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; if (!s.musicPos) ns.musicPos = this._musicDefaultPos(); this._ytEnsure(() => {}); } this.setState(ns); },
+      toggleMusic: () => { if (s.isMobile) return; const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; ns.musicPos = this._musicClampPos(s.musicPos); this._ytEnsure(() => {}); } this.setState(ns); },
       toggleMusicMin: () => this.setState({ musicMin: !s.musicMin }),
       closeMusic: () => this.setState({ musicOpen: false }),
       musicPlayPause: () => this._musicTogglePlay(),
@@ -3832,8 +3841,8 @@ class Component extends DCLogic {
       musicErr: s.musicErr || '',
       hasMusicErr: !!s.musicErr,
       musicDragDown: (e) => this._musicDragDown(e),
-      musicLeft: ((s.musicPos ? s.musicPos.x : this._musicDefaultPos().x)) + 'px',
-      musicTop: ((s.musicPos ? s.musicPos.y : this._musicDefaultPos().y)) + 'px',
+      musicLeft: this._musicClampPos(s.musicPos).x + 'px',
+      musicTop: this._musicClampPos(s.musicPos).y + 'px',
       musicEqOpacity: s.musicPlaying ? '1' : '.35',
       musicStatusLabel: s.musicPlaying ? 'Tocando' : 'Pausado',
       musicStatusColor: s.musicPlaying ? 'var(--ok)' : 'var(--text-3)',
