@@ -105,6 +105,7 @@
   @keyframes cc-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes cc-dot { 0%, 80%, 100% { opacity:.25; transform: scale(.8); } 40% { opacity:1; transform: scale(1); } }
   @keyframes cc-search-pop { from { transform: translateX(-50%) translateY(-10px) scale(.98); opacity:0; } to { transform: translateX(-50%) translateY(0) scale(1); opacity:1; } }
+  @keyframes cc-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
 
   /* ===== Responsivo (mobile ≤ 760px) ===== inline-styles são sobrescritos com !important ===== */
   @media (max-width: 760px) {
@@ -207,6 +208,8 @@
       </div>
 
       <div style="display:flex; align-items:center; gap:4px; -webkit-app-region:no-drag;">
+        <button onClick="{{ toggleMusic }}" title="Player lo-fi" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:{{ musicBtnColor }}; border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconMusic }}</button>
+        <button onClick="{{ toggleSound }}" title="{{ soundTitle }}" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:{{ soundColor }}; border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ soundIcon }}</button>
         <button onClick="{{ toggleTheme }}" title="{{ themeTitle }}" style="display:flex; align-items:center; justify-content:center; width:27px; height:27px; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconTheme }}</button>
         <!-- Design System: acesso via goSystem(), mantido como referência interna -->
         <div style="position:relative; display:flex;">
@@ -1686,6 +1689,47 @@
         </div>
       </sc-if>
 
+      <!-- PLAYER LO-FI (mini janela arrastável estilo Spotify) -->
+      <sc-if value="{{ musicOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; left:{{ musicLeft }}; top:{{ musicTop }}; width:280px; background:var(--bg); border:1px solid var(--border-2); border-radius:16px; box-shadow:var(--sh-3); z-index:60; overflow:hidden; animation:cc-fade .16s ease both;">
+          <div onMouseDown="{{ musicDragDown }}" style="display:flex; align-items:center; gap:9px; padding:11px 12px; cursor:grab; background:linear-gradient(150deg, var(--accent-weak), transparent); user-select:none;">
+            <span style="display:flex; color:var(--accent);">{{ iconMusic }}</span>
+            <span style="flex:1; font-size:12px; font-weight:600; letter-spacing:.2px;">Lo-fi · foco</span>
+            <button onClick="{{ toggleMusicMin }}" title="Minimizar" style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconChevDown }}</button>
+            <button onClick="{{ closeMusic }}" title="Fechar" style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ iconXsm }}</button>
+          </div>
+          <sc-if value="{{ musicBodyShown }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:6px 14px 15px;">
+              <div style="height:92px; border-radius:12px; background:linear-gradient(135deg, #5285f0, #8a7ff0 55%, #d7796b); display:flex; align-items:flex-end; justify-content:center; gap:5px; padding:16px; margin-bottom:12px; position:relative; overflow:hidden;">
+                <div style="position:absolute; inset:0; background:radial-gradient(120px 80px at 72% 18%, rgba(255,255,255,.28), transparent);"></div>
+                <span style="width:5px; height:30%; border-radius:3px; background:rgba(255,255,255,.9); transform-origin:bottom; animation:cc-eq 1s ease-in-out infinite; animation-delay:0s; opacity:{{ musicEqOpacity }};"></span>
+                <span style="width:5px; height:72%; border-radius:3px; background:rgba(255,255,255,.9); transform-origin:bottom; animation:cc-eq .8s ease-in-out infinite; animation-delay:.15s; opacity:{{ musicEqOpacity }};"></span>
+                <span style="width:5px; height:46%; border-radius:3px; background:rgba(255,255,255,.9); transform-origin:bottom; animation:cc-eq 1.1s ease-in-out infinite; animation-delay:.3s; opacity:{{ musicEqOpacity }};"></span>
+                <span style="width:5px; height:86%; border-radius:3px; background:rgba(255,255,255,.9); transform-origin:bottom; animation:cc-eq .9s ease-in-out infinite; animation-delay:.05s; opacity:{{ musicEqOpacity }};"></span>
+                <span style="width:5px; height:55%; border-radius:3px; background:rgba(255,255,255,.9); transform-origin:bottom; animation:cc-eq 1.05s ease-in-out infinite; animation-delay:.22s; opacity:{{ musicEqOpacity }};"></span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+                <div style="min-width:0;">
+                  <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ musicStationName }}</div>
+                  <div style="font-size:11px; color:var(--text-3);">{{ musicStationDesc }}</div>
+                </div>
+                <span style="font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:{{ musicStatusColor }}; white-space:nowrap;">{{ musicStatusLabel }}</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:13px;">
+                <button onClick="{{ musicPrev }}" title="Estação anterior" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; color:var(--text-2); border-radius:9px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconSkipBack }}</button>
+                <button onClick="{{ musicPlayPause }}" title="Play / Pause" style="display:flex; align-items:center; justify-content:center; width:46px; height:46px; border:none; background:var(--accent); color:#fff; border-radius:50%; cursor:pointer; box-shadow:0 4px 14px rgba(82,133,240,.4);" style-hover="background:var(--accent-2)" style-active="transform:scale(.94)">{{ musicPlayIcon }}</button>
+                <button onClick="{{ musicNext }}" title="Próxima estação" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; color:var(--text-2); border-radius:9px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconSkipFwd }}</button>
+              </div>
+              <div style="display:flex; align-items:center; gap:9px;">
+                <span style="display:flex; color:var(--text-3);">{{ iconVolume }}</span>
+                <input type="range" min="0" max="100" value="{{ musicVol }}" onInput="{{ musicVolChange }}" style="flex:1; accent-color:var(--accent); cursor:pointer;" />
+              </div>
+              <div style="font-size:9.5px; color:var(--text-3); text-align:center; margin-top:11px;">rádios lo-fi · SomaFM (livre p/ ouvir)</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
     </div>
   </div>
   </sc-if>
@@ -1715,7 +1759,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, musicOpen: false, musicPlaying: false, musicMin: false, musicStation: 0, musicVol: 65, musicPos: null, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -1850,6 +1894,75 @@ class Component extends DCLogic {
   _wfScheduleSave() { clearTimeout(this._wfSaveT); this._wfSaveT = setTimeout(() => this._wfSaveNow(), 250); }
   _loadWfView() { try { const raw = localStorage.getItem('cdc-wf'); if (raw) { const v = JSON.parse(raw); this.setState({ wfPos: v.pos || {}, wfPan: v.pan || { x: 0, y: 0 }, wfZoom: v.zoom || 1 }); } } catch (e) {} }
 
+  // ===================== ÁUDIO (sons de UI + player lo-fi) =====================
+  // Rádios lo-fi/chill do SomaFM — livres pra streaming (financiado por doação).
+  _stations = [
+    { name: 'Fluid', desc: 'lo-fi & chill hip hop', url: 'https://ice1.somafm.com/fluid-128-mp3' },
+    { name: 'Groove Salad', desc: 'chillout · downtempo', url: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+    { name: 'Lush', desc: 'vocal chillout', url: 'https://ice1.somafm.com/lush-128-mp3' },
+    { name: 'Drone Zone', desc: 'ambiente · foco', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
+  ];
+  // som curto sintetizado (sem arquivos) p/ cliques/toggles/sucesso
+  _sfx(kind) {
+    if (!this.state.soundOn) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      const ac = this._ac || (this._ac = new AC());
+      if (ac.state === 'suspended') ac.resume();
+      const now = ac.currentTime;
+      const beep = (freq, start, dur, peak) => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine'; o.frequency.value = freq; o.connect(g); g.connect(ac.destination);
+        g.gain.setValueAtTime(0.0001, now + start);
+        g.gain.exponentialRampToValueAtTime(peak, now + start + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+        o.start(now + start); o.stop(now + start + dur + 0.03);
+      };
+      if (kind === 'toggle') { beep(520, 0, 0.06, 0.05); beep(720, 0.05, 0.07, 0.05); }
+      else if (kind === 'success') { beep(620, 0, 0.08, 0.055); beep(840, 0.07, 0.12, 0.055); }
+      else beep(430, 0, 0.06, 0.045); // click
+    } catch (e) {}
+  }
+  _musicEnsure() {
+    if (!this._audio) {
+      this._audio = new Audio(); this._audio.preload = 'none'; this._audio.volume = (this.state.musicVol || 65) / 100;
+      this._audio.addEventListener('playing', () => this.setState({ musicPlaying: true }));
+      this._audio.addEventListener('pause', () => this.setState({ musicPlaying: false }));
+      this._audio.addEventListener('error', () => this.setState({ musicPlaying: false }));
+    }
+    return this._audio;
+  }
+  _musicPlay() {
+    const a = this._musicEnsure();
+    const i = this.state.musicStation || 0;
+    if (a._station !== i || !a.src) { a.src = this._stations[i].url; a._station = i; }
+    a.play().then(() => this.setState({ musicPlaying: true })).catch(() => this.setState({ musicPlaying: false }));
+  }
+  _musicTogglePlay() { if (this.state.musicPlaying) { if (this._audio) this._audio.pause(); this.setState({ musicPlaying: false }); } else this._musicPlay(); }
+  _musicSetStation(delta) {
+    const n = this._stations.length;
+    const idx = (((this.state.musicStation || 0) + delta) % n + n) % n;
+    const was = this.state.musicPlaying;
+    this.setState({ musicStation: idx });
+    const a = this._musicEnsure(); a.src = this._stations[idx].url; a._station = idx;
+    if (was) a.play().catch(() => {});
+    this._saveAudioPrefs();
+  }
+  _musicSetVol(v) { const vol = Math.max(0, Math.min(100, parseInt(v, 10) || 0)); if (this._audio) this._audio.volume = vol / 100; this.setState({ musicVol: vol }); this._saveAudioPrefs(); }
+  _musicDefaultPos() { return { x: Math.max(12, (window.innerWidth || 1200) - 300), y: Math.max(12, (window.innerHeight || 800) - 230) }; }
+  _musicDragDown(e) {
+    e.preventDefault();
+    const p = this.state.musicPos || this._musicDefaultPos();
+    this._musicDrag = { sx: e.clientX, sy: e.clientY, ox: p.x, oy: p.y };
+    if (!this._musicMoveB) {
+      this._musicMoveB = (ev) => { const d = this._musicDrag; if (!d) return; this.setState({ musicPos: { x: d.ox + (ev.clientX - d.sx), y: d.oy + (ev.clientY - d.sy) } }); };
+      this._musicUpB = () => { window.removeEventListener('mousemove', this._musicMoveB); window.removeEventListener('mouseup', this._musicUpB); this._musicDrag = null; this._saveAudioPrefs(); };
+    }
+    window.addEventListener('mousemove', this._musicMoveB); window.addEventListener('mouseup', this._musicUpB);
+  }
+  _saveAudioPrefs() { clearTimeout(this._audioSaveT); this._audioSaveT = setTimeout(() => { try { localStorage.setItem('cdc-audio', JSON.stringify({ soundOn: this.state.soundOn, station: this.state.musicStation, vol: this.state.musicVol, pos: this.state.musicPos })); } catch (e) {} }, 150); }
+  _loadAudioPrefs() { try { const r = localStorage.getItem('cdc-audio'); if (r) { const v = JSON.parse(r); this.setState({ soundOn: v.soundOn !== false, musicStation: v.station || 0, musicVol: (v.vol == null ? 65 : v.vol), musicPos: v.pos || null }); } } catch (e) {} }
+
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders'];
   _hydrating = false;
@@ -1872,6 +1985,11 @@ class Component extends DCLogic {
     this._onMq = (e) => this.setState({ isMobile: e.matches, navOpen: e.matches ? this.state.navOpen : false });
     if (this._mq.addEventListener) this._mq.addEventListener('change', this._onMq); else this._mq.addListener(this._onMq);
     this.setState({ isMobile: this._mq.matches });
+
+    // áudio: prefs salvas + som de clique em botões (delegado, respeita soundOn)
+    this._loadAudioPrefs();
+    this._onClickSfx = (e) => { const t = e.target; if (t && t.closest && t.closest('button')) this._sfx('click'); };
+    document.addEventListener('click', this._onClickSfx, true);
 
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json().catch(() => ({ ok: false })))
@@ -1927,6 +2045,13 @@ class Component extends DCLogic {
       grid: ["M4 4.5h6v6H4z", "M14 4.5h6v6h-6z", "M4 14.5h6v6H4z", "M14 14.5h6v6h-6z"],
       bell: ["M6.5 8.5a5.5 5.5 0 0 1 11 0c0 6 2.5 7.5 2.5 7.5H4s2.5-1.5 2.5-7.5", "M10.3 19.5a1.9 1.9 0 0 0 3.4 0"],
       chevrons: ["M7 6l5 6-5 6", "M12 6l5 6-5 6"],
+      headphones: ["M4 14v-1a8 8 0 0 1 16 0v1", "M6 14a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0v-2a2 2 0 0 1 2-2", "M18 14a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0v-2a2 2 0 0 1 2-2"],
+      play: ["M7 5l12 7-12 7z"],
+      pause: ["M8 5v14", "M16 5v14"],
+      skipFwd: ["M6 5l9 7-9 7z", "M17 5v14"],
+      skipBack: ["M18 5l-9 7 9 7z", "M6 5v14"],
+      volume: ["M11 5L6 9H2v6h4l5 4z", "M15.5 8.5a5 5 0 0 1 0 7"],
+      volumeX: ["M11 5L6 9H2v6h4l5 4z", "M22 9l-6 6", "M16 9l6 6"],
       min: ["M5 12h14"],
       max: ["M5.5 5.5h13v13h-13z"],
       close: ["M18 6 6 18", "M6 6l12 12"],
@@ -3254,6 +3379,39 @@ class Component extends DCLogic {
       resizeNE: (e) => { e.preventDefault(); this._winResize('NorthEast'); },
       resizeSW: (e) => { e.preventDefault(); this._winResize('SouthWest'); },
       resizeSE: (e) => { e.preventDefault(); this._winResize('SouthEast'); },
+      // ---- áudio: sons de UI ----
+      soundOn: !!s.soundOn,
+      soundIcon: this.icon(s.soundOn ? 'volume' : 'volumeX', 15, 1.7),
+      soundTitle: s.soundOn ? 'Sons da interface: ligados' : 'Sons da interface: desligados',
+      soundColor: s.soundOn ? 'var(--text-2)' : 'var(--text-3)',
+      toggleSound: () => { const v = !s.soundOn; this.setState({ soundOn: v }); if (v) this._sfx('toggle'); this._saveAudioPrefs(); },
+      // ---- player lo-fi ----
+      iconMusic: this.icon('headphones', 15, 1.7),
+      musicBtnColor: s.musicOpen ? 'var(--accent)' : 'var(--text-2)',
+      musicOpen: !!s.musicOpen,
+      musicMin: !!s.musicMin,
+      musicPlaying: !!s.musicPlaying,
+      toggleMusic: () => { const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; if (!s.musicPos) ns.musicPos = this._musicDefaultPos(); } this.setState(ns); },
+      toggleMusicMin: () => this.setState({ musicMin: !s.musicMin }),
+      closeMusic: () => this.setState({ musicOpen: false }),
+      musicPlayPause: () => this._musicTogglePlay(),
+      musicPlayIcon: this.icon(s.musicPlaying ? 'pause' : 'play', 18, 2),
+      iconSkipFwd: this.icon('skipFwd', 16, 1.9),
+      iconSkipBack: this.icon('skipBack', 16, 1.9),
+      iconVolume: this.icon('volume', 14, 1.7),
+      musicNext: () => this._musicSetStation(1),
+      musicPrev: () => this._musicSetStation(-1),
+      musicVol: String(s.musicVol == null ? 65 : s.musicVol),
+      musicVolChange: (e) => this._musicSetVol(e.target.value),
+      musicStationName: this._stations[s.musicStation || 0].name,
+      musicStationDesc: this._stations[s.musicStation || 0].desc,
+      musicDragDown: (e) => this._musicDragDown(e),
+      musicLeft: ((s.musicPos ? s.musicPos.x : this._musicDefaultPos().x)) + 'px',
+      musicTop: ((s.musicPos ? s.musicPos.y : this._musicDefaultPos().y)) + 'px',
+      musicEqOpacity: s.musicPlaying ? '1' : '.35',
+      musicStatusLabel: s.musicPlaying ? 'Tocando' : 'Pausado',
+      musicStatusColor: s.musicPlaying ? 'var(--ok)' : 'var(--text-3)',
+      musicBodyShown: !s.musicMin,
       // ---- central de notificações (sino) ----
       notifOpen: !!s.notifOpen,
       toggleNotif: () => { const open = !s.notifOpen; if (open) this._requestNotifPerm(); this.setState({ notifOpen: open }); },
