@@ -1793,7 +1793,7 @@
       <!-- PLAYER LO-FI (mini janela arrastável estilo Spotify) -->
       <sc-if value="{{ musicOpen }}" hint-placeholder-val="{{ false }}">
         <div style="position:fixed; left:{{ musicLeft }}; top:{{ musicTop }}; width:280px; background:var(--bg); border:1px solid var(--border-2); border-radius:16px; box-shadow:var(--sh-3); z-index:60; overflow:hidden; animation:cc-fade .16s ease both;">
-          <div onMouseDown="{{ musicDragDown }}" style="display:flex; align-items:center; gap:9px; padding:11px 12px; cursor:grab; background:linear-gradient(150deg, var(--accent-weak), transparent); user-select:none;">
+          <div onMouseDown="{{ musicDragDown }}" onTouchStart="{{ musicDragDown }}" style="display:flex; align-items:center; gap:9px; padding:11px 12px; cursor:grab; background:linear-gradient(150deg, var(--accent-weak), transparent); user-select:none; touch-action:none;">
             <span style="display:flex; color:var(--accent);">{{ iconMusic }}</span>
             <span style="flex:1; font-size:12px; font-weight:600; letter-spacing:.2px;">Lo-fi · foco</span>
             <button onClick="{{ toggleMusicMin }}" title="Minimizar" style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconChevDown }}</button>
@@ -1825,7 +1825,20 @@
                 <span style="display:flex; color:var(--text-3);">{{ iconVolume }}</span>
                 <input type="range" min="0" max="100" value="{{ musicVol }}" onInput="{{ musicVolChange }}" style="flex:1; accent-color:var(--accent); cursor:pointer;" />
               </div>
-              <div style="font-size:9.5px; color:var(--text-3); text-align:center; margin-top:11px;">rádios lo-fi · SomaFM (livre p/ ouvir)</div>
+              <button onClick="{{ toggleMusicPicker }}" style="width:100%; margin-top:12px; height:32px; display:flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:9px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="color:var(--text); border-color:var(--accent)">Escolher som · categorias</button>
+              <sc-if value="{{ musicPickerOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:9px; display:flex; flex-direction:column; gap:2px; max-height:172px; overflow-y:auto;">
+                  <sc-for list="{{ musicCatList }}" as="cat" hint-placeholder-count="6">
+                    <button onClick="{{ cat.onClick }}" style="display:flex; align-items:center; height:34px; padding:0 11px; border:none; background:{{ cat.selBg }}; color:{{ cat.selColor }}; border-radius:8px; font:inherit; font-size:12.5px; font-weight:500; cursor:pointer; text-align:left;" style-hover="background:var(--surface-2)">{{ cat.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="margin-top:9px; display:flex; gap:6px;">
+                  <input value="{{ musicCustomUrl }}" onInput="{{ musicCustomUrlChange }}" onKeyDown="{{ musicCustomKeyDown }}" placeholder="Colar link do YouTube" style="flex:1; min-width:0; height:32px; padding:0 10px; background:var(--surface); border:1px solid var(--border-2); border-radius:8px; color:var(--text); font:inherit; font-size:12px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                  <button onClick="{{ playCustomUrl }}" title="Tocar este link" style="flex:0 0 auto; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:var(--accent); color:#fff; border-radius:8px; cursor:pointer;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}</button>
+                </div>
+                <sc-if value="{{ hasMusicErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px; color:var(--crit); margin-top:6px;">{{ musicErr }}</div></sc-if>
+              </sc-if>
+              <div style="font-size:9.5px; color:var(--text-3); text-align:center; margin-top:11px;">som ambiente via YouTube · ou cole um link</div>
             </div>
           </sc-if>
         </div>
@@ -1860,7 +1873,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, musicOpen: false, musicPlaying: false, musicMin: false, musicStation: 0, musicVol: 65, musicPos: null, drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -1997,11 +2010,14 @@ class Component extends DCLogic {
 
   // ===================== ÁUDIO (sons de UI + player lo-fi) =====================
   // Rádios lo-fi/chill do SomaFM — livres pra streaming (financiado por doação).
-  _stations = [
-    { name: 'Fluid', desc: 'lo-fi & chill hip hop', url: 'https://ice1.somafm.com/fluid-128-mp3' },
-    { name: 'Groove Salad', desc: 'chillout · downtempo', url: 'https://ice1.somafm.com/groovesalad-128-mp3' },
-    { name: 'Lush', desc: 'vocal chillout', url: 'https://ice1.somafm.com/lush-128-mp3' },
-    { name: 'Drone Zone', desc: 'ambiente · foco', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
+  // categorias de som (via YouTube). O usuário também pode colar qualquer link.
+  _lofiCats = [
+    { emoji: '📚', name: 'Lofi pra estudar', id: 'jfKfPfyJRdk' },
+    { emoji: '☕', name: 'Lofi pra relaxar', id: '28KRPhVzCus' },
+    { emoji: '🌌', name: 'Synthwave / foco', id: '4xDzrJKXOOY' },
+    { emoji: '🌧️', name: 'Chuva', id: 'mPZkdNFkNps' },
+    { emoji: '🔥', name: 'Fogueira', id: 'L_LUpnjgPso' },
+    { emoji: '🌊', name: 'Cachoeira / natureza', id: 'BHntJ_zlYCQ' },
   ];
   // som curto sintetizado (sem arquivos) p/ cliques/toggles/sucesso
   _sfx(kind) {
@@ -2024,45 +2040,92 @@ class Component extends DCLogic {
       else beep(430, 0, 0.06, 0.045); // click
     } catch (e) {}
   }
-  _musicEnsure() {
-    if (!this._audio) {
-      this._audio = new Audio(); this._audio.preload = 'none'; this._audio.volume = (this.state.musicVol || 65) / 100;
-      this._audio.addEventListener('playing', () => this.setState({ musicPlaying: true }));
-      this._audio.addEventListener('pause', () => this.setState({ musicPlaying: false }));
-      this._audio.addEventListener('error', () => this.setState({ musicPlaying: false }));
-    }
-    return this._audio;
+  // ---- player via YouTube IFrame API ----
+  _ytLoadApi(cb) {
+    if (window.YT && window.YT.Player) { cb(); return; }
+    this._ytCbs = this._ytCbs || []; this._ytCbs.push(cb);
+    if (this._ytLoading) return;
+    this._ytLoading = true;
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (typeof prev === 'function') { try { prev(); } catch (e) {} } (this._ytCbs || []).forEach((f) => { try { f(); } catch (e) {} }); this._ytCbs = []; };
+    const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
   }
-  _musicPlay() {
-    const a = this._musicEnsure();
-    const i = this.state.musicStation || 0;
-    if (a._station !== i || !a.src) { a.src = this._stations[i].url; a._station = i; }
-    a.play().then(() => this.setState({ musicPlaying: true })).catch(() => this.setState({ musicPlaying: false }));
+  _ytEnsure(cb) {
+    this._ytLoadApi(() => {
+      if (this._yt && this._yt.playVideo) { if (cb) cb(); return; }
+      let host = document.getElementById('cdc-yt');
+      if (!host) { host = document.createElement('div'); host.id = 'cdc-yt'; host.style.cssText = 'position:fixed; width:1px; height:1px; left:-100px; top:-100px; opacity:0; pointer-events:none;'; document.body.appendChild(host); }
+      try {
+        this._yt = new window.YT.Player('cdc-yt', {
+          height: '1', width: '1',
+          playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, rel: 0, playsinline: 1 },
+          events: {
+            onReady: () => { try { this._yt.setVolume(this.state.musicVol == null ? 65 : this.state.musicVol); } catch (e) {} if (cb) cb(); },
+            onStateChange: (e) => this.setState({ musicPlaying: e.data === 1 }),
+            onError: () => this.setState({ musicPlaying: false, musicErr: 'Essa estação não tocou — tente outra ou cole um link.' }),
+          },
+        });
+      } catch (e) {}
+    });
   }
-  _musicTogglePlay() { if (this.state.musicPlaying) { if (this._audio) this._audio.pause(); this.setState({ musicPlaying: false }); } else this._musicPlay(); }
-  _musicSetStation(delta) {
-    const n = this._stations.length;
-    const idx = (((this.state.musicStation || 0) + delta) % n + n) % n;
-    const was = this.state.musicPlaying;
-    this.setState({ musicStation: idx });
-    const a = this._musicEnsure(); a.src = this._stations[idx].url; a._station = idx;
-    if (was) a.play().catch(() => {});
-    this._saveAudioPrefs();
+  _ytId(url) {
+    if (!url) return null;
+    const s = String(url).trim();
+    const m = s.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/|live\/)([\w-]{11})/);
+    if (m) return m[1];
+    if (/^[\w-]{11}$/.test(s)) return s;
+    return null;
   }
-  _musicSetVol(v) { const vol = Math.max(0, Math.min(100, parseInt(v, 10) || 0)); if (this._audio) this._audio.volume = vol / 100; this.setState({ musicVol: vol }); this._saveAudioPrefs(); }
-  _musicDefaultPos() { return { x: Math.max(12, (window.innerWidth || 1200) - 300), y: Math.max(12, (window.innerHeight || 800) - 230) }; }
+  _ytPlayId(id) { this.setState({ musicErr: '' }); this._ytEnsure(() => { try { this._yt.loadVideoById(id); this._yt.playVideo(); } catch (e) {} }); }
+  _musicPlayCat(i) {
+    const n = this._lofiCats.length; const idx = ((i % n) + n) % n;
+    this.setState({ musicCat: idx, musicCustom: null }); this._saveAudioPrefs();
+    this._ytPlayId(this._lofiCats[idx].id);
+  }
+  _musicTogglePlay() {
+    this._ytEnsure(() => {
+      try {
+        const st = this._yt.getPlayerState ? this._yt.getPlayerState() : -1;
+        if (st === 1) { this._yt.pauseVideo(); }
+        else if (st === 2) { this._yt.playVideo(); }
+        else { const id = this.state.musicCustom || this._lofiCats[this.state.musicCat || 0].id; this._yt.loadVideoById(id); this._yt.playVideo(); }
+      } catch (e) {}
+    });
+  }
+  _musicCustom(url) {
+    const id = this._ytId(url);
+    if (!id) { this.setState({ musicErr: 'Link do YouTube inválido.' }); return; }
+    this.setState({ musicCustom: id, musicCustomUrl: '', musicPickerOpen: false }); this._saveAudioPrefs();
+    this._ytPlayId(id);
+  }
+  _musicSetVol(v) { const vol = Math.max(0, Math.min(100, parseInt(v, 10) || 0)); this.setState({ musicVol: vol }); try { if (this._yt && this._yt.setVolume) this._yt.setVolume(vol); } catch (e) {} this._saveAudioPrefs(); }
+  _musicDefaultPos() { return { x: Math.max(12, (window.innerWidth || 1200) - 300), y: Math.max(12, Math.min((window.innerHeight || 800) - 360, (window.innerHeight || 800) * 0.35)) }; }
   _musicDragDown(e) {
-    e.preventDefault();
+    const touch = e.touches && e.touches[0];
+    const cx = touch ? touch.clientX : e.clientX, cy = touch ? touch.clientY : e.clientY;
+    if (e.cancelable) e.preventDefault();
     const p = this.state.musicPos || this._musicDefaultPos();
-    this._musicDrag = { sx: e.clientX, sy: e.clientY, ox: p.x, oy: p.y };
+    this._musicDrag = { sx: cx, sy: cy, ox: p.x, oy: p.y };
     if (!this._musicMoveB) {
-      this._musicMoveB = (ev) => { const d = this._musicDrag; if (!d) return; this.setState({ musicPos: { x: d.ox + (ev.clientX - d.sx), y: d.oy + (ev.clientY - d.sy) } }); };
-      this._musicUpB = () => { window.removeEventListener('mousemove', this._musicMoveB); window.removeEventListener('mouseup', this._musicUpB); this._musicDrag = null; this._saveAudioPrefs(); };
+      this._musicMoveB = (ev) => {
+        const d = this._musicDrag; if (!d) return;
+        const t = ev.touches && ev.touches[0];
+        const x = t ? t.clientX : ev.clientX, y = t ? t.clientY : ev.clientY;
+        if (ev.cancelable && ev.touches) ev.preventDefault();
+        const w = window.innerWidth || 1200, h = window.innerHeight || 800;
+        this.setState({ musicPos: { x: Math.max(4, Math.min(w - 60, d.ox + (x - d.sx))), y: Math.max(4, Math.min(h - 50, d.oy + (y - d.sy))) } });
+      };
+      this._musicUpB = () => {
+        window.removeEventListener('mousemove', this._musicMoveB); window.removeEventListener('mouseup', this._musicUpB);
+        window.removeEventListener('touchmove', this._musicMoveB); window.removeEventListener('touchend', this._musicUpB);
+        this._musicDrag = null; this._saveAudioPrefs();
+      };
     }
     window.addEventListener('mousemove', this._musicMoveB); window.addEventListener('mouseup', this._musicUpB);
+    window.addEventListener('touchmove', this._musicMoveB, { passive: false }); window.addEventListener('touchend', this._musicUpB);
   }
-  _saveAudioPrefs() { clearTimeout(this._audioSaveT); this._audioSaveT = setTimeout(() => { try { localStorage.setItem('cdc-audio', JSON.stringify({ soundOn: this.state.soundOn, station: this.state.musicStation, vol: this.state.musicVol, pos: this.state.musicPos })); } catch (e) {} }, 150); }
-  _loadAudioPrefs() { try { const r = localStorage.getItem('cdc-audio'); if (r) { const v = JSON.parse(r); this.setState({ soundOn: v.soundOn !== false, musicStation: v.station || 0, musicVol: (v.vol == null ? 65 : v.vol), musicPos: v.pos || null }); } } catch (e) {} }
+  _saveAudioPrefs() { clearTimeout(this._audioSaveT); this._audioSaveT = setTimeout(() => { try { localStorage.setItem('cdc-audio', JSON.stringify({ soundOn: this.state.soundOn, cat: this.state.musicCat, custom: this.state.musicCustom || null, vol: this.state.musicVol, pos: this.state.musicPos })); } catch (e) {} }, 150); }
+  _loadAudioPrefs() { try { const r = localStorage.getItem('cdc-audio'); if (r) { const v = JSON.parse(r); this.setState({ soundOn: v.soundOn !== false, musicCat: v.cat || 0, musicCustom: v.custom || null, musicVol: (v.vol == null ? 65 : v.vol), musicPos: v.pos || null }); } } catch (e) {} }
 
   // redimensiona uma imagem (File) pra um quadrado pequeno -> data URL base64 (leve, cabe no estado)
   _imgToDataUrl(file, size, cb) {
@@ -3568,12 +3631,21 @@ class Component extends DCLogic {
       iconSkipFwd: this.icon('skipFwd', 16, 1.9),
       iconSkipBack: this.icon('skipBack', 16, 1.9),
       iconVolume: this.icon('volume', 14, 1.7),
-      musicNext: () => this._musicSetStation(1),
-      musicPrev: () => this._musicSetStation(-1),
+      musicNext: () => this._musicPlayCat((s.musicCat || 0) + 1),
+      musicPrev: () => this._musicPlayCat((s.musicCat || 0) - 1),
       musicVol: String(s.musicVol == null ? 65 : s.musicVol),
       musicVolChange: (e) => this._musicSetVol(e.target.value),
-      musicStationName: this._stations[s.musicStation || 0].name,
-      musicStationDesc: this._stations[s.musicStation || 0].desc,
+      musicStationName: s.musicCustom ? 'Link personalizado' : (this._lofiCats[s.musicCat || 0].emoji + ' ' + this._lofiCats[s.musicCat || 0].name),
+      musicStationDesc: s.musicCustom ? 'YouTube' : 'YouTube · som ambiente',
+      musicPickerOpen: !!s.musicPickerOpen,
+      toggleMusicPicker: () => this.setState({ musicPickerOpen: !s.musicPickerOpen, musicErr: '' }),
+      musicCatList: this._lofiCats.map((c, i) => { const sel = !s.musicCustom && (s.musicCat || 0) === i; return { label: c.emoji + '  ' + c.name, selBg: sel ? 'var(--accent-weak)' : 'transparent', selColor: sel ? 'var(--accent)' : 'var(--text-2)', onClick: () => { this._musicPlayCat(i); } }; }),
+      musicCustomUrl: s.musicCustomUrl || '',
+      musicCustomUrlChange: (e) => this.setState({ musicCustomUrl: e.target.value }),
+      musicCustomKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); this._musicCustom(s.musicCustomUrl); } },
+      playCustomUrl: () => this._musicCustom(s.musicCustomUrl),
+      musicErr: s.musicErr || '',
+      hasMusicErr: !!s.musicErr,
       musicDragDown: (e) => this._musicDragDown(e),
       musicLeft: ((s.musicPos ? s.musicPos.x : this._musicDefaultPos().x)) + 'px',
       musicTop: ((s.musicPos ? s.musicPos.y : this._musicDefaultPos().y)) + 'px',
