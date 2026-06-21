@@ -132,6 +132,8 @@
     .cc-screen-flex > div:first-child { flex-wrap:wrap !important; row-gap:10px !important; }
     /* Grupos de controles/barras que devem quebrar linha (não espremer) no mobile */
     .cc-wrap-mob { flex-wrap:wrap !important; row-gap:8px !important; }
+    /* Valores monetários grandes (KPIs) não quebram linha no mobile */
+    .cc-kpi-money { font-size:18px !important; white-space:nowrap !important; }
   }
 </style>
 </helmet>
@@ -1090,7 +1092,7 @@
               <sc-for list="{{ finKpis }}" as="k" hint-placeholder-count="4">
                 <div style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ k.accent }}; border-radius:12px; padding:15px 16px; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s;" style-hover="border-color:var(--border-2); transform:translateY(-3px); box-shadow:var(--sh-2)">
                   <div style="font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:10px;">{{ k.label }}</div>
-                  <div style="font-size:21px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ k.color }}; letter-spacing:-.3px;">{{ k.value }}</div>
+                  <div class="cc-kpi-money" style="font-size:21px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ k.color }}; letter-spacing:-.3px;">{{ k.value }}</div>
                   <div style="font-size:11.5px; color:var(--text-3); margin-top:5px;">{{ k.sub }}</div>
                 </div>
               </sc-for>
@@ -1137,7 +1139,7 @@
               <sc-for list="{{ despKpis }}" as="k" hint-placeholder-count="3">
                 <div style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ k.accent }}; border-radius:12px; padding:15px 16px; box-shadow:var(--sh-1);">
                   <div style="font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:10px;">{{ k.label }}</div>
-                  <div style="font-size:21px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ k.color }}; letter-spacing:-.3px;">{{ k.value }}</div>
+                  <div class="cc-kpi-money" style="font-size:21px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ k.color }}; letter-spacing:-.3px;">{{ k.value }}</div>
                   <div style="font-size:11.5px; color:var(--text-3); margin-top:5px;">{{ k.sub }}</div>
                 </div>
               </sc-for>
@@ -1183,7 +1185,7 @@
               </div>
               <button onClick="{{ toggleHideMoney }}" title="{{ hideMoneyTitle }}" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; cursor:pointer; flex:0 0 auto;" style-hover="color:var(--text); border-color:var(--accent)">{{ iconEye }}</button>
             </div>
-            <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:20px; display:flex; align-items:center; gap:28px;">
+            <div class="cc-stack" style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:20px; display:flex; align-items:center; gap:28px;">
               <div style="flex:1;">
                 <div style="font-size:12px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3); margin-bottom:10px;">Recomendação · junho 2026</div>
                 <div style="font-size:42px; font-weight:700; font-family:'Geist Mono',monospace; color:var(--ok); letter-spacing:-1.5px; line-height:1;">{{ salRecomendacao }}</div>
@@ -1237,7 +1239,7 @@
                     <span style="display:inline-flex; align-items:center; height:24px; padding:0 9px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:'Geist Mono',monospace; color:{{ m.pctColor }}; background:{{ m.pctBg }};">{{ m.pct }}</span>
                   </div>
                   <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:10px;">
-                    <span style="font-size:28px; font-weight:700; font-family:'Geist Mono',monospace; letter-spacing:-.8px; color:var(--text);">{{ m.current }}</span>
+                    <span style="font-size:28px; font-weight:700; font-family:'Geist Mono',monospace; letter-spacing:-.8px; color:var(--text); white-space:nowrap;">{{ m.current }}</span>
                     <span style="font-size:13px; color:var(--text-3);">de {{ m.target }}</span>
                   </div>
                   <div style="height:8px; border-radius:6px; background:var(--surface-3); overflow:hidden;"><div style="height:100%; width:{{ m.bar }}; background:{{ m.barColor }}; border-radius:6px; animation:cc-grow-w .8s cubic-bezier(.4,0,.2,1) both; transform-origin:left;"></div></div>
@@ -1465,14 +1467,14 @@
             </sc-if>
             <div style="display:flex; flex-direction:column; gap:9px;">
               <sc-for list="{{ lembretesAll }}" as="lb" hint-placeholder-count="0">
-                <div style="display:flex; align-items:center; gap:13px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:13px 15px; box-shadow:var(--sh-1);">
+                <div style="display:flex; align-items:center; gap:13px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:13px 15px; box-shadow:var(--sh-1); opacity:{{ lb.rowOpacity }}; transition:opacity .15s;">
                   <span style="flex:0 0 auto; width:9px; height:9px; border-radius:50%; background:{{ lb.dot }};"></span>
                   <div onClick="{{ lb.onOpen }}" style="flex:1; min-width:0; cursor:{{ lb.openCursor }};">
                     <div style="font-size:13.5px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ lb.title }}</div>
                     <div style="font-size:11.5px; color:var(--text-3); margin-top:2px;">{{ lb.sub }} · <span style="color:{{ lb.whenColor }};">{{ lb.whenLabel }}</span></div>
                   </div>
-                  <span class="cc-sw" onClick="{{ lb.onToggle }}" title="Desligar lembrete" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:var(--accent); cursor:pointer;">
-                    <span style="position:absolute; top:2px; left:21px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45);"></span>
+                  <span class="cc-sw" onClick="{{ lb.onToggle }}" title="{{ lb.swTitle }}" style="position:relative; flex:0 0 auto; width:44px; height:25px; border-radius:13px; background:{{ lb.swBg }}; cursor:pointer; transition:background .2s;">
+                    <span style="position:absolute; top:2px; left:{{ lb.swKnob }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); transition:left .2s;"></span>
                   </span>
                   <sc-if value="{{ lb.isAvulso }}" hint-placeholder-val="{{ false }}">
                     <button onClick="{{ lb.onDelete }}" title="Excluir lembrete" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:30px; height:30px; border:1px solid var(--border-2); background:var(--bg); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconXsm }}</button>
@@ -1756,7 +1758,7 @@
           </sc-if>
 
           <div style="display:flex; align-items:center; gap:10px; padding:18px 28px; border-top:1px solid var(--border);">
-            <button onClick="{{ submitDrawer }}" style="flex:1; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 16px rgba(82,133,240,.4);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ drawerCta }}</button>
+            <button onClick="{{ submitDrawer }}" style="flex:1; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:14px; font-weight:600; cursor:{{ drawerSaveCursor }}; opacity:{{ drawerSaveOpacity }}; box-shadow:0 4px 16px rgba(82,133,240,.4);" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ drawerCta }}</button>
             <button onClick="{{ closeDrawer }}" style="height:42px; padding:0 20px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:10px; font:inherit; font-size:14px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
           </div>
         </div>
@@ -3212,33 +3214,38 @@ class Component extends DCLogic {
     // mini-toast helper
     const _flash = (extra, msg) => { this.setState({ ...extra, toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000); };
     // ---- aba Lembretes: agrega avulsos + os ligados nas demandas ----
+    // Desativar NÃO apaga: o lembrete continua visível, só marcado como inativo (done). Excluir é à parte.
     const _lembretesRaw = [];
     for (const r of reminders) {
-      if (r.done) continue;
       const t = r.when ? new Date(r.when).getTime() : 0;
-      _lembretesRaw.push({ kind: 'avulso', id: r.id, title: r.title, sub: 'Lembrete avulso', whenLabel: _fmtWhen(r.when), ts: t || 0, late: !!(t && t < _nowMs) });
+      _lembretesRaw.push({ kind: 'avulso', id: r.id, title: r.title, sub: 'Lembrete avulso', whenLabel: _fmtWhen(r.when), ts: t || 0, late: !!(t && t < _nowMs && !r.done), active: !r.done });
     }
     for (const d of (s.demands || [])) {
       if (d.status === 'done' || !d.reminderAt) continue;
       const t = new Date(d.reminderAt).getTime();
       const cl = (s.clients || []).find((c) => c.id === d.clientId);
-      _lembretesRaw.push({ kind: 'demanda', id: d.id, title: d.title, sub: 'Demanda' + (cl ? ' · ' + cl.nome : ''), whenLabel: _fmtWhen(d.reminderAt), ts: isNaN(t) ? 0 : t, late: !isNaN(t) && t < _nowMs });
+      _lembretesRaw.push({ kind: 'demanda', id: d.id, title: d.title, sub: 'Demanda' + (cl ? ' · ' + cl.nome : ''), whenLabel: _fmtWhen(d.reminderAt), ts: isNaN(t) ? 0 : t, late: !isNaN(t) && t < _nowMs, active: true });
     }
-    _lembretesRaw.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    // ativos primeiro, inativos depois; dentro de cada grupo, por data
+    _lembretesRaw.sort((a, b) => (Number(b.active) - Number(a.active)) || ((a.ts || 0) - (b.ts || 0)));
     const lembretesAll = _lembretesRaw.map((x) => ({
-      title: x.title, sub: x.sub, whenLabel: x.whenLabel,
+      title: x.title, sub: x.sub, whenLabel: x.whenLabel, active: x.active,
       whenColor: x.late ? 'var(--crit)' : 'var(--text-3)',
-      dot: x.late ? 'var(--crit)' : (x.kind === 'demanda' ? 'var(--info)' : 'var(--accent)'),
+      dot: !x.active ? 'var(--text-3)' : (x.late ? 'var(--crit)' : (x.kind === 'demanda' ? 'var(--info)' : 'var(--accent)')),
+      rowOpacity: x.active ? '1' : '.5',
+      swBg: x.active ? 'var(--accent)' : 'var(--surface-3)',
+      swKnob: x.active ? '21px' : '2px',
+      swTitle: x.active ? 'Desativar lembrete' : 'Reativar lembrete',
       isDemanda: x.kind === 'demanda', isAvulso: x.kind === 'avulso',
       openCursor: x.kind === 'demanda' ? 'pointer' : 'default',
       onOpen: x.kind === 'demanda' ? () => editDemand((s.demands || []).find((d) => d.id === x.id)) : null,
       onToggle: x.kind === 'avulso'
-        ? () => _flash({ reminders: reminders.map((r) => r.id === x.id ? { ...r, done: true } : r) }, 'Lembrete concluído')
+        ? () => _flash({ reminders: reminders.map((r) => r.id === x.id ? { ...r, done: !r.done } : r) }, x.active ? 'Lembrete desativado' : 'Lembrete reativado')
         : () => _flash({ demands: (s.demands || []).map((d) => d.id === x.id ? { ...d, reminderAt: '' } : d) }, 'Lembrete da demanda desligado'),
       onDelete: x.kind === 'avulso' ? () => _flash({ reminders: reminders.filter((r) => r.id !== x.id) }, 'Lembrete excluído') : null,
     }));
     const lembretesEmpty = lembretesAll.length === 0;
-    const lembretesCount = lembretesAll.length;
+    const lembretesCount = lembretesAll.filter((x) => x.active).length;
     const lembretesCountLabel = lembretesCount + (lembretesCount === 1 ? ' ativo' : ' ativos');
     const lembretesSub = lembretesEmpty ? 'Tudo em dia — nenhum lembrete ativo.' : 'Seus lembretes avulsos e os ligados nas demandas, num lugar só.';
 
@@ -3379,6 +3386,8 @@ class Component extends DCLogic {
           }
           updates.lancDesc = ''; updates.lancValor = ''; updates.lancData = ''; updates.lancTipo = 'receita';
         } else if (mode === 'ideia') {
+          // não salva ideia vazia (sem título nem observação)
+          if (!(s.ideiaTitulo||'').trim() && !(s.ideiaObs||'').trim()) return;
           const cat = s.ideiaCategoria||'Pessoal';
           const [tc, tbg] = catColors[cat] || catColors.Pessoal;
           if (editId) {
@@ -3400,6 +3409,8 @@ class Component extends DCLogic {
       isDrawerProspecto: s.drawerMode === 'prospecto',
       isDrawerLancamento: s.drawerMode === 'lancamento',
       isDrawerIdeia: s.drawerMode === 'ideia',
+      drawerSaveOpacity: ((s.drawerMode === 'ideia') && !((s.ideiaTitulo||'').trim() || (s.ideiaObs||'').trim())) ? '.45' : '1',
+      drawerSaveCursor: ((s.drawerMode === 'ideia') && !((s.ideiaTitulo||'').trim() || (s.ideiaObs||'').trim())) ? 'not-allowed' : 'pointer',
       drawerLabel: (s.drawerEditId
         ? ({ demanda:'Editar demanda', cliente:'Editar cliente', prospecto:'Editar prospecto', lancamento:'Editar lançamento', ideia:'Editar ideia' })
         : ({ demanda:'Nova demanda', cliente:'Novo cliente', prospecto:'Novo prospecto', lancamento:'Lançamento', ideia:'Nova ideia' }))[s.drawerMode||'demanda'] || 'Nova demanda',
