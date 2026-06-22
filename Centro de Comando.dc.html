@@ -1295,12 +1295,20 @@
               <h1 style="margin:0; font-size:18px; font-weight:600; letter-spacing:-.3px;">Mapa mental</h1>
               <div style="display:flex; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
                 <button onClick="{{ mapaToGraph }}" style="height:28px; padding:0 13px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ mapaGraphColor }}; background:{{ mapaGraphBg }};">Cérebro</button>
+                <button onClick="{{ mapaToBlueprint }}" style="height:28px; padding:0 13px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ mapaBlueprintColor }}; background:{{ mapaBlueprintBg }};">Blueprint</button>
                 <button onClick="{{ mapaToIdeias }}" style="height:28px; padding:0 13px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ mapaIdeiasColor }}; background:{{ mapaIdeiasBg }};">Ideias</button>
               </div>
               <sc-if value="{{ isMapaGraph }}" hint-placeholder-val="{{ true }}">
                 <span class="cc-hide-mob" style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
                 <button onClick="{{ wfForce }}" title="Espalha os nós em teia (force-directed)" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Espalhar</span></button>
                 <button onClick="{{ wfAutoArrange }}" title="Volta ao layout radial" style="flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Radial</span></button>
+              </sc-if>
+              <sc-if value="{{ isMapaBlueprint }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ bpConnecting }}" hint-placeholder-val="{{ false }}">
+                  <span class="cc-hide-mob" style="display:inline-flex; align-items:center; gap:7px; font-size:11.5px; color:var(--accent); background:var(--accent-weak); border:1px solid var(--accent); border-radius:7px; padding:3px 10px;"><span style="width:7px; height:7px; border-radius:50%; background:var(--accent);"></span>Ligando "{{ bpConnectName }}" — clique em outro card</span>
+                  <button onClick="{{ bpClearConnect }}" title="Cancelar conexão" style="flex:0 0 auto; height:28px; padding:0 11px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-3); border-radius:7px; font:inherit; font-size:11.5px; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
+                </sc-if>
+                <button onClick="{{ bpAddNode }}" title="Adicionar um card de ideia no canvas" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:7px; height:32px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Adicionar card</span></button>
               </sc-if>
               <sc-if value="{{ isMapaIdeias }}" hint-placeholder-val="{{ false }}">
                 <button onClick="{{ openDrawerIdeia }}" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:7px; height:32px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nova ideia</span></button>
@@ -1402,6 +1410,50 @@
                     </sc-for>
                   </div>
                 </sc-for>
+              </div>
+            </div>
+            </sc-if>
+
+            <!-- modo BLUEPRINT (canvas editável) -->
+            <sc-if value="{{ isMapaBlueprint }}" hint-placeholder-val="{{ false }}">
+            <div id="bp-canvas" onMouseDown="{{ bpCanvasDown }}" onTouchStart="{{ bpCanvasDown }}" onWheel="{{ bpWheel }}" style="flex:1; overflow:hidden; position:relative; background-color:var(--bg); background-image:radial-gradient(var(--border-2) 1px, transparent 1px); background-size:26px 26px; cursor:grab; user-select:none; touch-action:none;">
+              <sc-if value="{{ bpEmpty }}" hint-placeholder-val="{{ true }}">
+                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px; color:var(--text-3); text-align:center; padding:20px; pointer-events:none;">
+                  <div style="font-size:15px; font-weight:500; color:var(--text-2);">Quadro em branco</div>
+                  <div style="font-size:12.5px; max-width:360px; line-height:1.55;">Crie cards de ideias, arraste pra organizar e ligue um no outro com setas. Tudo salvo automaticamente.</div>
+                </div>
+              </sc-if>
+              <div style="position:absolute; top:0; left:0; transform-origin:0 0; transform:translate({{ bpPanX }}px, {{ bpPanY }}px) scale({{ bpZoom }});">
+                <div style="position:relative; width:1px; height:1px;">
+                  <sc-for list="{{ bpEdgesView }}" as="ed" hint-placeholder-count="0">
+                    <div style="position:absolute; left:{{ ed.mx }}px; top:{{ ed.my }}px; width:{{ ed.len }}px; height:0; border-top:2px solid var(--wire); transform:translate(-50%,-50%) rotate({{ ed.ang }}deg); z-index:1;"></div>
+                    <button onClick="{{ ed.onDel }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Remover conexão" style="position:absolute; left:{{ ed.mx }}px; top:{{ ed.my }}px; transform:translate(-50%,-50%); z-index:3; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:var(--surface); color:var(--text-3); border-radius:50%; cursor:pointer; font-size:12px; line-height:1; padding:0; opacity:.0;" style-hover="opacity:1; color:var(--crit); border-color:var(--crit)">×</button>
+                  </sc-for>
+                  <sc-for list="{{ bpNodesView }}" as="bn" hint-placeholder-count="0">
+                    <div data-bpnode="true" style="position:absolute; left:{{ bn.x }}px; top:{{ bn.y }}px; width:184px; background:var(--surface); border:1px solid var(--border-2); border-left:3px solid {{ bn.accent }}; border-radius:11px; box-shadow:{{ bn.ring }}; z-index:2; overflow:hidden;">
+                      <div onMouseDown="{{ bn.onDown }}" onTouchStart="{{ bn.onDown }}" style="display:flex; align-items:center; gap:6px; padding:6px 7px 5px 10px; cursor:grab; touch-action:none;">
+                        <span style="flex:1; font-size:10px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3); user-select:none;">⠿ card</span>
+                        <button onClick="{{ bn.onConnect }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="{{ bn.connTitle }}" style="flex:0 0 auto; width:23px; height:23px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:{{ bn.connBg }}; color:{{ bn.connColor }}; border-radius:6px; cursor:pointer;" style-hover="border-color:var(--accent); color:var(--accent)">{{ iconLinkSm }}</button>
+                        <button onClick="{{ bn.onDel }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Excluir card" style="flex:0 0 auto; width:23px; height:23px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:6px; cursor:pointer; font-size:14px; line-height:1;" style-hover="color:var(--crit); border-color:var(--crit)">×</button>
+                      </div>
+                      <textarea value="{{ bn.text }}" onInput="{{ bn.onText }}" onFocus="{{ bn.onFocus }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" placeholder="Escreva a ideia…" style="display:block; width:100%; box-sizing:border-box; border:none; background:transparent; color:var(--text); font:inherit; font-size:13px; line-height:1.42; padding:0 11px 9px; resize:none; outline:none; min-height:48px;"></textarea>
+                      <sc-if value="{{ bn.editing }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex; align-items:center; gap:6px; padding:0 11px 10px;">
+                          <sc-for list="{{ bn.palette }}" as="pc" hint-placeholder-count="6">
+                            <button onClick="{{ pc.onPick }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Cor do card" style="width:15px; height:15px; border-radius:50%; cursor:pointer; padding:0; background:{{ pc.dot }}; border:1.5px solid {{ pc.dot }};" style-hover="transform:scale(1.2)"></button>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" style="position:absolute; bottom:16px; right:16px; z-index:5; display:flex; flex-direction:column; gap:4px; background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:5px; box-shadow:var(--sh-2);">
+                <button onClick="{{ bpZoomIn }}" title="Aproximar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:18px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">+</button>
+                <div style="font-size:9.5px; text-align:center; color:var(--text-3); font-family:'Geist Mono',monospace;">{{ bpZoomPct }}</div>
+                <button onClick="{{ bpZoomOut }}" title="Afastar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:21px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">−</button>
+                <div style="height:1px; background:var(--border); margin:1px 3px;"></div>
+                <button onClick="{{ bpResetView }}" title="Centralizar a visão" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:15px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">⟲</button>
               </div>
             </div>
             </sc-if>
@@ -2071,7 +2123,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfFilter: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfFilter: null, bpNodes: [], bpEdges: [], bpPan: { x: 0, y: 0 }, bpZoom: 1, bpConnectFrom: null, bpEditId: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -2286,6 +2338,84 @@ class Component extends DCLogic {
   _wfSaveNow() { try { const s = this.state; localStorage.setItem('cdc-wf', JSON.stringify({ pos: s.wfPos || {}, pan: s.wfPan || { x: 0, y: 0 }, zoom: s.wfZoom || 1 })); } catch (e) {} }
   _wfScheduleSave() { clearTimeout(this._wfSaveT); this._wfSaveT = setTimeout(() => this._wfSaveNow(), 250); }
   _loadWfView() { try { const raw = localStorage.getItem('cdc-wf'); if (raw) { const v = JSON.parse(raw); this.setState({ wfPos: v.pos || {}, wfPan: v.pan || { x: 0, y: 0 }, wfZoom: v.zoom || 1 }); } } catch (e) {} }
+
+  // ===================== BLUEPRINT (canvas editável de ideias) =====================
+  // Whiteboard livre: cards de texto que o usuário cria, arrasta e conecta manualmente
+  // com setas. Posições + arestas persistem no state (bpNodes/bpEdges → /api/state).
+  _bpNextId() { const ns = this.state.bpNodes || []; const mx = ns.reduce((m, n) => Math.max(m, parseInt(String(n.id).replace(/\D/g, '')) || 0), 0); return 'bp' + (mx + 1); }
+  _bpAddNode() {
+    const pan = this.state.bpPan || { x: 0, y: 0 }, z = this.state.bpZoom || 1;
+    const el = document.getElementById('bp-canvas');
+    const cw = el ? el.clientWidth : 800, ch = el ? el.clientHeight : 600;
+    // centro da viewport convertido p/ coordenadas internas do canvas, com leve jitter p/ não empilhar
+    const ns = this.state.bpNodes || [];
+    const off = (ns.length % 6) * 18;
+    const x = Math.round((cw / 2 - pan.x) / z - 90 + off), y = Math.round((ch / 2 - pan.y) / z - 34 + off);
+    const id = this._bpNextId();
+    this.setState({ bpNodes: [...ns, { id, x, y, text: '', color: '' }], bpEditId: id, bpConnectFrom: null });
+    setTimeout(() => { try { const t = document.querySelector('[data-bpinput="' + id + '"]'); if (t) t.focus(); } catch (e) {} }, 30);
+  }
+  _bpSetText(id, text) { this.setState({ bpNodes: (this.state.bpNodes || []).map(n => n.id === id ? { ...n, text } : n) }); }
+  _bpSetColor(id, color) { this.setState({ bpNodes: (this.state.bpNodes || []).map(n => n.id === id ? { ...n, color } : n) }); }
+  _bpDelNode(id) { this.setState({ bpNodes: (this.state.bpNodes || []).filter(n => n.id !== id), bpEdges: (this.state.bpEdges || []).filter(e => e.from !== id && e.to !== id), bpConnectFrom: this.state.bpConnectFrom === id ? null : this.state.bpConnectFrom, bpEditId: this.state.bpEditId === id ? null : this.state.bpEditId }); }
+  _bpDelEdge(from, to) { this.setState({ bpEdges: (this.state.bpEdges || []).filter(e => !(e.from === from && e.to === to)) }); }
+  _bpConnect(id) {
+    const from = this.state.bpConnectFrom;
+    if (!from) { this.setState({ bpConnectFrom: id }); return; }
+    if (from === id) { this.setState({ bpConnectFrom: null }); return; }
+    const edges = this.state.bpEdges || [];
+    const exists = edges.some(e => (e.from === from && e.to === id) || (e.from === id && e.to === from));
+    this.setState({ bpEdges: exists ? edges : [...edges, { from, to: id }], bpConnectFrom: null });
+  }
+  _bpNodeDown(e, id) {
+    // arrasta um nó (mouse + toque)
+    const isTouch = !!(e.touches && e.touches.length);
+    if (!isTouch && e.button) return;
+    const p0 = isTouch ? e.touches[0] : e;
+    const z = this.state.bpZoom || 1;
+    const node = (this.state.bpNodes || []).find(n => n.id === id); if (!node) return;
+    const start = { mx: p0.clientX, my: p0.clientY, nx: node.x, ny: node.y };
+    const move = (ev) => {
+      const t = isTouch ? (ev.touches && ev.touches[0]) : ev; if (!t) return;
+      if (isTouch && ev.cancelable) ev.preventDefault();
+      const dx = (t.clientX - start.mx) / z, dy = (t.clientY - start.my) / z;
+      this.setState({ bpNodes: (this.state.bpNodes || []).map(n => n.id === id ? { ...n, x: Math.round(start.nx + dx), y: Math.round(start.ny + dy) } : n) });
+    };
+    const end = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
+    };
+    if (isTouch) { document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end); }
+    else { document.addEventListener('mousemove', move); document.addEventListener('mouseup', end); }
+    if (e.stopPropagation) e.stopPropagation();
+  }
+  _bpCanvasDown(e) {
+    // pan do fundo — ignora se o gesto começou num nó
+    if (e.target && e.target.closest && e.target.closest('[data-bpnode]')) return;
+    const isTouch = !!(e.touches && e.touches.length);
+    if (!isTouch && e.button) return;
+    const p0 = isTouch ? e.touches[0] : e;
+    const pan = this.state.bpPan || { x: 0, y: 0 };
+    const start = { mx: p0.clientX, my: p0.clientY, px: pan.x, py: pan.y };
+    let moved = false;
+    const move = (ev) => {
+      const t = isTouch ? (ev.touches && ev.touches[0]) : ev; if (!t) return;
+      if (isTouch && ev.cancelable) ev.preventDefault();
+      moved = true;
+      this.setState({ bpPan: { x: start.px + (t.clientX - start.mx), y: start.py + (t.clientY - start.my) } });
+    };
+    const end = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
+      // clicar no vazio (sem arrastar) cancela o modo conectar
+      if (!moved && this.state.bpConnectFrom) this.setState({ bpConnectFrom: null });
+    };
+    if (isTouch) { document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end); }
+    else { document.addEventListener('mousemove', move); document.addEventListener('mouseup', end); }
+  }
+  _bpZoom(f) { const z = Math.max(0.4, Math.min(2.2, (this.state.bpZoom || 1) * f)); this.setState({ bpZoom: Math.round(z * 100) / 100 }); }
+  _bpWheel(e) { if (e.preventDefault) e.preventDefault(); this._bpZoom(e.deltaY < 0 ? 1.1 : 0.9); }
+  _bpResetView() { this.setState({ bpPan: { x: 0, y: 0 }, bpZoom: 1 }); }
 
   // ===================== ÁUDIO (sons de UI + player lo-fi) =====================
   // Estações via YouTube (lives 24/7 + 1 mix estável). O usuário também pode colar qualquer link.
@@ -2626,9 +2756,17 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.2.0';
+  _appVersion = '0.3.0';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.3.0', date: 'Junho 2026', items: [
+      'Mapa mental: novo modo Blueprint — um quadro livre pra criar cards de ideias, arrastar, pintar e ligar um no outro com setas. Tudo salvo automaticamente.',
+      'Mapa mental: Workflow e Ideias viraram uma aba só (Cérebro / Blueprint / Ideias).',
+      'Cérebro (grafo): nós coloridos por categoria/status com legenda clicável pra filtrar, botão "Espalhar" (teia) e painel de conexões com "Virar projeto".',
+      'Arrastar demandas e cards também no app instalado (.exe) e no celular.',
+      'Música: dá pra minimizar a janela, e o X agora fecha e pausa a música.',
+      'App instalado (.exe): em janela menor o conteúdo se ajusta direitinho.',
+    ] },
     { v: '0.2.0', date: 'Junho 2026', items: [
       'Tela de Novidades e versão do app (esta aqui).',
       'Música: barra de tempo (arraste pro minuto, tipo YouTube), playlist de links do YouTube com o nome real da música, e próxima/anterior dentro da playlist.',
@@ -2706,7 +2844,7 @@ class Component extends DCLogic {
   }
 
   // ---- persistência via backend (Fase 3a — substitui o localStorage) ----
-  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'reminders', 'profile'];
+  _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'bpNodes', 'bpEdges', 'reminders', 'profile'];
   _hydrating = false;
   _saveTimer = null;
 
@@ -3587,6 +3725,40 @@ class Component extends DCLogic {
     const wfPanX = (s.wfPan || {}).x || 0, wfPanY = (s.wfPan || {}).y || 0, wfZoom = s.wfZoom || 1;
     const wfZoomPct = Math.round(wfZoom * 100) + '%';
 
+    // ---- BLUEPRINT (canvas editável) ----
+    const bpRawNodes = s.bpNodes || [], bpRawEdges = s.bpEdges || [], bpConnectFrom = s.bpConnectFrom || null;
+    const BP_W = 184, BP_AY = 26; // largura do card e offset do ponto de ancoragem (no header)
+    const bpById = {}; bpRawNodes.forEach(n => bpById[n.id] = n);
+    const bpPalette = ['', '#5285f0', '#2fb344', '#e0a93f', '#e0566f', '#8a7de0'];
+    const bpNodesView = bpRawNodes.map(n => {
+      const isFrom = bpConnectFrom === n.id, connecting = !!bpConnectFrom;
+      const accent = n.color || 'var(--accent)';
+      return {
+        id: n.id, x: n.x, y: n.y, text: n.text || '',
+        accent,
+        ring: isFrom ? '0 0 0 2px var(--accent), 0 10px 26px rgba(0,0,0,.4)' : (connecting ? '0 0 0 1.5px var(--accent-weak), 0 8px 20px rgba(0,0,0,.32)' : '0 8px 20px rgba(0,0,0,.32)'),
+        connBg: isFrom ? 'var(--accent)' : 'transparent',
+        connColor: isFrom ? '#fff' : 'var(--text-3)',
+        connTitle: isFrom ? 'Conectando — clique em outro card (ou aqui p/ cancelar)' : (connecting ? 'Ligar a este card' : 'Ligar a outro card'),
+        editing: s.bpEditId === n.id,
+        palette: bpPalette.map(c => ({ dot: c || 'var(--text-3)', sel: (n.color || '') === c, isNone: c === '', onPick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._bpSetColor(n.id, c); } })),
+        onDown: (e) => this._bpNodeDown(e, n.id),
+        onText: (e) => this._bpSetText(n.id, e.target.value),
+        onFocus: () => this.setState({ bpEditId: n.id }),
+        onConnect: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._bpConnect(n.id); },
+        onDel: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._bpDelNode(n.id); },
+      };
+    });
+    const bpEdgesView = bpRawEdges.map(e => {
+      const a = bpById[e.from], b = bpById[e.to]; if (!a || !b) return null;
+      const ax = a.x + BP_W / 2, ay = a.y + BP_AY, bx = b.x + BP_W / 2, by = b.y + BP_AY;
+      const dx = bx - ax, dy = by - ay, len = Math.sqrt(dx * dx + dy * dy) || 1;
+      return { mx: (ax + bx) / 2, my: (ay + by) / 2, len, ang: Math.atan2(dy, dx) * 180 / Math.PI, onDel: (ev) => { if (ev && ev.stopPropagation) ev.stopPropagation(); this._bpDelEdge(e.from, e.to); } };
+    }).filter(Boolean);
+    const bpPanX = (s.bpPan || {}).x || 0, bpPanY = (s.bpPan || {}).y || 0, bpZoom = s.bpZoom || 1;
+    const bpFromNode = bpConnectFrom ? bpById[bpConnectFrom] : null;
+    const bpConnectName = bpFromNode ? ((bpFromNode.text || '').trim().slice(0, 28) || 'card sem título') : '';
+
     // ---- ASSISTENTE ----
     // Aplica de fato uma ação que o Gemini propôs (após confirmação do usuário no chat).
     // Lê this.state na hora, não as consts já desestruturadas acima — entre o usuário pedir
@@ -4240,13 +4412,29 @@ class Component extends DCLogic {
       isMapa: s.screen === 'mapa',
       mapaMode: s.mapaMode || 'graph',
       isMapaGraph: s.screen === 'mapa' && (s.mapaMode || 'graph') === 'graph',
+      isMapaBlueprint: s.screen === 'mapa' && (s.mapaMode || 'graph') === 'blueprint',
       isMapaIdeias: s.screen === 'mapa' && (s.mapaMode || 'graph') === 'ideias',
       mapaToGraph: () => { this.setState({ mapaMode: 'graph' }); setTimeout(() => this._wfFit(), 60); },
+      mapaToBlueprint: () => this.setState({ mapaMode: 'blueprint' }),
       mapaToIdeias: () => this.setState({ mapaMode: 'ideias' }),
       mapaGraphBg: (s.mapaMode || 'graph') === 'graph' ? 'var(--accent)' : 'transparent',
       mapaGraphColor: (s.mapaMode || 'graph') === 'graph' ? '#fff' : 'var(--text-2)',
+      mapaBlueprintBg: (s.mapaMode || 'graph') === 'blueprint' ? 'var(--accent)' : 'transparent',
+      mapaBlueprintColor: (s.mapaMode || 'graph') === 'blueprint' ? '#fff' : 'var(--text-2)',
       mapaIdeiasBg: (s.mapaMode || 'graph') === 'ideias' ? 'var(--accent)' : 'transparent',
       mapaIdeiasColor: (s.mapaMode || 'graph') === 'ideias' ? '#fff' : 'var(--text-2)',
+      bpNodesView, bpEdgesView, bpPanX, bpPanY, bpZoom,
+      bpZoomPct: Math.round(bpZoom * 100) + '%',
+      bpEmpty: bpRawNodes.length === 0,
+      bpConnecting: !!bpConnectFrom,
+      bpConnectName,
+      bpAddNode: () => this._bpAddNode(),
+      bpZoomIn: () => this._bpZoom(1.15),
+      bpZoomOut: () => this._bpZoom(0.87),
+      bpResetView: () => this._bpResetView(),
+      bpCanvasDown: (e) => this._bpCanvasDown(e),
+      bpWheel: (e) => this._bpWheel(e),
+      bpClearConnect: () => this.setState({ bpConnectFrom: null }),
       ideias, ideiasView,
       wfNodes, wfLinks, wfEmpty, wfCountLabel, wfPanX, wfPanY, wfZoom, wfZoomPct,
       wfLegendGroups: (() => {
@@ -4428,6 +4616,7 @@ class Component extends DCLogic {
       iconClose: this.icon('close', 15, 1.8),
       iconPlus: this.icon('plus', 15, 1.9),
       iconPlusSm: this.icon('plus', 14, 1.9),
+      iconLinkSm: this.icon('workflow', 13, 1.9),
       iconChevR: this.icon('chevR', 14, 1.8),
       iconChevDown: this.icon('chevDown', 15, 1.7),
       iconFilter: this.icon('filter', 14, 1.7),
