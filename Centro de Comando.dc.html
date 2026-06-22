@@ -2219,7 +2219,25 @@ class Component extends DCLogic {
     catch (e) { return null; }
   }
   // arrasto de redimensionamento nas bordas (janela frameless do .exe)
-  _winResize(dir) { const w = this._tauriWin(); if (w && w.startResizeDragging) { try { w.startResizeDragging(dir); } catch (e) {} } }
+  _winResize(dir) {
+    const w = this._tauriWin();
+    if (w && w.startResizeDragging) { try { w.startResizeDragging(dir); } catch (e) {} }
+    // Durante o arrasto de borda (loop modal SC_SIZE do Windows) o WebView2 não re-propaga
+    // o viewport sozinho — bombeia relayout a cada frame até soltar o mouse / perder o foco.
+    if (this._scheduleSize) {
+      this._sizePumping = true;
+      const pump = () => { if (this._sizePumping) { this._scheduleSize(); requestAnimationFrame(pump); } };
+      requestAnimationFrame(pump);
+      const stop = () => {
+        this._sizePumping = false;
+        this._scheduleSize();
+        window.removeEventListener('mouseup', stop, true);
+        window.removeEventListener('blur', stop, true);
+      };
+      window.addEventListener('mouseup', stop, true);
+      window.addEventListener('blur', stop, true);
+    }
+  }
 
   // ---- Workflow: canvas interativo (arrastar nós, pan, zoom; posição salva local) ----
   // ponto do evento — funciona pra mouse E pra toque (celular)
@@ -2795,9 +2813,12 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.4.0';
+  _appVersion = '0.4.1';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.1', date: 'Junho 2026', items: [
+      'App instalado (.exe): ao encolher a janela, o conteúdo agora se ajusta ao novo tamanho (antes ficava travado no tamanho original).',
+    ] },
     { v: '0.4.0', date: 'Junho 2026', items: [
       'Sincronização entre celular e computador: o que você cria num aparelho aparece no outro automaticamente ao voltar pro app (antes o app instalado mostrava dados velhos).',
       'Demandas ordenadas por prioridade: alta primeiro, depois média e baixa.',
@@ -2912,6 +2933,35 @@ class Component extends DCLogic {
     if (this._mq.addEventListener) this._mq.addEventListener('change', this._onMq); else this._mq.addListener(this._onMq);
     this.setState({ isMobile: this._mq.matches });
 
+    // --- Reflow no .exe/WebView2 (janela frameless): o "surface" do WebView2 fica STALE
+    // ao redimensionar a janela via start_resize_dragging, então position:fixed/inset:0 e
+    // 100vw/vh resolvem contra o tamanho ANTIGO e o conteúdo não encolhe ("mantém o tamanho
+    // original"). Fix sem rebuild: medir o tamanho REAL (visualViewport/clientWidth) e travar
+    // width/height EXPLÍCITOS no root, reagindo a ResizeObserver(<html>) + resize/visualViewport
+    // + onResized do Tauri. No navegador é inócuo (lá o viewport nunca fica stale). Refs:
+    // tauri#6322/#6927/#9053, WebView2Feedback#2776.
+    this._applyRealSize = () => {
+      const root = this._root || document.querySelector('[data-theme-root]');
+      if (!root) return;
+      const de = document.documentElement;
+      const w = Math.round((window.visualViewport && window.visualViewport.width) || de.clientWidth || window.innerWidth);
+      const h = Math.round((window.visualViewport && window.visualViewport.height) || de.clientHeight || window.innerHeight);
+      if (!w || !h) return;
+      root.style.width = w + 'px';
+      root.style.height = h + 'px';
+      de.style.setProperty('--vw', w + 'px');
+      de.style.setProperty('--vh', h + 'px');
+    };
+    this._scheduleSize = () => {
+      if (this._sizeRaf) cancelAnimationFrame(this._sizeRaf);
+      this._sizeRaf = requestAnimationFrame(() => { this._sizeRaf = 0; this._applyRealSize(); });
+    };
+    try { this._sizeRO = new ResizeObserver(this._scheduleSize); this._sizeRO.observe(document.documentElement); } catch (e) {}
+    window.addEventListener('resize', this._scheduleSize, { passive: true });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', this._scheduleSize, { passive: true });
+    try { if (window.__TAURI__) window.__TAURI__.window.getCurrentWindow().onResized(this._scheduleSize); } catch (e) {}
+    this._applyRealSize();
+
     // áudio: prefs salvas + som de clique em botões (delegado, respeita soundOn)
     this._loadAudioPrefs();
     this._applyTone(); // aplica a tonalidade salva do fundo (lê o data-theme já setado pelo anti-flash)
@@ -2966,6 +3016,9 @@ class Component extends DCLogic {
     document.removeEventListener('touchend', this._onTouchEndEdge);
     window.removeEventListener('focus', this._onWindowFocus);
     document.removeEventListener('visibilitychange', this._onVisibility);
+    if (this._sizeRO) { try { this._sizeRO.disconnect(); } catch (e) {} }
+    window.removeEventListener('resize', this._scheduleSize);
+    if (window.visualViewport) window.visualViewport.removeEventListener('resize', this._scheduleSize);
   }
 
   _loadState() {
