@@ -143,9 +143,6 @@
 
 <div ref="{{ rootRef }}" data-theme-root="true" style="--accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); font-family:'Geist',system-ui,sans-serif; color:var(--text); height:100vh; width:100vw; padding:0; background:var(--bg); display:flex;">
 
-  <!-- OVERLAY DE CLARIDADE (slider de aparência) — soft-light, não bloqueia cliques nem quebra position:fixed -->
-  <div style="position:fixed; inset:0; pointer-events:none; z-index:2147483646; background:{{ brightOverlayColor }}; opacity:{{ brightOverlayOpacity }}; mix-blend-mode:soft-light;"></div>
-
   <!-- RESIZE (janela frameless do .exe) — bordas invisíveis pra redimensionar -->
   <sc-if value="{{ showWinControls }}" hint-placeholder-val="{{ false }}">
     <div onMouseDown="{{ resizeN }}" style="position:fixed; top:0; left:9px; right:9px; height:5px; cursor:ns-resize; z-index:60;"></div>
@@ -260,16 +257,15 @@
                 <button onClick="{{ setThemeDark }}" style="flex:1; height:30px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ darkTabColor }}; background:{{ darkTabBg }};">Escuro</button>
                 <button onClick="{{ setThemeLight }}" style="flex:1; height:30px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ lightTabColor }}; background:{{ lightTabBg }};">Claro</button>
               </div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
-                <span style="font-size:11.5px; font-weight:500; color:var(--text-2);">Claridade</span>
-                <span style="font-size:11px; font-family:'Geist Mono',monospace; color:var(--text-2);">{{ brightLabel }}</span>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
+                <span style="font-size:11.5px; font-weight:500; color:var(--text-2);">Tom do fundo</span>
+                <span style="font-size:10px; color:var(--text-3);">{{ toneLeftLabel }} → {{ toneRightLabel }}</span>
               </div>
-              <div style="display:flex; align-items:center; gap:9px;">
-                <span style="font-size:14px; color:var(--text-3); width:10px; text-align:center;">−</span>
-                <input type="range" min="-100" max="100" value="{{ brightStr }}" onInput="{{ brightChange }}" style="flex:1; accent-color:var(--accent); cursor:pointer;" />
-                <span style="font-size:14px; color:var(--text-3); width:10px; text-align:center;">+</span>
+              <div style="display:flex; gap:8px;">
+                <sc-for list="{{ toneSwatches }}" as="sw" hint-placeholder-count="5">
+                  <button onClick="{{ sw.onClick }}" title="Escolher este tom" style="flex:1; height:34px; border-radius:8px; border:1px solid {{ sw.border }}; background:{{ sw.color }}; box-shadow:{{ sw.ring }}; cursor:pointer; transition:box-shadow .12s, border-color .12s;" style-active="transform:scale(.94)"></button>
+                </sc-for>
               </div>
-              <button onClick="{{ brightResetZero }}" style="margin-top:11px; width:100%; height:28px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:8px; font:inherit; font-size:11.5px; font-weight:500; cursor:pointer;" style-hover="color:var(--text)">Restaurar padrão</button>
             </div>
           </sc-if>
         </div>
@@ -1940,14 +1936,27 @@
               </div>
               <button onClick="{{ toggleMusicPicker }}" style="width:100%; margin-top:12px; height:32px; display:flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-2); border-radius:9px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="color:var(--text); border-color:var(--accent)">Escolher som · categorias</button>
               <sc-if value="{{ musicPickerOpen }}" hint-placeholder-val="{{ false }}">
-                <div style="margin-top:9px; display:flex; flex-direction:column; gap:2px; max-height:172px; overflow-y:auto;">
+                <sc-if value="{{ hasCustomStations }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:9.5px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin:11px 2px 5px;">Minhas estações</div>
+                  <div style="display:flex; flex-direction:column; gap:2px; max-height:118px; overflow-y:auto;">
+                    <sc-for list="{{ musicCustomList }}" as="cs" hint-placeholder-count="0">
+                      <div style="display:flex; align-items:center; height:34px; padding:0 5px 0 11px; background:{{ cs.selBg }}; border-radius:8px;" style-hover="background:var(--surface-2)">
+                        <button onClick="{{ cs.onClick }}" style="flex:1; min-width:0; height:100%; border:none; background:transparent; color:{{ cs.selColor }}; font:inherit; font-size:12.5px; font-weight:500; cursor:pointer; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ cs.name }}</button>
+                        <button onClick="{{ cs.onRemove }}" title="Remover da playlist" style="flex:0 0 auto; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ cs.removeIcon }}</button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="font-size:9.5px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin:11px 2px 5px;">Categorias</div>
+                <div style="display:flex; flex-direction:column; gap:2px; max-height:150px; overflow-y:auto;">
                   <sc-for list="{{ musicCatList }}" as="cat" hint-placeholder-count="6">
                     <button onClick="{{ cat.onClick }}" style="display:flex; align-items:center; height:34px; padding:0 11px; border:none; background:{{ cat.selBg }}; color:{{ cat.selColor }}; border-radius:8px; font:inherit; font-size:12.5px; font-weight:500; cursor:pointer; text-align:left;" style-hover="background:var(--surface-2)">{{ cat.label }}</button>
                   </sc-for>
                 </div>
-                <div style="margin-top:9px; display:flex; gap:6px;">
-                  <input value="{{ musicCustomUrl }}" onInput="{{ musicCustomUrlChange }}" onKeyDown="{{ musicCustomKeyDown }}" placeholder="Colar link do YouTube" style="flex:1; min-width:0; height:32px; padding:0 10px; background:var(--surface); border:1px solid var(--border-2); border-radius:8px; color:var(--text); font:inherit; font-size:12px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
-                  <button onClick="{{ playCustomUrl }}" title="Tocar este link" style="flex:0 0 auto; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:var(--accent); color:#fff; border-radius:8px; cursor:pointer;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}</button>
+                <div style="font-size:9.5px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin:11px 2px 5px;">Adicionar link do YouTube</div>
+                <div style="display:flex; gap:6px;">
+                  <input value="{{ musicCustomUrl }}" onInput="{{ musicCustomUrlChange }}" onKeyDown="{{ musicCustomKeyDown }}" placeholder="Colar link e salvar na playlist" style="flex:1; min-width:0; height:32px; padding:0 10px; background:var(--surface); border:1px solid var(--border-2); border-radius:8px; color:var(--text); font:inherit; font-size:12px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                  <button onClick="{{ playCustomUrl }}" title="Salvar na playlist e tocar" style="flex:0 0 auto; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:var(--accent); color:#fff; border-radius:8px; cursor:pointer;" style-hover="background:var(--accent-2)">{{ iconPlusSm }}</button>
                 </div>
                 <sc-if value="{{ hasMusicErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px; color:var(--crit); margin-top:6px;">{{ musicErr }}</div></sc-if>
               </sc-if>
@@ -1986,7 +1995,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, bright: (() => { try { return parseInt(localStorage.getItem('cdc-bright') || '0', 10) || 0; } catch (e) { return 0; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -2240,7 +2249,7 @@ class Component extends DCLogic {
               const cbs = this._ytReadyCbs || []; this._ytReadyCbs = [];
               cbs.forEach((f) => { try { f(); } catch (e) {} });
             },
-            onStateChange: (e) => this.setState({ musicPlaying: e.data === 1 }),
+            onStateChange: (e) => { this.setState({ musicPlaying: e.data === 1 }); this._ytSyncTitle(); setTimeout(() => this._ytSyncTitle(), 700); },
             onError: () => this.setState({ musicPlaying: false, musicErr: 'Essa estação não tocou — tente outra ou cole um link.' }),
           },
         });
@@ -2271,11 +2280,36 @@ class Component extends DCLogic {
       } catch (e) {}
     });
   }
+  // adiciona um link à playlist de estações personalizadas e toca (o nome resolve quando toca)
   _musicCustom(url) {
     const id = this._ytId(url);
     if (!id) { this.setState({ musicErr: 'Link do YouTube inválido.' }); return; }
-    this.setState({ musicCustom: id, musicCustomUrl: '', musicPickerOpen: false }); this._saveAudioPrefs();
+    const cs = this.state.customStations || [];
+    const ncs = cs.some(st => st.id === id) ? cs : [...cs, { id, name: '(carregando…)' }];
+    this.setState({ customStations: ncs, musicCustom: id, musicCustomUrl: '', musicErr: '', musicNowTitle: '' }); this._saveAudioPrefs();
     this._ytPlayId(id);
+  }
+  _musicPlayCustom(id) { this.setState({ musicCustom: id, musicNowTitle: '' }); this._saveAudioPrefs(); this._ytPlayId(id); }
+  _musicRemoveCustom(id) {
+    const cs = (this.state.customStations || []).filter(st => st.id !== id);
+    const ns = { customStations: cs };
+    if (this.state.musicCustom === id) ns.musicCustom = null;
+    this.setState(ns); this._saveAudioPrefs();
+  }
+  // lê o título real do vídeo tocando (via player do YouTube — sem CORS/serviço externo) e
+  // preenche o nome da estação personalizada salva ainda sem nome
+  _ytSyncTitle() {
+    try {
+      if (!this._yt || !this._yt.getVideoData) return;
+      const d = this._yt.getVideoData(); const title = d && d.title ? d.title : '';
+      if (!title) return;
+      const upd = { musicNowTitle: title };
+      const cs = this.state.customStations || []; let changed = false;
+      const ncs = cs.map(st => { if (st.id === d.video_id && (!st.name || st.name === d.video_id || st.name === '(carregando…)')) { changed = true; return { ...st, name: title }; } return st; });
+      if (changed) upd.customStations = ncs;
+      this.setState(upd);
+      if (changed) this._saveAudioPrefs();
+    } catch (e) {}
   }
   _musicSetVol(v) { const vol = Math.max(0, Math.min(100, parseInt(v, 10) || 0)); this.setState({ musicVol: vol }); try { if (this._yt && this._yt.setVolume) this._yt.setVolume(vol); } catch (e) {} this._saveAudioPrefs(); }
   _musicDefaultPos() { return { x: Math.max(12, (window.innerWidth || 1200) - 300), y: Math.max(12, Math.min((window.innerHeight || 800) - 360, (window.innerHeight || 800) * 0.35)) }; }
@@ -2312,8 +2346,8 @@ class Component extends DCLogic {
     window.addEventListener('mousemove', this._musicMoveB); window.addEventListener('mouseup', this._musicUpB);
     window.addEventListener('touchmove', this._musicMoveB, { passive: false }); window.addEventListener('touchend', this._musicUpB);
   }
-  _saveAudioPrefs() { clearTimeout(this._audioSaveT); this._audioSaveT = setTimeout(() => { try { localStorage.setItem('cdc-audio', JSON.stringify({ soundOn: this.state.soundOn, cat: this.state.musicCat, custom: this.state.musicCustom || null, vol: this.state.musicVol, pos: this.state.musicPos, sfxVol: this.state.sfxVol })); } catch (e) {} }, 150); }
-  _loadAudioPrefs() { try { const r = localStorage.getItem('cdc-audio'); if (r) { const v = JSON.parse(r); this.setState({ soundOn: v.soundOn !== false, musicCat: v.cat || 0, musicCustom: v.custom || null, musicVol: (v.vol == null ? 65 : v.vol), musicPos: v.pos || null, sfxVol: (v.sfxVol == null ? 70 : v.sfxVol) }); } } catch (e) {} }
+  _saveAudioPrefs() { clearTimeout(this._audioSaveT); this._audioSaveT = setTimeout(() => { try { localStorage.setItem('cdc-audio', JSON.stringify({ soundOn: this.state.soundOn, cat: this.state.musicCat, custom: this.state.musicCustom || null, customs: this.state.customStations || [], vol: this.state.musicVol, pos: this.state.musicPos, sfxVol: this.state.sfxVol })); } catch (e) {} }, 150); }
+  _loadAudioPrefs() { try { const r = localStorage.getItem('cdc-audio'); if (r) { const v = JSON.parse(r); const customs = Array.isArray(v.customs) ? v.customs : (v.custom ? [{ id: v.custom, name: v.custom }] : []); this.setState({ soundOn: v.soundOn !== false, musicCat: v.cat || 0, musicCustom: v.custom || null, customStations: customs, musicVol: (v.vol == null ? 65 : v.vol), musicPos: v.pos || null, sfxVol: (v.sfxVol == null ? 70 : v.sfxVol) }); } } catch (e) {} }
   // aplica um tema (com o morph suave de cores) — usado pelo toggle e pelos botões do popover de aparência
   _applyTheme(mode) {
     try { localStorage.setItem('cdc-theme', mode); } catch (e) {}
@@ -2325,6 +2359,48 @@ class Component extends DCLogic {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', mode === 'light' ? '#ebe6dd' : '#141519');
     this.setState({ mode });
+    this._applyTone(); // reaplica o tom do novo tema (lê o data-theme já setado acima)
+  }
+  // ---- tonalizador: ajusta a TONALIDADE do fundo por tema (claro: branco↔creme, escuro: preto↔cinza) ----
+  _lerpHex(a, b, t) {
+    const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+    const r = Math.round(((pa >> 16) & 255) + (((pb >> 16) & 255) - ((pa >> 16) & 255)) * t);
+    const g = Math.round(((pa >> 8) & 255) + (((pb >> 8) & 255) - ((pa >> 8) & 255)) * t);
+    const bl = Math.round((pa & 255) + ((pb & 255) - (pa & 255)) * t);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1);
+  }
+  _toneEndpoints(theme) {
+    if (theme === 'light') return {
+      a: { appbg: '#eef0f3', bg: '#f4f6f8', content: '#ffffff', sidebar: '#eef0f3', titlebar: '#e9ebee', surface: '#ffffff', s2: '#f3f5f8', s3: '#e9edf1' },
+      b: { appbg: '#e6ddcd', bg: '#efe7d9', content: '#fdf8ee', sidebar: '#ebe3d4', titlebar: '#e7dfd0', surface: '#fdf8ed', s2: '#f1e9da', s3: '#e7decd' },
+    };
+    return {
+      a: { appbg: '#060708', bg: '#0d0e10', content: '#111316', sidebar: '#0a0b0c', titlebar: '#0c0d0f', surface: '#16181b', s2: '#1b1e22', s3: '#22262c' },
+      b: { appbg: '#17191e', bg: '#202329', content: '#262a30', sidebar: '#1a1c21', titlebar: '#1c1f24', surface: '#2a2e35', s2: '#31363e', s3: '#3a4049' },
+    };
+  }
+  _toneTokens(theme, tone) {
+    const e = this._toneEndpoints(theme), t = Math.max(0, Math.min(1, tone / 100)), m = {};
+    for (const k in e.a) m[k] = this._lerpHex(e.a[k], e.b[k], t);
+    return m;
+  }
+  _curTheme() { return (this.state.mode || document.documentElement.getAttribute('data-theme') || 'dark') === 'light' ? 'light' : 'dark'; }
+  _applyTone(toneOverride) {
+    try {
+      const theme = this._curTheme();
+      const tone = toneOverride != null ? toneOverride : (theme === 'light' ? (this.state.toneLight == null ? 50 : this.state.toneLight) : (this.state.toneDark == null ? 50 : this.state.toneDark));
+      const m = this._toneTokens(theme, tone);
+      const el = document.documentElement, S = (k, v) => el.style.setProperty(k, v);
+      S('--app-bg', m.appbg); S('--bg', m.bg); S('--content', m.content); S('--sidebar', m.sidebar); S('--titlebar', m.titlebar);
+      S('--surface', m.surface); S('--surface-2', m.s2); S('--surface-3', m.s3);
+      S('--app-gradient', 'radial-gradient(1200px 700px at 20% -10%, ' + m.s2 + ' 0%, ' + m.bg + ' 60%, ' + m.appbg + ' 100%)');
+    } catch (e) {}
+  }
+  _setTone(v) {
+    const theme = this._curTheme(), key = theme === 'light' ? 'toneLight' : 'toneDark';
+    this.setState({ [key]: v });
+    try { const cur = JSON.parse(localStorage.getItem('cdc-tone') || '{}'); cur[theme] = v; localStorage.setItem('cdc-tone', JSON.stringify(cur)); } catch (e) {}
+    this._applyTone(v);
   }
 
   // redimensiona uma imagem (File) pra um quadrado pequeno -> data URL base64 (leve, cabe no estado)
@@ -2440,6 +2516,7 @@ class Component extends DCLogic {
 
     // áudio: prefs salvas + som de clique em botões (delegado, respeita soundOn)
     this._loadAudioPrefs();
+    this._applyTone(); // aplica a tonalidade salva do fundo (lê o data-theme já setado pelo anti-flash)
     this._onClickSfx = (e) => { const t = e.target; if (!t || !t.closest) return; if (t.closest('.cc-sw')) this._sfx('toggle'); else if (t.closest('button')) this._sfx('click'); };
     document.addEventListener('click', this._onClickSfx, true);
 
@@ -3495,6 +3572,8 @@ class Component extends DCLogic {
     const _notifSeen = s.notifSeen || {};
     const hasUnseenAvisos = avisos.some(a => !_notifSeen[a.key]);
     const cropGeom = this._cropGeom(); // geometria do recorte de foto (pan/zoom) pros bindings do modal
+    const _curCustomSt = s.musicCustom ? (s.customStations || []).find(st => st.id === s.musicCustom) : null;
+    const _curCustomName = (_curCustomSt && _curCustomSt.name && _curCustomSt.name !== '(carregando…)') ? _curCustomSt.name : '';
     const avisosCountLabel = avisos.length ? (avisos.length + (avisos.length === 1 ? ' aviso' : ' avisos')) : 'tudo em dia';
     const remindersList = [...reminders].filter(r => !r.done).sort((a, b) => new Date(a.when || 0) - new Date(b.when || 0)).map(r => {
       const t = r.when ? new Date(r.when).getTime() : 0;
@@ -3993,12 +4072,13 @@ class Component extends DCLogic {
       lightTabColor: (s.mode || 'dark') === 'light' ? '#fff' : 'var(--text-2)',
       setThemeDark: () => this._applyTheme('dark'),
       setThemeLight: () => this._applyTheme('light'),
-      brightStr: String(s.bright == null ? 0 : s.bright),
-      brightLabel: ((s.bright || 0) > 0 ? '+' : '') + (s.bright || 0),
-      brightChange: (e) => { const v = Math.max(-100, Math.min(100, parseInt(e.target.value, 10) || 0)); this.setState({ bright: v }); try { localStorage.setItem('cdc-bright', String(v)); } catch (er) {} },
-      brightResetZero: () => { this.setState({ bright: 0 }); try { localStorage.setItem('cdc-bright', '0'); } catch (er) {} },
-      brightOverlayColor: (s.bright || 0) >= 0 ? '#ffffff' : '#000000',
-      brightOverlayOpacity: String(Math.min(0.5, Math.abs(s.bright || 0) / 100 * 0.5)),
+      toneLeftLabel: (s.mode || 'dark') === 'light' ? 'Branco' : 'Preto',
+      toneRightLabel: (s.mode || 'dark') === 'light' ? 'Creme' : 'Cinza',
+      toneSwatches: (() => {
+        const theme = (s.mode || 'dark') === 'light' ? 'light' : 'dark';
+        const cur = theme === 'light' ? (s.toneLight == null ? 50 : s.toneLight) : (s.toneDark == null ? 50 : s.toneDark);
+        return [0, 25, 50, 75, 100].map(v => { const m = this._toneTokens(theme, v); const sel = Math.abs(cur - v) < 13; return { color: m.surface, border: sel ? 'var(--accent)' : m.s3, ring: sel ? '0 0 0 2px var(--accent)' : 'none', onClick: () => this._setTone(v) }; });
+      })(),
       // ---- player lo-fi ----
       iconMusic: this.icon('headphones', 15, 1.7),
       musicBtnColor: s.musicOpen ? 'var(--accent)' : 'var(--text-2)',
@@ -4006,7 +4086,7 @@ class Component extends DCLogic {
       musicMin: !!s.musicMin,
       musicPlaying: !!s.musicPlaying,
       toggleMusic: () => { if (s.isMobile) return; const open = !s.musicOpen; const ns = { musicOpen: open }; if (open) { ns.musicMin = false; ns.musicPos = this._musicClampPos(s.musicPos); this._ytEnsure(() => {}); } this.setState(ns); },
-      toggleMusicMin: () => this.setState({ musicMin: !s.musicMin }),
+      toggleMusicMin: () => { const min = !s.musicMin; const ns = { musicMin: min }; if (!min) ns.musicPos = this._musicClampPos(s.musicPos); this.setState(ns); },
       closeMusic: () => this.setState({ musicOpen: false }),
       musicPlayPause: () => this._musicTogglePlay(),
       musicPlayIcon: this.icon(s.musicPlaying ? 'pause' : 'play', 18, 2),
@@ -4017,11 +4097,14 @@ class Component extends DCLogic {
       musicPrev: () => this._musicPlayCat((s.musicCat || 0) - 1),
       musicVol: String(s.musicVol == null ? 65 : s.musicVol),
       musicVolChange: (e) => this._musicSetVol(e.target.value),
-      musicStationName: s.musicCustom ? 'Link personalizado' : (this._lofiCats[s.musicCat || 0].emoji + ' ' + this._lofiCats[s.musicCat || 0].name),
-      musicStationDesc: s.musicCustom ? 'YouTube' : 'YouTube · som ambiente',
+      musicStationName: s.musicCustom ? (_curCustomName || (s.musicNowTitle || 'Carregando…')) : (this._lofiCats[s.musicCat || 0].emoji + ' ' + this._lofiCats[s.musicCat || 0].name),
+      musicStationDesc: s.musicCustom ? 'YouTube · sua estação' : 'YouTube · som ambiente',
       musicPickerOpen: !!s.musicPickerOpen,
       toggleMusicPicker: () => this.setState({ musicPickerOpen: !s.musicPickerOpen, musicErr: '' }),
       musicCatList: this._lofiCats.map((c, i) => { const sel = !s.musicCustom && (s.musicCat || 0) === i; return { label: c.emoji + '  ' + c.name, selBg: sel ? 'var(--accent-weak)' : 'transparent', selColor: sel ? 'var(--accent)' : 'var(--text-2)', onClick: () => { this._musicPlayCat(i); } }; }),
+      hasCustomStations: (s.customStations || []).length > 0,
+      noCustomStations: (s.customStations || []).length === 0,
+      musicCustomList: (s.customStations || []).map(st => { const sel = s.musicCustom === st.id; const nm = (st.name && st.name !== '(carregando…)') ? st.name : (sel && s.musicNowTitle ? s.musicNowTitle : st.name); return { id: st.id, name: nm || st.id, selBg: sel ? 'var(--accent-weak)' : 'transparent', selColor: sel ? 'var(--accent)' : 'var(--text-2)', onClick: () => this._musicPlayCustom(st.id), onRemove: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._musicRemoveCustom(st.id); }, removeIcon: this.icon('close', 11, 2) }; }),
       musicCustomUrl: s.musicCustomUrl || '',
       musicCustomUrlChange: (e) => this.setState({ musicCustomUrl: e.target.value }),
       musicCustomKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); this._musicCustom(s.musicCustomUrl); } },
