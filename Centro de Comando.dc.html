@@ -1430,20 +1430,21 @@
                     <button onClick="{{ ed.onDel }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Remover conexão" style="position:absolute; left:{{ ed.mx }}px; top:{{ ed.my }}px; transform:translate(-50%,-50%); z-index:3; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:var(--surface); color:var(--text-3); border-radius:50%; cursor:pointer; font-size:12px; line-height:1; padding:0; opacity:.0;" style-hover="opacity:1; color:var(--crit); border-color:var(--crit)">×</button>
                   </sc-for>
                   <sc-for list="{{ bpNodesView }}" as="bn" hint-placeholder-count="0">
-                    <div data-bpnode="true" style="position:absolute; left:{{ bn.x }}px; top:{{ bn.y }}px; width:184px; background:var(--surface); border:1px solid var(--border-2); border-left:3px solid {{ bn.accent }}; border-radius:11px; box-shadow:{{ bn.ring }}; z-index:2; overflow:hidden;">
+                    <div data-bpnode="true" style="position:absolute; left:{{ bn.x }}px; top:{{ bn.y }}px; width:{{ bn.w }}px; height:{{ bn.h }}px; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--border-2); border-left:3px solid {{ bn.accent }}; border-radius:11px; box-shadow:{{ bn.ring }}; z-index:{{ bn.z }}; overflow:hidden;">
                       <div onMouseDown="{{ bn.onDown }}" onTouchStart="{{ bn.onDown }}" style="display:flex; align-items:center; gap:6px; padding:6px 7px 5px 10px; cursor:grab; touch-action:none;">
                         <span style="flex:1; font-size:10px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3); user-select:none;">⠿ card</span>
                         <button onClick="{{ bn.onConnect }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="{{ bn.connTitle }}" style="flex:0 0 auto; width:23px; height:23px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:{{ bn.connBg }}; color:{{ bn.connColor }}; border-radius:6px; cursor:pointer;" style-hover="border-color:var(--accent); color:var(--accent)">{{ iconLinkSm }}</button>
                         <button onClick="{{ bn.onDel }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Excluir card" style="flex:0 0 auto; width:23px; height:23px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text-3); border-radius:6px; cursor:pointer; font-size:14px; line-height:1;" style-hover="color:var(--crit); border-color:var(--crit)">×</button>
                       </div>
-                      <textarea value="{{ bn.text }}" onInput="{{ bn.onText }}" onFocus="{{ bn.onFocus }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" placeholder="Escreva a ideia…" style="display:block; width:100%; box-sizing:border-box; border:none; background:transparent; color:var(--text); font:inherit; font-size:13px; line-height:1.42; padding:0 11px 9px; resize:none; outline:none; min-height:48px;"></textarea>
+                      <textarea value="{{ bn.text }}" onInput="{{ bn.onText }}" onFocus="{{ bn.onFocus }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" placeholder="Escreva a ideia…" style="display:block; width:100%; box-sizing:border-box; border:none; background:transparent; color:var(--text); font:inherit; font-size:13px; line-height:1.42; padding:0 11px 9px; resize:none; outline:none; flex:1; min-height:0; overflow-y:auto;"></textarea>
                       <sc-if value="{{ bn.editing }}" hint-placeholder-val="{{ false }}">
-                        <div style="display:flex; align-items:center; gap:6px; padding:0 11px 10px;">
+                        <div style="flex:0 0 auto; display:flex; align-items:center; gap:4px; padding:0 20px 9px 11px;">
                           <sc-for list="{{ bn.palette }}" as="pc" hint-placeholder-count="6">
-                            <button onClick="{{ pc.onPick }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Cor do card" style="width:15px; height:15px; border-radius:50%; cursor:pointer; padding:0; background:{{ pc.dot }}; border:1.5px solid {{ pc.dot }};" style-hover="transform:scale(1.2)"></button>
+                            <button onClick="{{ pc.onPick }}" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" title="Cor do card" style="flex:0 0 auto; width:15px; height:15px; border-radius:50%; cursor:pointer; padding:0; background:{{ pc.dot }}; border:1.5px solid {{ pc.dot }};" style-hover="transform:scale(1.2)"></button>
                           </sc-for>
                         </div>
                       </sc-if>
+                      <div onMouseDown="{{ bn.onResize }}" onTouchStart="{{ bn.onResize }}" title="Arraste pra redimensionar o card" style="position:absolute; right:0; bottom:0; width:26px; height:26px; cursor:nwse-resize; z-index:6; touch-action:none; display:flex; align-items:flex-end; justify-content:flex-end; padding:4px; opacity:.5;" style-hover="opacity:1"><span style="display:block; width:9px; height:9px; border-right:2px solid var(--accent); border-bottom:2px solid var(--accent); border-bottom-right-radius:3px;"></span></div>
                     </div>
                   </sc-for>
                 </div>
@@ -2123,7 +2124,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfFilter: null, bpNodes: [], bpEdges: [], bpPan: { x: 0, y: 0 }, bpZoom: 1, bpConnectFrom: null, bpEditId: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfFilter: null, bpNodes: [], bpEdges: [], bpPan: { x: 0, y: 0 }, bpZoom: 1, bpConnectFrom: null, bpEditId: null, bpFront: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -2342,6 +2343,7 @@ class Component extends DCLogic {
   // ===================== BLUEPRINT (canvas editável de ideias) =====================
   // Whiteboard livre: cards de texto que o usuário cria, arrasta e conecta manualmente
   // com setas. Posições + arestas persistem no state (bpNodes/bpEdges → /api/state).
+  _bpDefW = 184; _bpDefH = 112; _bpMinW = 156; _bpMinH = 96; _bpMaxW = 720; _bpMaxH = 560;
   _bpNextId() { const ns = this.state.bpNodes || []; const mx = ns.reduce((m, n) => Math.max(m, parseInt(String(n.id).replace(/\D/g, '')) || 0), 0); return 'bp' + (mx + 1); }
   _bpAddNode() {
     const pan = this.state.bpPan || { x: 0, y: 0 }, z = this.state.bpZoom || 1;
@@ -2349,10 +2351,10 @@ class Component extends DCLogic {
     const cw = el ? el.clientWidth : 800, ch = el ? el.clientHeight : 600;
     // centro da viewport convertido p/ coordenadas internas do canvas, com leve jitter p/ não empilhar
     const ns = this.state.bpNodes || [];
-    const off = (ns.length % 6) * 18;
-    const x = Math.round((cw / 2 - pan.x) / z - 90 + off), y = Math.round((ch / 2 - pan.y) / z - 34 + off);
+    const off = (ns.length % 6) * 28;
+    const x = Math.round((cw / 2 - pan.x) / z - this._bpDefW / 2 + off), y = Math.round((ch / 2 - pan.y) / z - 34 + off);
     const id = this._bpNextId();
-    this.setState({ bpNodes: [...ns, { id, x, y, text: '', color: '' }], bpEditId: id, bpConnectFrom: null });
+    this.setState({ bpNodes: [...ns, { id, x, y, text: '', color: '', w: this._bpDefW, h: this._bpDefH }], bpEditId: id, bpFront: id, bpConnectFrom: null });
     setTimeout(() => { try { const t = document.querySelector('[data-bpinput="' + id + '"]'); if (t) t.focus(); } catch (e) {} }, 30);
   }
   _bpSetText(id, text) { this.setState({ bpNodes: (this.state.bpNodes || []).map(n => n.id === id ? { ...n, text } : n) }); }
@@ -2367,6 +2369,21 @@ class Component extends DCLogic {
     const exists = edges.some(e => (e.from === from && e.to === id) || (e.from === id && e.to === from));
     this.setState({ bpEdges: exists ? edges : [...edges, { from, to: id }], bpConnectFrom: null });
   }
+  // liga os listeners de drag (mouse + toque) de forma robusta: além de mouseup/touchend,
+  // cobre touchcancel e blur da janela — senão um drag interrompido (alt-tab) deixa o
+  // userSelect preso e os listeners de move vivos.
+  _bpBindDrag(isTouch, move, onEnd) {
+    const end = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
+      document.removeEventListener('touchcancel', end); window.removeEventListener('blur', end);
+      document.body.style.userSelect = '';
+      if (onEnd) onEnd();
+    };
+    if (isTouch) { document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end); document.addEventListener('touchcancel', end); }
+    else { document.body.style.userSelect = 'none'; document.addEventListener('mousemove', move); document.addEventListener('mouseup', end); }
+    window.addEventListener('blur', end);
+  }
   _bpNodeDown(e, id) {
     // arrasta um nó (mouse + toque)
     const isTouch = !!(e.touches && e.touches.length);
@@ -2374,6 +2391,7 @@ class Component extends DCLogic {
     const p0 = isTouch ? e.touches[0] : e;
     const z = this.state.bpZoom || 1;
     const node = (this.state.bpNodes || []).find(n => n.id === id); if (!node) return;
+    if (this.state.bpFront !== id) this.setState({ bpFront: id });   // traz o card pra frente
     const start = { mx: p0.clientX, my: p0.clientY, nx: node.x, ny: node.y };
     const move = (ev) => {
       const t = isTouch ? (ev.touches && ev.touches[0]) : ev; if (!t) return;
@@ -2381,12 +2399,26 @@ class Component extends DCLogic {
       const dx = (t.clientX - start.mx) / z, dy = (t.clientY - start.my) / z;
       this.setState({ bpNodes: (this.state.bpNodes || []).map(n => n.id === id ? { ...n, x: Math.round(start.nx + dx), y: Math.round(start.ny + dy) } : n) });
     };
-    const end = () => {
-      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
-      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
+    this._bpBindDrag(isTouch, move);
+    if (e.stopPropagation) e.stopPropagation();
+  }
+  _bpResize(e, id) {
+    // redimensiona o card pela alça do canto (mouse + toque), com mínimo E máximo
+    const isTouch = !!(e.touches && e.touches.length);
+    if (!isTouch && e.button) return;
+    const p0 = isTouch ? e.touches[0] : e;
+    const z = this.state.bpZoom || 1;
+    const node = (this.state.bpNodes || []).find(n => n.id === id); if (!node) return;
+    if (this.state.bpFront !== id) this.setState({ bpFront: id });
+    const start = { mx: p0.clientX, my: p0.clientY, w: node.w || this._bpDefW, h: node.h || this._bpDefH };
+    const move = (ev) => {
+      const t = isTouch ? (ev.touches && ev.touches[0]) : ev; if (!t) return;
+      if (isTouch && ev.cancelable) ev.preventDefault();
+      const w = Math.max(this._bpMinW, Math.min(this._bpMaxW, Math.round(start.w + (t.clientX - start.mx) / z)));
+      const h = Math.max(this._bpMinH, Math.min(this._bpMaxH, Math.round(start.h + (t.clientY - start.my) / z)));
+      this.setState({ bpNodes: (this.state.bpNodes || []).map(n => n.id === id ? { ...n, w, h } : n) });
     };
-    if (isTouch) { document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end); }
-    else { document.addEventListener('mousemove', move); document.addEventListener('mouseup', end); }
+    this._bpBindDrag(isTouch, move);
     if (e.stopPropagation) e.stopPropagation();
   }
   _bpCanvasDown(e) {
@@ -2404,14 +2436,8 @@ class Component extends DCLogic {
       moved = true;
       this.setState({ bpPan: { x: start.px + (t.clientX - start.mx), y: start.py + (t.clientY - start.my) } });
     };
-    const end = () => {
-      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
-      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
-      // clicar no vazio (sem arrastar) cancela o modo conectar
-      if (!moved && this.state.bpConnectFrom) this.setState({ bpConnectFrom: null });
-    };
-    if (isTouch) { document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end); }
-    else { document.addEventListener('mousemove', move); document.addEventListener('mouseup', end); }
+    // clicar no vazio (sem arrastar) cancela o modo conectar
+    this._bpBindDrag(isTouch, move, () => { if (!moved && this.state.bpConnectFrom) this.setState({ bpConnectFrom: null }); });
   }
   _bpZoom(f) { const z = Math.max(0.4, Math.min(2.2, (this.state.bpZoom || 1) * f)); this.setState({ bpZoom: Math.round(z * 100) / 100 }); }
   _bpWheel(e) { if (e.preventDefault) e.preventDefault(); this._bpZoom(e.deltaY < 0 ? 1.1 : 0.9); }
@@ -3727,7 +3753,6 @@ class Component extends DCLogic {
 
     // ---- BLUEPRINT (canvas editável) ----
     const bpRawNodes = s.bpNodes || [], bpRawEdges = s.bpEdges || [], bpConnectFrom = s.bpConnectFrom || null;
-    const BP_W = 184, BP_AY = 26; // largura do card e offset do ponto de ancoragem (no header)
     const bpById = {}; bpRawNodes.forEach(n => bpById[n.id] = n);
     const bpPalette = ['', '#5285f0', '#2fb344', '#e0a93f', '#e0566f', '#8a7de0'];
     const bpNodesView = bpRawNodes.map(n => {
@@ -3735,6 +3760,8 @@ class Component extends DCLogic {
       const accent = n.color || 'var(--accent)';
       return {
         id: n.id, x: n.x, y: n.y, text: n.text || '',
+        w: n.w || this._bpDefW, h: n.h || this._bpDefH,
+        z: (s.bpFront === n.id || s.bpEditId === n.id) ? 5 : 2,
         accent,
         ring: isFrom ? '0 0 0 2px var(--accent), 0 10px 26px rgba(0,0,0,.4)' : (connecting ? '0 0 0 1.5px var(--accent-weak), 0 8px 20px rgba(0,0,0,.32)' : '0 8px 20px rgba(0,0,0,.32)'),
         connBg: isFrom ? 'var(--accent)' : 'transparent',
@@ -3743,6 +3770,7 @@ class Component extends DCLogic {
         editing: s.bpEditId === n.id,
         palette: bpPalette.map(c => ({ dot: c || 'var(--text-3)', sel: (n.color || '') === c, isNone: c === '', onPick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._bpSetColor(n.id, c); } })),
         onDown: (e) => this._bpNodeDown(e, n.id),
+        onResize: (e) => this._bpResize(e, n.id),
         onText: (e) => this._bpSetText(n.id, e.target.value),
         onFocus: () => this.setState({ bpEditId: n.id }),
         onConnect: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._bpConnect(n.id); },
@@ -3751,9 +3779,18 @@ class Component extends DCLogic {
     });
     const bpEdgesView = bpRawEdges.map(e => {
       const a = bpById[e.from], b = bpById[e.to]; if (!a || !b) return null;
-      const ax = a.x + BP_W / 2, ay = a.y + BP_AY, bx = b.x + BP_W / 2, by = b.y + BP_AY;
-      const dx = bx - ax, dy = by - ay, len = Math.sqrt(dx * dx + dy * dy) || 1;
-      return { mx: (ax + bx) / 2, my: (ay + by) / 2, len, ang: Math.atan2(dy, dx) * 180 / Math.PI, onDel: (ev) => { if (ev && ev.stopPropagation) ev.stopPropagation(); this._bpDelEdge(e.from, e.to); } };
+      const aw = a.w || this._bpDefW, ah = a.h || this._bpDefH, bw = b.w || this._bpDefW, bh = b.h || this._bpDefH;
+      const acx = a.x + aw / 2, acy = a.y + ah / 2, bcx = b.x + bw / 2, bcy = b.y + bh / 2;
+      const dx = bcx - acx, dy = bcy - acy;
+      if (dx === 0 && dy === 0) return null;
+      const adx = Math.abs(dx) || 1e-6, ady = Math.abs(dy) || 1e-6;
+      const sa = Math.min((aw / 2) / adx, (ah / 2) / ady); // fração até a borda de A
+      const sb = Math.min((bw / 2) / adx, (bh / 2) / ady); // fração até a borda de B
+      if (sa + sb >= 1) return null;                       // cards sobrepostos: sem fio visível
+      const ax = acx + dx * sa, ay = acy + dy * sa;        // ponto na borda de A
+      const bx = bcx - dx * sb, by = bcy - dy * sb;        // ponto na borda de B
+      const ex = bx - ax, ey = by - ay, len = Math.sqrt(ex * ex + ey * ey) || 1;
+      return { mx: (ax + bx) / 2, my: (ay + by) / 2, len, ang: Math.atan2(ey, ex) * 180 / Math.PI, onDel: (ev) => { if (ev && ev.stopPropagation) ev.stopPropagation(); this._bpDelEdge(e.from, e.to); } };
     }).filter(Boolean);
     const bpPanX = (s.bpPan || {}).x || 0, bpPanY = (s.bpPan || {}).y || 0, bpZoom = s.bpZoom || 1;
     const bpFromNode = bpConnectFrom ? bpById[bpConnectFrom] : null;
