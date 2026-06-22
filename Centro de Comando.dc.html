@@ -1299,7 +1299,8 @@
               </div>
               <sc-if value="{{ isMapaGraph }}" hint-placeholder-val="{{ true }}">
                 <span class="cc-hide-mob" style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
-                <button onClick="{{ wfAutoArrange }}" title="Reposiciona os blocos automaticamente" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Organizar</span></button>
+                <button onClick="{{ wfForce }}" title="Espalha os nós em teia (force-directed)" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Espalhar</span></button>
+                <button onClick="{{ wfAutoArrange }}" title="Volta ao layout radial" style="flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Radial</span></button>
               </sc-if>
               <sc-if value="{{ isMapaIdeias }}" hint-placeholder-val="{{ false }}">
                 <button onClick="{{ openDrawerIdeia }}" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:7px; height:32px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nova ideia</span></button>
@@ -1367,6 +1368,16 @@
                 <button onClick="{{ wfZoomOut }}" title="Afastar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:21px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">−</button>
                 <div style="height:1px; background:var(--border); margin:1px 3px;"></div>
                 <button onClick="{{ wfReset }}" title="Resetar posições e zoom" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:15px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">⟲</button>
+              </div>
+              <div onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" class="cc-hide-mob" style="position:absolute; bottom:16px; left:16px; z-index:5; background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:10px 12px; box-shadow:var(--sh-2); display:flex; gap:16px;">
+                <sc-for list="{{ wfLegendGroups }}" as="lg" hint-placeholder-count="2">
+                  <div>
+                    <div style="font-size:9px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin-bottom:6px;">{{ lg.title }}</div>
+                    <sc-for list="{{ lg.items }}" as="li" hint-placeholder-count="4">
+                      <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;"><span style="width:8px; height:8px; border-radius:50%; background:{{ li.color }}; flex:0 0 auto;"></span><span style="font-size:10.5px; color:var(--text-2);">{{ li.label }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-for>
               </div>
             </div>
             </sc-if>
@@ -2199,6 +2210,42 @@ class Component extends DCLogic {
     const CW = 1120, CH = 800, pad = 20;
     const zoom = Math.max(0.25, Math.min(1, Math.min((cw - pad) / CW, (ch - pad) / CH)));
     this.setState({ wfZoom: zoom, wfPan: { x: (cw - CW * zoom) / 2, y: (ch - CH * zoom) / 2 } });
+  }
+  // layout em "teia" (force-directed): repulsão entre todos os nós + molas nas arestas; salva em wfPos
+  _wfForce() {
+    const sim = this._wfSim; if (!sim || sim.ids.length < 2) return;
+    const ids = sim.ids, n = ids.length, center = { x: 560, y: 380 };
+    const pos = {}; ids.forEach(id => { const b = sim.base[id]; pos[id] = { x: b.x, y: b.y }; });
+    for (let it = 0; it < 300; it++) {
+      const fx = {}, fy = {}; ids.forEach(id => { fx[id] = 0; fy[id] = 0; });
+      for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
+        const ia = ids[a], ib = ids[b];
+        let dx = pos[ia].x - pos[ib].x, dy = pos[ia].y - pos[ib].y;
+        let d2 = dx * dx + dy * dy; if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = 1; }
+        const d = Math.sqrt(d2), f = 11000 / d2;
+        fx[ia] += (dx / d) * f; fy[ia] += (dy / d) * f; fx[ib] -= (dx / d) * f; fy[ib] -= (dy / d) * f;
+      }
+      for (const e of sim.edges) {
+        const u = e[0], v = e[1];
+        let dx = pos[v].x - pos[u].x, dy = pos[v].y - pos[u].y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - 120) * 0.05;
+        fx[u] += (dx / d) * f; fy[u] += (dy / d) * f; fx[v] -= (dx / d) * f; fy[v] -= (dy / d) * f;
+      }
+      ids.forEach(id => {
+        if (id === 'root') { pos[id].x += (center.x - pos[id].x) * 0.25; pos[id].y += (center.y - pos[id].y) * 0.25; return; }
+        pos[id].x += Math.max(-28, Math.min(28, fx[id])) * 0.85 + (center.x - pos[id].x) * 0.006;
+        pos[id].y += Math.max(-28, Math.min(28, fy[id])) * 0.85 + (center.y - pos[id].y) * 0.006;
+      });
+    }
+    let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+    ids.forEach(id => { minX = Math.min(minX, pos[id].x); minY = Math.min(minY, pos[id].y); maxX = Math.max(maxX, pos[id].x); maxY = Math.max(maxY, pos[id].y); });
+    const w = maxX - minX || 1, h = maxY - minY || 1, pad = 90;
+    const sc = Math.min((1120 - pad * 2) / w, (800 - pad * 2) / h, 1.4);
+    const ox = (1120 - w * sc) / 2 - minX * sc, oy = (800 - h * sc) / 2 - minY * sc;
+    ids.forEach(id => { pos[id] = { x: pos[id].x * sc + ox, y: pos[id].y * sc + oy }; });
+    this.setState({ wfPos: pos });
+    this._wfScheduleSave();
+    setTimeout(() => this._wfFit(), 30);
   }
   _wfWheelImpl(e) {
     const s = this.state; const zoom = s.wfZoom || 1;
@@ -3431,12 +3478,12 @@ class Component extends DCLogic {
     }));
     const wfAvul = demands.filter(d => !clients.some(c => c.id === d.clientId));
     if (wfAvul.length) wfGroups.push({ key:'avul', label:'Avulsas', color:'var(--text-3)', items: wfAvul.map(d => ({ id:'d'+d.id, title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })), onClick:() => this.setState({ screen:'demandas' }) });
-    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map((it, ii) => ({ id:'i'+ii, title:it.title, color:'var(--warn)', onClick:() => this.setState({ screen:'mapa', mapaMode:'ideias' }) })), onClick:() => this.setState({ screen:'mapa', mapaMode:'ideias' }) });
+    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map((it, ii) => { const _icat = (it.tags && it.tags[0] && it.tags[0].label) || 'Pessoal'; const _ic = (catColors[_icat] || catColors.Pessoal)[0]; return { id:'i'+ii, title:it.title, color:_ic, onClick:() => this.setState({ screen:'mapa', mapaMode:'ideias' }) }; }), onClick:() => this.setState({ screen:'mapa', mapaMode:'ideias' }) });
 
     const wfCx = 560, wfCy = 380, wfR1 = 210;
     const wfPosOv = s.wfPos || {};
     const wfFinal = (id, bx, by) => { const o = wfPosOv[id]; return o ? { x:o.x, y:o.y } : { x:bx, y:by }; };
-    const wfNodes = []; const wfLinks = [];
+    const wfNodes = []; const wfLinks = []; const wfEdges = [];
     // linha = div fino rotacionado (o framework DC não interpola atributos x1/y1 de <line> SVG)
     const wfLink = (x1, y1, x2, y2, dash, op) => { const dx = x2 - x1, dy = y2 - y1; wfLinks.push({ mx:(x1 + x2) / 2, my:(y1 + y2) / 2, len:Math.sqrt(dx * dx + dy * dy), ang:Math.atan2(dy, dx) * 180 / Math.PI, lineStyle:dash ? 'dashed' : 'solid', op }); };
     // clique navega, mas é suprimido logo após um arraste
@@ -3456,8 +3503,8 @@ class Component extends DCLogic {
       const ang = (i / wfN) * Math.PI * 2 - Math.PI / 2;
       const gbx = wfCx + Math.cos(ang) * wfR1, gby = wfCy + Math.sin(ang) * wfR1;
       const gp = wfFinal('g:'+g.key, gbx, gby);
-      wfPush('g:'+g.key, gp.x, gp.y, { label:g.label, sub:g.items.length+(g.key==='ideias'?' ideias':' demandas'), hasSub:true, color:g.color, size:56, glow:'0 0 0 5px '+g.color+'22', labelSize:'12px', labelW:'600', maxW:'120px' }, g.onClick);
-      wfLink(rp.x, rp.y, gp.x, gp.y, false, '.55');
+      wfPush('g:'+g.key, gp.x, gp.y, { label:g.label, sub:g.items.length+(g.key==='ideias'?' ideias':' demandas'), hasSub:true, color:g.color, size:Math.round(46 + Math.min(g.items.length, 9) * 3.4), glow:'0 0 0 5px '+g.color+'22', labelSize:'12px', labelW:'600', maxW:'120px' }, g.onClick);
+      wfLink(rp.x, rp.y, gp.x, gp.y, false, '.55'); wfEdges.push(['root', 'g:'+g.key]);
       const m = g.items.length;
       const r2 = 92 + Math.min(m, 6) * 11;
       g.items.forEach((it, j) => {
@@ -3467,9 +3514,11 @@ class Component extends DCLogic {
         const lid = 'l:' + g.key + ':' + it.id;
         const ip = wfFinal(lid, ibx, iby);
         wfPush(lid, ip.x, ip.y, { label:it.title, sub:'', hasSub:false, color:it.color, size:15, glow:'0 0 0 3px '+(it.color)+'1c', labelSize:'10.5px', labelW:'500', maxW:'96px' }, it.onClick);
-        wfLink(gp.x, gp.y, ip.x, ip.y, true, '.4');
+        wfLink(gp.x, gp.y, ip.x, ip.y, true, '.4'); wfEdges.push(['g:'+g.key, lid]);
       });
     });
+    // estrutura do grafo (ids + arestas + posição-base) pro layout em "teia" (force-directed)
+    this._wfSim = { ids: wfNodes.map(n => n.id), edges: wfEdges, base: Object.fromEntries(wfNodes.map(n => [n.id, { x: n.x, y: n.y }])) };
     const wfEmpty = clients.length === 0 && demands.length === 0 && ideias.length === 0;
     const wfCountLabel = (wfNodes.length - 1) + ' nós · ' + clients.length + ' clientes';
     const wfPanX = (s.wfPan || {}).x || 0, wfPanY = (s.wfPan || {}).y || 0, wfZoom = s.wfZoom || 1;
@@ -4137,12 +4186,17 @@ class Component extends DCLogic {
       mapaIdeiasColor: (s.mapaMode || 'graph') === 'ideias' ? '#fff' : 'var(--text-2)',
       ideias, ideiasView,
       wfNodes, wfLinks, wfEmpty, wfCountLabel, wfPanX, wfPanY, wfZoom, wfZoomPct,
+      wfLegendGroups: [
+        { title: 'Demandas', items: [{ label: 'A fazer', color: 'var(--text-3)' }, { label: 'Produção', color: 'var(--info)' }, { label: 'Revisão', color: 'var(--warn)' }, { label: 'Entregue', color: 'var(--ok)' }] },
+        { title: 'Ideias', items: [{ label: 'Pessoal', color: 'var(--accent)' }, { label: 'Produto', color: 'var(--ok)' }, { label: 'Conteúdo', color: 'var(--text-2)' }, { label: 'Cliente', color: 'var(--info)' }] },
+      ],
       wfCanvasDown: (e) => this._wfCanvasDown(e),
       wfWheel: (e) => this._wfWheelImpl(e),
       wfZoomIn: () => { const z = Math.min(2, (s.wfZoom || 1) + 0.15); this.setState({ wfZoom: z }); this._wfScheduleSave(); },
       wfZoomOut: () => { const z = Math.max(0.4, (s.wfZoom || 1) - 0.15); this.setState({ wfZoom: z }); this._wfScheduleSave(); },
       wfReset: () => { this.setState({ wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1 }); if (s.isMobile) setTimeout(() => { this._wfFit(); this._wfScheduleSave(); }, 30); else this._wfScheduleSave(); },
       wfAutoArrange: () => { this.setState({ wfPos: {} }); setTimeout(() => { this._wfFit(); this._wfScheduleSave(); }, 30); },
+      wfForce: () => this._wfForce(),
       stopProp: (e) => e.stopPropagation(),
       isAssistente: s.screen === 'assistente',
       chatMessages, chatSuggestions,
