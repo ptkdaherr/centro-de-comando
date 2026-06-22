@@ -503,6 +503,10 @@
               </div>
               <div class="cc-wrap-mob" style="display:flex; align-items:center; gap:9px;">
                 <div style="display:flex; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
+                  <button onClick="{{ scopeProf }}" title="Demandas de clientes" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:{{ scopeProfW }}; cursor:pointer; white-space:nowrap; color:{{ scopeProfColor }}; background:{{ scopeProfBg }};">Profissional</button>
+                  <button onClick="{{ scopePessoal }}" title="Demandas pessoais (sem cliente)" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:{{ scopePessoalW }}; cursor:pointer; white-space:nowrap; color:{{ scopePessoalColor }}; background:{{ scopePessoalBg }};">Pessoal</button>
+                </div>
+                <div style="display:flex; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
                   <button onClick="{{ viewCliente }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ clienteTabColor }}; background:{{ clienteTabBg }};">Por cliente</button>
                   <button onClick="{{ viewStatus }}" style="height:28px; padding:0 12px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; color:{{ statusTabColor }}; background:{{ statusTabBg }};">Por status</button>
                 </div>
@@ -1717,6 +1721,15 @@
               </div>
             </div>
             <div>
+              <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Status</label>
+              <div style="display:flex; gap:6px; max-width:420px;">
+                <span onClick="{{ drawerSetStTodo }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:11.5px; font-weight:{{ drawerStTodoWeight }}; color:{{ drawerStTodoColor }}; background:{{ drawerStTodoBg }}; border:1px solid {{ drawerStTodoBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">A fazer</span>
+                <span onClick="{{ drawerSetStProd }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:11.5px; font-weight:{{ drawerStProdWeight }}; color:{{ drawerStProdColor }}; background:{{ drawerStProdBg }}; border:1px solid {{ drawerStProdBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">Produção</span>
+                <span onClick="{{ drawerSetStRev }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:11.5px; font-weight:{{ drawerStRevWeight }}; color:{{ drawerStRevColor }}; background:{{ drawerStRevBg }}; border:1px solid {{ drawerStRevBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">Revisão</span>
+                <span onClick="{{ drawerSetStDone }}" style="flex:1; text-align:center; height:34px; line-height:34px; border-radius:8px; font-size:11.5px; font-weight:{{ drawerStDoneWeight }}; color:{{ drawerStDoneColor }}; background:{{ drawerStDoneBg }}; border:1px solid {{ drawerStDoneBorder }}; cursor:pointer; transition:all .12s;" style-active="transform:scale(.94)">Entregue</span>
+              </div>
+            </div>
+            <div>
               <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Briefing</label>
               <textarea value="{{ drawerBrief }}" onInput="{{ drawerBriefChange }}" placeholder="Descreva o briefing…" style="width:100%; min-height:86px; padding:11px 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:9px; color:var(--text); font:inherit; font-size:13px; line-height:1.5; resize:vertical; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)"></textarea>
             </div>
@@ -2782,9 +2795,15 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.3.0';
+  _appVersion = '0.4.0';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.0', date: 'Junho 2026', items: [
+      'Sincronização entre celular e computador: o que você cria num aparelho aparece no outro automaticamente ao voltar pro app (antes o app instalado mostrava dados velhos).',
+      'Demandas ordenadas por prioridade: alta primeiro, depois média e baixa.',
+      'Separação Profissional × Pessoal nas Demandas: um seletor no topo mostra só as de clientes ou só as pessoais — nunca misturadas.',
+      'Editar demanda: agora dá pra mudar o status (A fazer / Produção / Revisão / Entregue) direto no formulário, sem precisar arrastar no quadro.',
+    ] },
     { v: '0.3.0', date: 'Junho 2026', items: [
       'Mapa mental: novo modo Blueprint — um quadro livre pra criar cards de ideias, arrastar, pintar e ligar um no outro com setas. Tudo salvo automaticamente.',
       'Mapa mental: Workflow e Ideias viraram uma aba só (Cérebro / Blueprint / Ideias).',
@@ -2873,6 +2892,7 @@ class Component extends DCLogic {
   _persistKeys = ['clients', 'prospectos', 'demands', 'ideias', 'lancamentos', 'wfNodesExtra', 'bpNodes', 'bpEdges', 'reminders', 'profile'];
   _hydrating = false;
   _saveTimer = null;
+  _lastStateLoad = 0;
 
   componentDidMount() {
     this._onKeyDown = (e) => {
@@ -2920,6 +2940,16 @@ class Component extends DCLogic {
     document.addEventListener('touchmove', this._onTouchMoveEdge, { passive: true });
     document.addEventListener('touchend', this._onTouchEndEdge, { passive: true });
 
+    // Re-busca o estado do servidor quando a janela volta ao foco / fica visível.
+    // Sem isso, o .exe (que esconde na bandeja e NÃO recarrega o webview) e o PWA
+    // mostravam dados velhos: algo criado no celular não aparecia no desktop até
+    // fechar de verdade e abrir de novo. Cobre os dois eventos (foco nativo + Page
+    // Visibility) porque nem todo webview dispara ambos.
+    this._onWindowFocus = () => this._refreshState();
+    this._onVisibility = () => { if (document.visibilityState === 'visible') this._refreshState(); };
+    window.addEventListener('focus', this._onWindowFocus);
+    document.addEventListener('visibilitychange', this._onVisibility);
+
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json().catch(() => ({ ok: false })))
       .then((d) => {
@@ -2934,9 +2964,12 @@ class Component extends DCLogic {
     document.removeEventListener('touchstart', this._onTouchStartEdge);
     document.removeEventListener('touchmove', this._onTouchMoveEdge);
     document.removeEventListener('touchend', this._onTouchEndEdge);
+    window.removeEventListener('focus', this._onWindowFocus);
+    document.removeEventListener('visibilitychange', this._onVisibility);
   }
 
   _loadState() {
+    this._lastStateLoad = Date.now();
     fetch('/api/state', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : {}))
       .then((data) => {
@@ -2948,6 +2981,26 @@ class Component extends DCLogic {
       .catch(() => {});
   }
 
+  // Re-sincroniza com o servidor sob demanda (ao voltar o foco). Protege a gravação
+  // local pendente: se há algo ainda no debounce de save, manda ANTES de re-buscar,
+  // pra um refresh não apagar uma edição local que ainda não subiu.
+  _refreshState() {
+    if (!this.state.authed || document.hidden) return;
+    if (Date.now() - this._lastStateLoad < 2500) return; // evita rajada de eventos de foco
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+      const snap = {};
+      for (const k of this._persistKeys) if (this.state[k] != null) snap[k] = this.state[k];
+      this._lastStateLoad = Date.now();
+      fetch('/api/state', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(snap) })
+        .catch(() => {})
+        .then(() => this._loadState());
+    } else {
+      this._loadState();
+    }
+  }
+
   setState(update, cb) {
     super.setState(update, cb);
     if (this._hydrating || !this.state.authed) return;
@@ -2956,6 +3009,7 @@ class Component extends DCLogic {
     if (Object.keys(snap).length === 0) return;
     clearTimeout(this._saveTimer);
     this._saveTimer = setTimeout(() => {
+      this._saveTimer = null; // marca que não há mais gravação pendente (senão _refreshState acha que há e dá flush do estado velho por cima do servidor)
       fetch('/api/state', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(snap) }).catch(() => {});
     }, 400);
   }
@@ -3176,6 +3230,17 @@ class Component extends DCLogic {
     const prioOf = (d) => d.priority || (d.flag === 'high' ? 'alta' : 'media');
     const fp = s.demandPrio || 'all';
     const passPrio = (d) => fp === 'all' || prioOf(d) === fp;
+    // Ordenação por prioridade: alta -> média -> baixa. Desempate = mais recente
+    // primeiro (id é Date.now() na criação, então id maior = mais novo).
+    const prioRank = { alta: 0, media: 1, baixa: 2 };
+    const sortPrio = (a, b) => (prioRank[prioOf(a)] - prioRank[prioOf(b)]) || ((b.id || 0) - (a.id || 0));
+    // ---- ESCOPO Profissional × Pessoal: profissional = demanda com cliente válido;
+    // pessoal = demanda sem cliente (ou cujo cliente foi removido). O board e as lanes
+    // mostram só o conjunto escolhido, pra os dois nunca se misturarem. ----
+    const demandScope = s.demandScope || 'prof';
+    const isProf = demandScope === 'prof';
+    const hasClient = (d) => clients.some(c => c.id === d.clientId);
+    const passScope = (d) => isProf ? hasClient(d) : !hasClient(d);
 
     // ---- PRAZO: data(yyyy-mm-dd)+hora -> rótulo amigável (Hoje/Amanhã/DD mmm · HH:MM) ----
     const _mesAbbr = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -3216,7 +3281,7 @@ class Component extends DCLogic {
       this.setState({
         drawer:true, drawerMode:'demanda', drawerEditId:d.id, drawerNewClientOpen:false,
         drawerDemandTitle:d.title, drawerDemandClientId: d.clientId!=null?String(d.clientId):'',
-        drawerTypeActive:arr, drawerPriority: prioOf(d),
+        drawerTypeActive:arr, drawerPriority: prioOf(d), drawerStatus: d.status || 'todo',
         drawerDemandDate: d.dueDate||'', drawerDemandTime: d.dueTime||'',
         drawerReminderOn: !!d.reminderAt, drawerReminderAt: d.reminderAt || '',
         drawerBrief: d.brief||'', drawerAttachments: (d.attachments||[]).map(a => ({ name: a.name || a })),
@@ -3283,7 +3348,7 @@ class Component extends DCLogic {
       { name:'Em produção', status:'prod', color:'var(--info)' },
       { name:'Em revisão', status:'rev', color:'var(--warn)' },
       { name:'Entregue', status:'done', color:'var(--ok)' },
-    ].map(col => ({ name:col.name, color:col.color, status:col.status, count:demands.filter(d=>d.status===col.status&&passPrio(d)).length, cards:demands.filter(d=>d.status===col.status&&passPrio(d)).map(mkCard),
+    ].map(col => ({ name:col.name, color:col.color, status:col.status, count:demands.filter(d=>d.status===col.status&&passPrio(d)&&passScope(d)).length, cards:demands.filter(d=>d.status===col.status&&passPrio(d)&&passScope(d)).sort(sortPrio).map(mkCard),
       dropBg: s.dragOverCol===col.status ? 'var(--accent-weak)' : 'transparent',
       dropBorder: s.dragOverCol===col.status ? 'var(--accent)' : 'transparent',
       onDragOver:(e) => e.preventDefault(),
@@ -3292,23 +3357,26 @@ class Component extends DCLogic {
       onDrop:(e) => { e.preventDefault(); const id = parseInt(e.dataTransfer.getData('text/plain'), 10); this.setState({ dragOverCol: null, draggingId: null }); if (!id) return; this.setState({ demands: demands.map(d => d.id===id ? { ...d, status: col.status } : d) }); },
     }));
 
-    // ---- por cliente: lanes ----
-    const clientLanes = clients.map(cl => {
-      const clD = demands.filter(d => d.clientId === cl.id);
-      const openD = clD.filter(d => d.status !== 'done');
-      const first = openD[0];
-      const avatarBg = cl.color + '22';
-      return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', avatar:cl.avatar||null, hasAvatar:!!cl.avatar, noAvatar:!cl.avatar, cards:clD.filter(passPrio).map(mkLane) };
-    });
-    // demandas sem cliente (ou cujo cliente foi removido) — aba "Avulsas" pra nunca sumirem do board por cliente
+    // demandas sem cliente (ou cujo cliente foi removido) = pessoais
     const avulsasD = demands.filter(d => !clients.some(c => c.id === d.clientId));
-    if (avulsasD.length) {
+    // ---- por cliente: lanes. Escopo "Profissional" = uma lane por cliente.
+    // Escopo "Pessoal" = uma única lane "Pessoal" com as demandas sem cliente. ----
+    let clientLanes;
+    if (isProf) {
+      clientLanes = clients.map(cl => {
+        const clD = demands.filter(d => d.clientId === cl.id);
+        const openD = clD.filter(d => d.status !== 'done');
+        const first = openD[0];
+        const avatarBg = cl.color + '22';
+        return { name:cl.nome, color:cl.color, initials:cl.initials, avatarBg, tag:cl.tipo==='fixo'?'FIXO':'FREELANCE', tagColor:cl.tipo==='fixo'?'var(--info)':'var(--text-2)', tagBg:cl.tipo==='fixo'?'var(--info-weak)':'var(--surface-3)', tagBorder:cl.tipo==='fixo'?'transparent':'var(--border-2)', open:openD.length, openLabel:openD.length+' abertas', next:first?first.due:'Tudo em dia', nextColor:first&&(first.due||'').includes('Hoje')?'var(--warn)':'var(--text-3)', avatar:cl.avatar||null, hasAvatar:!!cl.avatar, noAvatar:!cl.avatar, cards:clD.filter(passPrio).sort(sortPrio).map(mkLane) };
+      });
+    } else {
       const ab = avulsasD.filter(d => d.status !== 'done').length;
-      clientLanes.push({ name:'Avulsas', color:'var(--text-3)', initials:'–', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', hasAvatar:false, noAvatar:true, cards:avulsasD.filter(passPrio).map(d => mkLane(d, true)) });
+      clientLanes = [{ name:'Pessoal', color:'var(--accent)', initials:'•', avatarBg:'var(--surface-3)', tag:'SEM CLIENTE', tagColor:'var(--text-2)', tagBg:'var(--surface-3)', tagBorder:'var(--border-2)', open:ab, openLabel:ab+' abertas', next:avulsasD[0]?(avulsasD[0].due||'Sem prazo'):'—', nextColor:'var(--text-3)', hasAvatar:false, noAvatar:true, cards:avulsasD.filter(passPrio).sort(sortPrio).map(d => mkLane(d, true)) }];
     }
 
     // Projetos pessoais = demandas sem cliente (reais, editáveis) — não os mocks antigos
-    const personal = demands.filter(d => d.clientId == null && d.status !== 'done').map(d => mkLane(d, true));
+    const personal = demands.filter(d => d.clientId == null && d.status !== 'done').sort(sortPrio).map(d => mkLane(d, true));
     const personalEmpty = personal.length === 0;
 
     const ac = s.activeClient || 0;
@@ -3322,7 +3390,7 @@ class Component extends DCLogic {
       onDragLeave:()=>{ if(s.dragOverClient===key) this.setState({ dragOverClient:null }); },
       onDrop:(e)=>{ e.preventDefault(); const id=parseInt(e.dataTransfer.getData('text/plain'),10); this.setState({ dragOverClient:null, draggingId:null }); if(!id) return; this.setState({ demands: demands.map(d=>d.id===id?{...d, clientId:targetClientId}:d), toast:'Demanda movida' }); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),2200); },
     });
-    const clientTabs = clients.map((cl, i) => {
+    const clientTabs = isProf ? clients.map((cl, i) => {
       const _av = _clAv(cl);
       return {
       name:cl.nome, count:demands.filter(d=>d.clientId===cl.id&&d.status!=='done').length, color:cl.color, dropKey:String(cl.id),
@@ -3330,11 +3398,7 @@ class Component extends DCLogic {
       isActive:i===ac, textColor:i===ac?'var(--text)':'var(--text-2)', borderColor:i===ac?'var(--accent)':'transparent', weight:i===ac?'600':'500',
       onClick:()=>this.setState({ activeClient:i }),
       ...tabDrop(cl.id, cl.id),
-    }; });
-    if (avulsasD.length) {
-      const ai = clients.length;
-      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', dropKey:'avul', hasAvatar:false, noAvatar:true, avatar:null, avatarBg:'var(--surface-3)', avInitials:'•', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
-    }
+    }; }) : [{ name:'Pessoal', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--accent)', dropKey:'avul', hasAvatar:false, noAvatar:true, avatar:null, avatarBg:'var(--surface-3)', avInitials:'•', isActive:true, textColor:'var(--text)', borderColor:'var(--accent)', weight:'600', onClick:()=>this.setState({ activeClient:0 }), ...tabDrop('avul', null) }];
     // personalIdeas (ideias reais) é montado mais abaixo, após `ideias`/`editIdeia` existirem
     // ---- CALENDÁRIO ----
     const calDayHeaders = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
@@ -3485,12 +3549,12 @@ class Component extends DCLogic {
         isFix: fix, paid: _cps.key === 'pago', payTrack: _cps.key === 'pago' ? 'var(--ok)' : 'var(--border-2)', payKnob: _cps.key === 'pago' ? '21px' : '2px', onTogglePay: () => (_cps.key === 'pago' ? unmarkPaid(_cp) : markPaid(_cp)),
         tipoLabel: fix ? 'Cliente fixo' : 'Freelance', valor: this.brl(parseFloat(String(_cp.valor).replace(',', '.')) || 0), pagDiaLabel: pd ? ('Todo dia ' + pd) : '—', servico: _cp.servico || '—', since: _cp.since || '—',
         recebido: this.brl(rec), openN: String(openN), doneN: String(doneN), totalN: String(dd.length),
-        demandas: dd.map(d => { const st = stat[d.status] || stat.todo; return { title: d.title, status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due || 'Sem prazo', iconType: this.icon(typeIcons[d.type] || 'image', 13, 1.6), onClick: () => editDemanda(d) }; }),
+        demandas: dd.sort(sortPrio).map(d => { const st = stat[d.status] || stat.todo; return { title: d.title, status: st.l, statusColor: st.c, statusBg: st.bg, due: d.due || 'Sem prazo', iconType: this.icon(typeIcons[d.type] || 'image', 13, 1.6), onClick: () => editDemanda(d) }; }),
         hasDemandas: dd.length > 0, noDemandas: dd.length === 0,
         onBack: () => this.setState({ clientProfileId: null }),
         onEdit: () => editCliente(_cp),
         onDelete: () => { if (window.confirm('Excluir o cliente "' + _cp.nome + '"?')) { deleteCliente(_cp.id); this.setState({ clientProfileId: null }); } },
-        onNovaDemanda: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle: '', drawerDemandClientId: String(_cp.id), drawerTypeActive: [false, true, false, false, true, false, false], drawerPriority: 'media' }),
+        onNovaDemanda: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle: '', drawerDemandClientId: String(_cp.id), drawerTypeActive: [false, true, false, false, true, false, false], drawerPriority: 'media', drawerStatus: 'todo' }),
       };
     })() : null;
     const pipeline = [
@@ -3611,7 +3675,7 @@ class Component extends DCLogic {
     const ideias = s.ideias || [];
     const editIdeia = (idea) => this.setState({ drawer:true, drawerMode:'ideia', drawerEditId:idea.id, ideiaTitulo:idea.title||'', ideiaCategoria:(idea.tags&&idea.tags[0]&&idea.tags[0].label)||'Pessoal', ideiaObs:idea.obs||'' });
     // "Virar projeto": abre o drawer de nova demanda já com o título/obs da ideia
-    const projetoFromIdeia = (idea) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle: idea.title||'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief: idea.obs||'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
+    const projetoFromIdeia = (idea) => this.setState({ drawer:true, drawerMode:'demanda', drawerEditId:null, drawerDemandTitle: idea.title||'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerStatus:'todo', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief: idea.obs||'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] });
     // Ideias rascunho da aba Pessoal = ideias reais (clicáveis pra editar / virar projeto)
     const personalIdeas = ideias.map(idea => ({
       title: idea.title,
@@ -4127,9 +4191,9 @@ class Component extends DCLogic {
       go: (id) => this.go(id),
       goSystem: () => this.go('system'),
       goDemandas: () => this.go('demandas'),
-      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }),
+      openDrawer: () => this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerStatus:'todo', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }),
       // "Nova demanda" do cabeçalho de Demandas: na visão "Por cliente" já entra com o cliente da aba ativa selecionado
-      newDemandaBoard: () => { const cliView = (s.boardView || 'cliente') === 'cliente'; const cl = (cliView && (s.activeClient || 0) < clients.length) ? clients[s.activeClient || 0] : null; this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId: cl ? String(cl.id) : '', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }); },
+      newDemandaBoard: () => { const cliView = (s.boardView || 'cliente') === 'cliente'; const cl = (isProf && cliView && (s.activeClient || 0) < clients.length) ? clients[s.activeClient || 0] : null; this.setState({ drawer: true, drawerMode: 'demanda', drawerEditId: null, drawerDemandTitle:'', drawerDemandClientId: cl ? String(cl.id) : '', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerStatus:'todo', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'] }); },
       openDrawerCliente: () => this.setState({ drawer: true, drawerMode: 'cliente', drawerEditId: null, clienteNome:'', clienteTipo:'fixo', clienteValor:'', clientePagDia:'5', clienteServico:'', clienteAvatar:null }),
       openDrawerProspecto: () => this.setState({ drawer: true, drawerMode: 'prospecto', drawerEditId: null, prospectoNome:'', prospectoSegmento:'', prospectoObs:'' }),
       openDrawerLancamento: () => this.setState({ drawer: true, drawerMode: 'lancamento', drawerEditId: null, lancDesc:'', lancTipo:'receita', lancValor:'', lancData:'' }),
@@ -4156,6 +4220,7 @@ class Component extends DCLogic {
           const clientId = parseInt(s.drawerDemandClientId) || null;
           const priority = s.drawerPriority || 'media';
           const flag = priority==='alta'?'high':null;
+          const status = s.drawerStatus || 'todo';
           const dueDate = s.drawerDemandDate || '';
           const dueTime = s.drawerDemandTime || '';
           const due = fmtDue(dueDate, dueTime);
@@ -4165,14 +4230,15 @@ class Component extends DCLogic {
           const checklist = ckLabels.map((label,i) => ({ label, done: !!ckDone[i] })).filter(c => (c.label||'').trim());
           const attachments = (s.drawerAttachments||[]).map(a => ({ name: a.name }));
           if (editId) {
-            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag, priority, dueDate, dueTime, due, reminderAt, brief:s.drawerBrief||'', checklist, attachments } : d);
+            updates.demands = demands.map(d => d.id===editId ? { ...d, title:s.drawerDemandTitle||d.title, clientId, type:typeKeys[typeIdx]||d.type, flag, priority, status, dueDate, dueTime, due, reminderAt, brief:s.drawerBrief||'', checklist, attachments } : d);
           } else {
-            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status:'todo', type:typeKeys[typeIdx]||'image', due, dueDate, dueTime, reminderAt, flag, priority, brief:s.drawerBrief||'', checklist, attachments }];
+            updates.demands = [...demands, { id:Date.now(), title:s.drawerDemandTitle||'Nova demanda', clientId, status, type:typeKeys[typeIdx]||'image', due, dueDate, dueTime, reminderAt, flag, priority, brief:s.drawerBrief||'', checklist, attachments }];
           }
           updates.drawerDemandTitle = '';
           updates.drawerDemandClientId = '';
           updates.drawerTypeActive = [false,true,false,false,false,false,false,false];
           updates.drawerPriority = 'media';
+          updates.drawerStatus = 'todo';
           updates.drawerDemandDate = ''; updates.drawerDemandTime = '';
           updates.drawerReminderOn = false; updates.drawerReminderAt = '';
           updates.drawerBrief = ''; updates.drawerAttachments = []; updates.drawerNewClientOpen = false; updates.drawerNewClientName = '';
@@ -4361,8 +4427,13 @@ class Component extends DCLogic {
       isCreatingDemanda: s.drawer && (s.drawerMode||'demanda')==='demanda' && !s.drawerEditId,
       isEditingDemanda: s.drawer && (s.drawerMode||'demanda')==='demanda' && !!s.drawerEditId,
       // ---- DRAWER DEMANDA: limpar/reset (criar) e excluir (editar) ----
-      resetDrawerDemanda: () => this.setState({ drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'], toast:'Campos limpos' }),
+      resetDrawerDemanda: () => this.setState({ drawerEditId:null, drawerDemandTitle:'', drawerDemandClientId:'', drawerTypeActive:[false,true,false,false,false,false,false,false], drawerPriority:'media', drawerStatus:'todo', drawerDemandDate:'', drawerDemandTime:'', drawerReminderOn:false, drawerReminderAt:'', drawerBrief:'', drawerAttachments:[], drawerNewClientOpen:false, drawerNewClientName:'', drawerChecklist:[false], drawerChecklistLabels:['Aprovação do cliente'], toast:'Campos limpos' }),
       deleteDrawerDemanda: () => { const id = s.drawerEditId; if (id && window.confirm('Excluir esta demanda? Essa ação não pode ser desfeita.')) { this.setState({ demands:(s.demands||[]).filter(x=>x.id!==id), drawer:false, drawerEditId:null, toast:'Demanda excluída' }); clearTimeout(this._t); this._t = setTimeout(()=>this.setState({ toast:null }), 2200); } },
+      // ---- DEMANDAS: escopo Profissional × Pessoal (separa as demandas sem cliente) ----
+      scopeProf: () => this.setState({ demandScope:'prof', activeClient:0 }),
+      scopePessoal: () => this.setState({ demandScope:'pessoal', activeClient:0 }),
+      scopeProfBg: isProf?'var(--accent)':'transparent', scopeProfColor: isProf?'#fff':'var(--text-2)', scopeProfW: isProf?'600':'500',
+      scopePessoalBg: !isProf?'var(--accent)':'transparent', scopePessoalColor: !isProf?'#fff':'var(--text-2)', scopePessoalW: !isProf?'600':'500',
       // ---- DEMANDAS: filtro de prioridade ----
       prioFilterAll: () => this.setState({ demandPrio:'all' }),
       prioFilterHigh: () => this.setState({ demandPrio:'alta' }),
@@ -4680,6 +4751,29 @@ class Component extends DCLogic {
         drawerPrioHighBg: dp==='alta' ? 'var(--crit-weak)' : 'var(--surface)',
         drawerPrioHighBorder: dp==='alta' ? 'var(--crit)' : 'var(--border-2)',
         drawerPrioHighWeight: dp==='alta' ? '600' : '500',
+      }; })(),
+      // ---- DRAWER DEMANDA: seletor de status (muda o status sem precisar arrastar no kanban) ----
+      drawerSetStTodo: () => this.setState({ drawerStatus: 'todo' }),
+      drawerSetStProd: () => this.setState({ drawerStatus: 'prod' }),
+      drawerSetStRev: () => this.setState({ drawerStatus: 'rev' }),
+      drawerSetStDone: () => this.setState({ drawerStatus: 'done' }),
+      ...(()=>{ const ds = s.drawerStatus || 'todo'; return {
+        drawerStTodoColor: ds==='todo' ? 'var(--text)' : 'var(--text-3)',
+        drawerStTodoBg: ds==='todo' ? 'var(--surface-3)' : 'var(--surface)',
+        drawerStTodoBorder: ds==='todo' ? 'var(--text-3)' : 'var(--border-2)',
+        drawerStTodoWeight: ds==='todo' ? '600' : '500',
+        drawerStProdColor: ds==='prod' ? 'var(--info)' : 'var(--text-3)',
+        drawerStProdBg: ds==='prod' ? 'var(--info-weak)' : 'var(--surface)',
+        drawerStProdBorder: ds==='prod' ? 'var(--info)' : 'var(--border-2)',
+        drawerStProdWeight: ds==='prod' ? '600' : '500',
+        drawerStRevColor: ds==='rev' ? 'var(--warn)' : 'var(--text-3)',
+        drawerStRevBg: ds==='rev' ? 'var(--warn-weak)' : 'var(--surface)',
+        drawerStRevBorder: ds==='rev' ? 'var(--warn)' : 'var(--border-2)',
+        drawerStRevWeight: ds==='rev' ? '600' : '500',
+        drawerStDoneColor: ds==='done' ? 'var(--ok)' : 'var(--text-3)',
+        drawerStDoneBg: ds==='done' ? 'var(--ok-weak)' : 'var(--surface)',
+        drawerStDoneBorder: ds==='done' ? 'var(--ok)' : 'var(--border-2)',
+        drawerStDoneWeight: ds==='done' ? '600' : '500',
       }; })(),
       // ---- CHECKLIST DRAWER (editável: toggle, editar label, excluir) ----
       drawerAddChecklistItem: () => { const labels=[...(s.drawerChecklistLabels||['Aprovação do cliente'])]; labels.push(''); const checks=[...(s.drawerChecklist||[false])]; checks.push(false); this.setState({ drawerChecklistLabels:labels, drawerChecklist:checks }); },
