@@ -374,9 +374,9 @@
             <sc-if value="{{ noUserAvatar }}" hint-placeholder-val="{{ true }}"><span>{{ userInitials }}</span></sc-if>
           </div>
           <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
-            <div onClick="{{ openProfile }}" style="min-width:0; flex:1; cursor:pointer;" title="Editar perfil">
-              <div style="font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ userDisplayName }}</div>
-              <div style="font-size:11px; color:var(--text-3); white-space:nowrap;">Agência · plano solo</div>
+            <div style="min-width:0; flex:1;">
+              <div onClick="{{ openProfile }}" title="Editar perfil" style="font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" style-hover="color:var(--accent)">{{ userDisplayName }}</div>
+              <div onClick="{{ openNovidades }}" title="Ver novidades" style="font-size:11px; color:var(--text-3); white-space:nowrap; cursor:pointer; display:flex; align-items:center; gap:5px;" style-hover="color:var(--text-2)"><span>v{{ appVersion }}</span><sc-if value="{{ hasNewVersion }}" hint-placeholder-val="{{ true }}"><span style="width:5px; height:5px; border-radius:50%; background:var(--accent); flex:0 0 auto;"></span></sc-if><span>· novidades</span></div>
             </div>
             <button onClick="{{ logout }}" title="Sair da conta" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:28px; height:28px; border:1px solid var(--border); background:var(--surface); color:var(--text-3); border-radius:8px; cursor:pointer;" style-hover="color:var(--crit); border-color:var(--crit)">{{ iconLogout }}</button>
           </sc-if>
@@ -1871,6 +1871,33 @@
         </div>
       </sc-if>
 
+      <!-- NOVIDADES (changelog do app) -->
+      <sc-if value="{{ novidadesOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeNovidades }}" style="position:absolute; inset:0; background:rgba(5,6,7,.6); backdrop-filter:blur(3px); z-index:70; animation:cc-scrim .18s ease both;"></div>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(440px,92%); max-height:82%; background:var(--bg); border:1px solid var(--border-2); border-radius:18px; box-shadow:var(--sh-3); z-index:71; overflow:hidden; display:flex; flex-direction:column; animation:cc-pop .28s cubic-bezier(.4,0,.2,1) both;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:3px;">Novidades</div>
+              <h2 style="margin:0; font-size:17px; font-weight:600;">O que há de novo</h2>
+            </div>
+            <button onClick="{{ closeNovidades }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:9px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconClose }}</button>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:18px 20px;">
+            <sc-for list="{{ changelogList }}" as="rel" hint-placeholder-count="1">
+              <div style="margin-bottom:18px;">
+                <div style="display:flex; align-items:baseline; gap:9px; margin-bottom:10px;">
+                  <span style="font-size:14px; font-weight:700;">v{{ rel.v }}</span>
+                  <span style="font-size:11.5px; color:var(--text-3);">{{ rel.date }}</span>
+                </div>
+                <sc-for list="{{ rel.items }}" as="it" hint-placeholder-count="3">
+                  <div style="display:flex; gap:9px; margin-bottom:8px; font-size:13px; line-height:1.45; color:var(--text-2);"><span style="color:var(--accent); flex:0 0 auto;">•</span><span>{{ it.text }}</span></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
       <!-- RECORTE CIRCULAR DE FOTO (cliente / perfil) -->
       <sc-if value="{{ cropOpen }}" hint-placeholder-val="{{ false }}">
         <div onClick="{{ cancelCrop }}" style="position:absolute; inset:0; background:rgba(5,6,7,.62); backdrop-filter:blur(3px); z-index:70; animation:cc-scrim .18s ease both;"></div>
@@ -1930,6 +1957,13 @@
                 <button onClick="{{ musicPlayPause }}" title="Play / Pause" style="display:flex; align-items:center; justify-content:center; width:46px; height:46px; border:none; background:var(--accent); color:#fff; border-radius:50%; cursor:pointer; box-shadow:0 4px 14px rgba(82,133,240,.4);" style-hover="background:var(--accent-2)" style-active="transform:scale(.94)">{{ musicPlayIcon }}</button>
                 <button onClick="{{ musicNext }}" title="Próxima estação" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border:none; background:transparent; color:var(--text-2); border-radius:9px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconSkipFwd }}</button>
               </div>
+              <sc-if value="{{ musicHasDuration }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:11px;">
+                  <span style="font-size:9.5px; font-family:'Geist Mono',monospace; color:var(--text-3); width:30px; text-align:right; flex:0 0 auto;">{{ musicTimeStr }}</span>
+                  <input type="range" min="0" max="{{ musicDurVal }}" value="{{ musicTimeVal }}" step="1" onInput="{{ musicSeekChange }}" onMouseDown="{{ musicSeekDown }}" onMouseUp="{{ musicSeekUp }}" onTouchStart="{{ musicSeekDown }}" onTouchEnd="{{ musicSeekUp }}" title="Arraste pra avançar/voltar" style="flex:1; min-width:0; accent-color:var(--accent); cursor:pointer;" />
+                  <span style="font-size:9.5px; font-family:'Geist Mono',monospace; color:var(--text-3); width:30px; flex:0 0 auto;">{{ musicDurStr }}</span>
+                </div>
+              </sc-if>
               <div style="display:flex; align-items:center; gap:9px;">
                 <span style="display:flex; color:var(--text-3);">{{ iconVolume }}</span>
                 <input type="range" min="0" max="100" value="{{ musicVol }}" onInput="{{ musicVolChange }}" style="flex:1; accent-color:var(--accent); cursor:pointer;" />
@@ -1995,7 +2029,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -2249,7 +2283,7 @@ class Component extends DCLogic {
               const cbs = this._ytReadyCbs || []; this._ytReadyCbs = [];
               cbs.forEach((f) => { try { f(); } catch (e) {} });
             },
-            onStateChange: (e) => { this.setState({ musicPlaying: e.data === 1 }); this._ytSyncTitle(); setTimeout(() => this._ytSyncTitle(), 700); },
+            onStateChange: (e) => { this.setState({ musicPlaying: e.data === 1 }); this._ytSyncTitle(); setTimeout(() => this._ytSyncTitle(), 700); if (e.data === 1) this._ytStartProgress(); if (e.data === 0) this._musicCycle(1); },
             onError: () => this.setState({ musicPlaying: false, musicErr: 'Essa estação não tocou — tente outra ou cole um link.' }),
           },
         });
@@ -2312,6 +2346,30 @@ class Component extends DCLogic {
     } catch (e) {}
   }
   _musicSetVol(v) { const vol = Math.max(0, Math.min(100, parseInt(v, 10) || 0)); this.setState({ musicVol: vol }); try { if (this._yt && this._yt.setVolume) this._yt.setVolume(vol); } catch (e) {} this._saveAudioPrefs(); }
+  // ---- barra de tempo (seek tipo YouTube) ----
+  _fmtTime(sec) { sec = Math.max(0, Math.floor(sec || 0)); const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+  _ytStartProgress() {
+    if (this._progT) return;
+    this._progT = setInterval(() => {
+      try {
+        if (!this._yt || !this._yt.getDuration) return;
+        if (this.state.musicSeeking || !this.state.musicOpen || this.state.musicMin) return; // só atualiza quando visível
+        const dur = this._yt.getDuration() || 0, cur = this._yt.getCurrentTime() || 0;
+        if (Math.abs(cur - (this.state.musicTime || 0)) > 0.4 || Math.abs(dur - (this.state.musicDuration || 0)) > 0.4) this.setState({ musicDuration: dur, musicTime: cur });
+      } catch (e) {}
+    }, 1000);
+  }
+  _ytSeekTo(sec) { try { if (this._yt && this._yt.seekTo) { this._yt.seekTo(sec, true); this.setState({ musicTime: sec }); } } catch (e) {} }
+  // next/prev: dentro da playlist custom quando uma estação custom toca; senão entre as categorias
+  _musicCycle(dir) {
+    const s = this.state;
+    if (s.musicCustom) {
+      const cs = s.customStations || []; const i = cs.findIndex(st => st.id === s.musicCustom);
+      if (i >= 0 && cs.length > 1) { const n = (((i + dir) % cs.length) + cs.length) % cs.length; this._musicPlayCustom(cs[n].id); return; }
+      if (i >= 0) { this._ytPlayId(cs[i].id); return; } // só uma na playlist: recomeça
+    }
+    this._musicPlayCat((s.musicCat || 0) + dir);
+  }
   _musicDefaultPos() { return { x: Math.max(12, (window.innerWidth || 1200) - 300), y: Math.max(12, Math.min((window.innerHeight || 800) - 360, (window.innerHeight || 800) * 0.35)) }; }
   // garante que a posição (salva no localStorage) caiba no viewport ATUAL — sem isso, uma
   // posição salva numa janela maior/outro monitor faz o painel abrir fora da tela ("não aparece nada")
@@ -2427,6 +2485,21 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
+  _appVersion = '0.2.0';
+  // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
+  _changelog = [
+    { v: '0.2.0', date: 'Junho 2026', items: [
+      'Tela de Novidades e versão do app (esta aqui).',
+      'Música: barra de tempo (arraste pro minuto, tipo YouTube), playlist de links do YouTube com o nome real da música, e próxima/anterior dentro da playlist.',
+      'Foto de cliente e de perfil com recorte circular (arraste + zoom); a foto aparece nas demandas, nas abas e no calendário.',
+      'Tom do fundo ajustável por quadradinhos: branco↔creme no claro, preto↔cinza no escuro.',
+      'Volume dos sons da interface (cliques).',
+      'Sino de notificações: o ponto vermelho só acende com avisos novos.',
+      'Perfil do cliente: botão de excluir em destaque; criar demanda já vem com o cliente selecionado.',
+      'Menos botões repetidos de "nova demanda" pelo app.',
+      'App instalado (.exe): abrir de novo foca a janela aberta em vez de duplicar.',
+    ] },
+  ];
   _cropGeom() {
     const s = this.state, V = this._cropV;
     const iw = s.cropIw || 1, ih = s.cropIh || 1;
@@ -3977,6 +4050,12 @@ class Component extends DCLogic {
       removeProfileAvatar: () => this.setState({ profileAvatarInput: null }),
       saveProfile: () => { this.setState({ profile: { name: (s.profileNameInput || '').trim(), avatar: s.profileAvatarInput || null }, profileOpen: false, toast: 'Perfil salvo' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000); },
       iconLogout: this.icon('logout', 15, 1.8),
+      appVersion: this._appVersion,
+      hasNewVersion: s.seenVersion !== this._appVersion,
+      novidadesOpen: !!s.novidadesOpen,
+      openNovidades: () => { this.setState({ novidadesOpen: true, seenVersion: this._appVersion }); try { localStorage.setItem('cdc-seen-version', this._appVersion); } catch (e) {} },
+      closeNovidades: () => this.setState({ novidadesOpen: false }),
+      changelogList: this._changelog.map(c => ({ v: c.v, date: c.date, items: c.items.map(t => ({ text: t })) })),
       logout: () => {
         fetch('/api/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
         this.setState({ authed: false, username: '', authMode: 'login', loginUsername: '', loginPassword: '', loginError: '', clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, wfNodesExtra: null, geminiConfigured: false, screen: 'inicio' });
@@ -4093,8 +4172,16 @@ class Component extends DCLogic {
       iconSkipFwd: this.icon('skipFwd', 16, 1.9),
       iconSkipBack: this.icon('skipBack', 16, 1.9),
       iconVolume: this.icon('volume', 14, 1.7),
-      musicNext: () => this._musicPlayCat((s.musicCat || 0) + 1),
-      musicPrev: () => this._musicPlayCat((s.musicCat || 0) - 1),
+      musicNext: () => this._musicCycle(1),
+      musicPrev: () => this._musicCycle(-1),
+      musicTimeStr: this._fmtTime(s.musicTime),
+      musicDurStr: this._fmtTime(s.musicDuration),
+      musicTimeVal: String(Math.floor(s.musicTime || 0)),
+      musicDurVal: String(Math.max(1, Math.floor(s.musicDuration || 0))),
+      musicHasDuration: (s.musicDuration || 0) > 1,
+      musicSeekDown: () => this.setState({ musicSeeking: true }),
+      musicSeekUp: () => this.setState({ musicSeeking: false }),
+      musicSeekChange: (e) => { const v = +e.target.value; this.setState({ musicTime: v }); this._ytSeekTo(v); },
       musicVol: String(s.musicVol == null ? 65 : s.musicVol),
       musicVolChange: (e) => this._musicSetVol(e.target.value),
       musicStationName: s.musicCustom ? (_curCustomName || (s.musicNowTitle || 'Carregando…')) : (this._lofiCats[s.musicCat || 0].emoji + ' ' + this._lofiCats[s.musicCat || 0].name),
