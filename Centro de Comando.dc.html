@@ -522,7 +522,7 @@
                 <!-- tabs row -->
                 <div style="display:flex; align-items:stretch; padding:0 28px; border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto;">
                   <sc-for list="{{ clientTabs }}" as="ct" hint-placeholder-count="2">
-                    <button onClick="{{ ct.onClick }}" onDragOver="{{ ct.onDragOver }}" onDragEnter="{{ ct.onDragEnter }}" onDragLeave="{{ ct.onDragLeave }}" onDrop="{{ ct.onDrop }}" style="display:flex; align-items:center; gap:8px; height:42px; padding:0 16px; border:none; border-bottom:2.5px solid {{ ct.borderColor }}; background:{{ ct.dropBg }}; color:{{ ct.textColor }}; font:inherit; font-size:13px; font-weight:{{ ct.weight }}; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-bottom:-1px; border-radius:8px 8px 0 0; transition:color .1s, background .12s; box-shadow:{{ ct.dropRing }};" style-hover="color:var(--text)">
+                    <button onClick="{{ ct.onClick }}" data-dropclient="{{ ct.dropKey }}" onDragOver="{{ ct.onDragOver }}" onDragEnter="{{ ct.onDragEnter }}" onDragLeave="{{ ct.onDragLeave }}" onDrop="{{ ct.onDrop }}" style="display:flex; align-items:center; gap:8px; height:42px; padding:0 16px; border:none; border-bottom:2.5px solid {{ ct.borderColor }}; background:{{ ct.dropBg }}; color:{{ ct.textColor }}; font:inherit; font-size:13px; font-weight:{{ ct.weight }}; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-bottom:-1px; border-radius:8px 8px 0 0; transition:color .1s, background .12s; box-shadow:{{ ct.dropRing }};" style-hover="color:var(--text)">
                       <sc-if value="{{ ct.hasAvatar }}" hint-placeholder-val="{{ false }}"><span style="width:19px; height:19px; border-radius:6px; overflow:hidden; background:{{ ct.avatarBg }}; flex:0 0 auto; display:inline-flex;"><img src="{{ ct.avatar }}" style="width:100%; height:100%; object-fit:cover;" /></span></sc-if><sc-if value="{{ ct.noAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:8px; height:8px; border-radius:3px; background:{{ ct.color }}; flex:0 0 auto;"></span></sc-if>
                       <span>{{ ct.name }}</span>
                       <span style="font-size:11px; font-family:'Geist Mono',monospace; padding:1px 6px; border-radius:10px; background:var(--surface-3); color:var(--text-3);">{{ ct.count }}</span>
@@ -543,7 +543,7 @@
                 <div style="flex:1; min-height:0; overflow-y:auto; padding:18px 28px 30px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(228px,1fr)); gap:12px;">
                     <sc-for list="{{ activeClientCards }}" as="c" hint-placeholder-count="4">
-                      <div draggable="{{ c.draggable }}" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="position:relative; background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .28s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
+                      <div draggable="{{ c.draggable }}" onTouchStart="{{ c.onTouchStart }}" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="position:relative; background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .28s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                           <span style="display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:500; color:{{ c.statusColor }}; background:{{ c.statusBg }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ c.statusColor }};"></span>{{ c.status }}</span>
                           <div style="display:flex; align-items:center; gap:7px;">
@@ -574,9 +574,9 @@
                         <span style="font-size:13px; font-weight:600;">{{ col.name }}</span>
                         <span style="font-size:11.5px; font-family:'Geist Mono',monospace; color:var(--text-3);">{{ col.count }}</span>
                       </div>
-                      <div onDragOver="{{ col.onDragOver }}" onDragEnter="{{ col.onDragEnter }}" onDragLeave="{{ col.onDragLeave }}" onDrop="{{ col.onDrop }}" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px; background:{{ col.dropBg }}; border:1.5px dashed {{ col.dropBorder }}; border-radius:12px; transition:background .15s ease, border-color .15s ease;">
+                      <div data-dropstatus="{{ col.status }}" onDragOver="{{ col.onDragOver }}" onDragEnter="{{ col.onDragEnter }}" onDragLeave="{{ col.onDragLeave }}" onDrop="{{ col.onDrop }}" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding:3px 3px 12px; background:{{ col.dropBg }}; border:1.5px dashed {{ col.dropBorder }}; border-radius:12px; transition:background .15s ease, border-color .15s ease;">
                         <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
-                          <div draggable="true" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s ease, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .26s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
+                          <div draggable="true" onTouchStart="{{ c.onTouchStart }}" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onClick }}" style="background:var(--surface); border:1px solid var(--border); border-left:3px solid {{ c.prioColor }}; border-radius:11px; padding:13px 14px; cursor:pointer; opacity:{{ c.dragOpacity }}; transition:border-color .15s, transform .15s, opacity .15s ease, box-shadow .15s; box-shadow:var(--sh-1); animation:cc-rise .26s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 35ms);" style-hover="border-color:var(--accent); border-left-color:{{ c.prioColor }}; transform:translateY(-3px); box-shadow:var(--sh-2)" style-active="transform:scale(.98)">
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
                               <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-2);"><sc-if value="{{ c.clHasAvatar }}" hint-placeholder-val="{{ false }}"><span style="width:17px; height:17px; border-radius:5px; overflow:hidden; background:{{ c.clAvatarBg }}; flex:0 0 auto; display:inline-flex;"><img src="{{ c.clAvatar }}" style="width:100%; height:100%; object-fit:cover;" /></span></sc-if><sc-if value="{{ c.clNoAvatar }}" hint-placeholder-val="{{ true }}"><span style="width:8px; height:8px; border-radius:3px; background:{{ c.clientColor }};"></span></sc-if>{{ c.client }}</span>
                               <div style="display:flex; align-items:center; gap:7px;">
@@ -2380,6 +2380,56 @@ class Component extends DCLogic {
     const y = Math.min(Math.max(M, (p && typeof p.y === 'number') ? p.y : 120), Math.max(M, h - PH));
     return { x, y };
   }
+  // ---- drag-and-drop de demanda por TOQUE (mobile): HTML5 DnD não funciona em touch ----
+  // long-press pega o card (evita conflito com scroll); ghost segue o dedo; elementFromPoint
+  // acha a coluna (Por status -> muda status) ou aba de cliente (Por cliente -> reatribui) sob o dedo
+  _demandTouchStart(e, id) {
+    const t0 = e.touches && e.touches[0]; if (!t0) return;
+    const start = { x: t0.clientX, y: t0.clientY };
+    let dragging = false, ghost = null;
+    const findTarget = (x, y) => {
+      let el = document.elementFromPoint(x, y);
+      while (el) { if (el.dataset && el.dataset.dropstatus) return { type: 'status', val: el.dataset.dropstatus }; if (el.dataset && el.dataset.dropclient != null && el.dataset.dropclient !== '') return { type: 'client', val: el.dataset.dropclient }; el = el.parentElement; }
+      return null;
+    };
+    const lp = setTimeout(() => {
+      dragging = true;
+      this.setState({ draggingId: id });
+      const d = (this.state.demands || []).find(x => x.id === id);
+      ghost = document.createElement('div');
+      ghost.textContent = (d && d.title) || 'Demanda';
+      ghost.style.cssText = 'position:fixed; z-index:2147483647; pointer-events:none; transform:translate(-50%,-50%); padding:8px 13px; background:var(--accent); color:#fff; border-radius:9px; font:600 12.5px Geist,system-ui,sans-serif; box-shadow:0 10px 28px rgba(0,0,0,.45); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.96;';
+      ghost.style.left = start.x + 'px'; ghost.style.top = start.y + 'px';
+      document.body.appendChild(ghost);
+      try { if (navigator.vibrate) navigator.vibrate(12); } catch (er) {}
+    }, 200);
+    const move = (ev) => {
+      const t = ev.touches && ev.touches[0]; if (!t) return;
+      if (!dragging) { if (Math.abs(t.clientX - start.x) > 8 || Math.abs(t.clientY - start.y) > 8) clearTimeout(lp); return; }
+      if (ev.cancelable) ev.preventDefault(); // trava o scroll durante o arrasto
+      if (ghost) { ghost.style.left = t.clientX + 'px'; ghost.style.top = t.clientY + 'px'; }
+      const tg = findTarget(t.clientX, t.clientY);
+      if (tg && tg.type === 'status') { if (this.state.dragOverCol !== tg.val) this.setState({ dragOverCol: tg.val, dragOverClient: null }); }
+      else if (tg && tg.type === 'client') { if (this.state.dragOverClient !== tg.val) this.setState({ dragOverClient: tg.val, dragOverCol: null }); }
+      else if (this.state.dragOverCol || this.state.dragOverClient) this.setState({ dragOverCol: null, dragOverClient: null });
+    };
+    const end = (ev) => {
+      clearTimeout(lp);
+      document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end); document.removeEventListener('touchcancel', end);
+      if (ghost) { ghost.remove(); ghost = null; }
+      if (dragging) {
+        if (ev.cancelable) ev.preventDefault(); // evita o "click" sintético que abriria a edição
+        const t = (ev.changedTouches && ev.changedTouches[0]) || null;
+        const tg = t ? findTarget(t.clientX, t.clientY) : null;
+        if (tg && tg.type === 'status') { this.setState({ demands: (this.state.demands || []).map(d => d.id === id ? { ...d, status: tg.val } : d), toast: 'Status atualizado' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 1800); }
+        else if (tg && tg.type === 'client') { const cid = tg.val === 'avul' ? null : Number(tg.val); this.setState({ demands: (this.state.demands || []).map(d => d.id === id ? { ...d, clientId: cid } : d), toast: 'Demanda movida' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 1800); }
+      }
+      this.setState({ draggingId: null, dragOverCol: null, dragOverClient: null });
+    };
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('touchend', end);
+    document.addEventListener('touchcancel', end);
+  }
   _musicDragDown(e) {
     const touch = e.touches && e.touches[0];
     const cx = touch ? touch.clientX : e.clientX, cy = touch ? touch.clientY : e.clientY;
@@ -2953,6 +3003,7 @@ class Component extends DCLogic {
         prioLabel:pm.label, prioColor:pm.color, prioBg:pm.bg,
         dragOpacity: s.draggingId===d.id ? '.35' : '1',
         deleteIcon:this.icon('close',11,2), onClick:() => editDemanda(d), onDelete:(e) => { e.stopPropagation(); deleteDemanda(d.id); },
+        onTouchStart:(e) => this._demandTouchStart(e, d.id),
         onDragStart:(e) => { e.dataTransfer.setData('text/plain', String(d.id)); this.setState({ draggingId: d.id }); },
         onDragEnd:() => this.setState({ draggingId: null, dragOverCol: null, dragOverClient: null }) };
     };
@@ -2962,11 +3013,12 @@ class Component extends DCLogic {
       const pm = prioMeta[prioOf(d)] || prioMeta.media;
       const base = { title:d.title, status:st.l, statusColor:st.c, statusBg:st.bg, type:typeLabels[d.type]||'Arte', due:d.due||'Sem prazo', dueColor:(d.due||'').includes('Hoje')?dueAmber:dueMute, iconType:this.icon(ti,13,1.6), iconClock:this.icon('clock',13,1.7), flagged:!!d.flag, flagColor:d.flag==='high'?'var(--crit)':'var(--warn)', flagEl:this.icon('flag',13,1.7),
         prioLabel:pm.label, prioColor:pm.color, prioBg:pm.bg,
-        dragOpacity: s.draggingId===d.id ? '.4' : '1', onDragStart:() => {}, onDragEnd:() => {} };
+        dragOpacity: s.draggingId===d.id ? '.4' : '1', onDragStart:() => {}, onDragEnd:() => {}, onTouchStart:() => {} };
       if (editable === false) { base.editable = false; base.draggable = 'false'; base.deleteIcon = null; base.onClick = () => {}; base.onDelete = () => {}; return base; }
       base.editable = true; base.draggable = 'true'; base.deleteIcon = this.icon('close',11,2);
       base.onClick = () => editDemanda(d);
       base.onDelete = (e) => { e.stopPropagation(); deleteDemanda(d.id); };
+      base.onTouchStart = (e) => this._demandTouchStart(e, d.id);
       base.onDragStart = (e) => { e.dataTransfer.setData('text/plain', String(d.id)); this.setState({ draggingId: d.id }); };
       base.onDragEnd = () => this.setState({ draggingId: null, dragOverClient: null, dragOverCol: null });
       return base;
@@ -3019,7 +3071,7 @@ class Component extends DCLogic {
     const clientTabs = clients.map((cl, i) => {
       const _av = _clAv(cl);
       return {
-      name:cl.nome, count:demands.filter(d=>d.clientId===cl.id&&d.status!=='done').length, color:cl.color,
+      name:cl.nome, count:demands.filter(d=>d.clientId===cl.id&&d.status!=='done').length, color:cl.color, dropKey:String(cl.id),
       hasAvatar:_av.hasAvatar, noAvatar:_av.noAvatar, avatar:_av.avatar, avatarBg:_av.avatarBg, avInitials:_av.avInitials,
       isActive:i===ac, textColor:i===ac?'var(--text)':'var(--text-2)', borderColor:i===ac?'var(--accent)':'transparent', weight:i===ac?'600':'500',
       onClick:()=>this.setState({ activeClient:i }),
@@ -3027,7 +3079,7 @@ class Component extends DCLogic {
     }; });
     if (avulsasD.length) {
       const ai = clients.length;
-      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', hasAvatar:false, noAvatar:true, avatar:null, avatarBg:'var(--surface-3)', avInitials:'•', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
+      clientTabs.push({ name:'Avulsas', count:avulsasD.filter(d=>d.status!=='done').length, color:'var(--text-3)', dropKey:'avul', hasAvatar:false, noAvatar:true, avatar:null, avatarBg:'var(--surface-3)', avInitials:'•', isActive:ac===ai, textColor:ac===ai?'var(--text)':'var(--text-2)', borderColor:ac===ai?'var(--accent)':'transparent', weight:ac===ai?'600':'500', onClick:()=>this.setState({ activeClient:ai }), ...tabDrop('avul', null) });
     }
     // personalIdeas (ideias reais) é montado mais abaixo, após `ideias`/`editIdeia` existirem
     // ---- CALENDÁRIO ----
