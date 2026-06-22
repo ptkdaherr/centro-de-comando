@@ -1288,16 +1288,27 @@
           </div>
         </sc-if>
 
-        <!-- ======= IDEIAS ======= -->
-        <sc-if value="{{ isIdeias }}" hint-placeholder-val="{{ false }}">
+        <!-- ======= MAPA MENTAL (Cérebro/graph + Ideias unificados) ======= -->
+        <sc-if value="{{ isMapa }}" hint-placeholder-val="{{ false }}">
           <div class="cc-screen-flex" style="display:flex; flex-direction:column; height:100%; animation:cc-fade .2s ease both;">
-            <div style="padding:22px 28px 14px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-shrink:0;">
-              <div><h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Ideias</h1><p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">Banco de ideias — capture qualquer coisa, refine depois</p></div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button onClick="{{ openDrawerIdeia }}" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nova ideia</span></button>
+            <div class="cc-wrap-mob" style="padding:14px 22px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border);">
+              <h1 style="margin:0; font-size:18px; font-weight:600; letter-spacing:-.3px;">Mapa mental</h1>
+              <div style="display:flex; padding:3px; background:var(--surface); border:1px solid var(--border); border-radius:9px; gap:2px;">
+                <button onClick="{{ mapaToGraph }}" style="height:28px; padding:0 13px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ mapaGraphColor }}; background:{{ mapaGraphBg }};">Cérebro</button>
+                <button onClick="{{ mapaToIdeias }}" style="height:28px; padding:0 13px; border:none; border-radius:7px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; color:{{ mapaIdeiasColor }}; background:{{ mapaIdeiasBg }};">Ideias</button>
               </div>
+              <sc-if value="{{ isMapaGraph }}" hint-placeholder-val="{{ true }}">
+                <span class="cc-hide-mob" style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
+                <button onClick="{{ wfAutoArrange }}" title="Reposiciona os blocos automaticamente" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Organizar</span></button>
+              </sc-if>
+              <sc-if value="{{ isMapaIdeias }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ openDrawerIdeia }}" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:7px; height:32px; padding:0 14px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:var(--accent-2)" style-active="transform:scale(.96)">{{ iconPlusSm }}<span>Nova ideia</span></button>
+              </sc-if>
             </div>
-            <div style="flex:1; overflow-y:auto; padding:0 28px 32px;">
+
+            <!-- modo IDEIAS -->
+            <sc-if value="{{ isMapaIdeias }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1; overflow-y:auto; padding:18px 28px 32px;">
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:13px;">
                 <sc-for list="{{ ideiasView }}" as="idea" hint-placeholder-count="6">
                   <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px; cursor:pointer; box-shadow:var(--sh-1); transition:border-color .15s, transform .15s, box-shadow .15s; animation:cc-rise .3s cubic-bezier(.4,0,.2,1) both; animation-delay: calc({{ $index }} * 30ms);" style-hover="border-color:var(--accent); transform:translateY(-3px); box-shadow:var(--sh-2)">
@@ -1323,18 +1334,10 @@
                 <button onClick="{{ openDrawerIdeia }}" style="min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px dashed var(--border-2); background:transparent; color:var(--text-3); border-radius:12px; font:inherit; font-size:12px; cursor:pointer;" style-hover="color:var(--text-2); border-color:var(--text-3)">{{ iconPlusSm }}<span>Capturar ideia</span></button>
               </div>
             </div>
-          </div>
-        </sc-if>
+            </sc-if>
 
-        <!-- ======= WORKFLOW ======= -->
-        <sc-if value="{{ isWorkflow }}" hint-placeholder-val="{{ false }}">
-          <div class="cc-screen-flex" style="display:flex; flex-direction:column; height:100%; animation:cc-fade .2s ease both;">
-            <div style="padding:13px 22px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border);">
-              <span style="font-size:14px; font-weight:600; color:var(--text);">Cérebro da agência</span>
-              <span style="font-size:11.5px; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 9px;">{{ wfCountLabel }}</span>
-              <span style="font-size:12px; color:var(--text-3);">arraste os nós pra organizar · arraste o fundo pra mover · role pra dar zoom · clique pra abrir</span>
-              <button onClick="{{ wfAutoArrange }}" title="Reposiciona os blocos automaticamente" style="margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:6px; height:30px; padding:0 13px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="color:var(--text); border-color:var(--accent)"><span>Organizar</span></button>
-            </div>
+            <!-- modo CÉREBRO (graph) -->
+            <sc-if value="{{ isMapaGraph }}" hint-placeholder-val="{{ true }}">
             <div id="wf-canvas" onMouseDown="{{ wfCanvasDown }}" onTouchStart="{{ wfCanvasDown }}" onWheel="{{ wfWheel }}" style="flex:1; overflow:hidden; position:relative; background-color:var(--bg); background-image:radial-gradient(var(--border-2) 1px, transparent 1px); background-size:30px 30px; cursor:grab; user-select:none; touch-action:none;">
               <sc-if value="{{ wfEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-3); text-align:center; padding:20px;">
@@ -1366,6 +1369,7 @@
                 <button onClick="{{ wfReset }}" title="Resetar posições e zoom" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:15px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">⟲</button>
               </div>
             </div>
+            </sc-if>
           </div>
         </sc-if>
 
@@ -2029,7 +2033,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -2775,7 +2779,7 @@ class Component extends DCLogic {
     return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  go(screen) { this.setState({ screen, drawer: false, navOpen: false }); if (screen === 'workflow' && this.state.isMobile) setTimeout(() => this._wfFit(), 90); }
+  go(screen) { this.setState({ screen, drawer: false, navOpen: false }); if (screen === 'mapa') setTimeout(() => this._wfFit(), 90); }
 
   themes = {
     'Azul':    { a: '#5285f0', a2: '#3f6fe0', w: 'rgba(82,133,240,.14)' },
@@ -2809,8 +2813,7 @@ class Component extends DCLogic {
         { id: 'lembretes', label: 'Lembretes', icon: 'bell' },
         { id: 'clientes', label: 'Clientes', icon: 'users', badge: nC ? String(nC) : null },
         { id: 'pessoal', label: 'Pessoal', icon: 'folder' },
-        { id: 'ideias', label: 'Ideias', icon: 'bulb' },
-        { id: 'workflow', label: 'Workflow', icon: 'workflow' },
+        { id: 'mapa', label: 'Mapa mental', icon: 'workflow' },
         { id: 'assistente', label: 'Assistente', icon: 'spark' },
       ],
       bottom: [
@@ -2854,7 +2857,7 @@ class Component extends DCLogic {
       workflow: { t: 'Workflow', d: 'Canvas de nós conectáveis estilo mapa mental, onde ideias viram etapas de produção.', i: 'workflow' },
       assistente: { t: 'Assistente', d: 'Apoio pra planejar a semana, escrever legendas e organizar as demandas do dia.', i: 'spark' },
     };
-    const isBuilt = ['inicio','demandas','pessoal','system','calendario','clientes','financeiro','despesas','salario','metas','ideias','workflow','assistente','lembretes'].includes(s.screen);
+    const isBuilt = ['inicio','demandas','pessoal','system','calendario','clientes','financeiro','despesas','salario','metas','mapa','ideias','workflow','assistente','lembretes'].includes(s.screen);
     const stub = stubMap[s.screen];
 
     const dueRed = 'var(--crit)', dueAmber = 'var(--warn)', dueMute = 'var(--text-3)';
@@ -3428,7 +3431,7 @@ class Component extends DCLogic {
     }));
     const wfAvul = demands.filter(d => !clients.some(c => c.id === d.clientId));
     if (wfAvul.length) wfGroups.push({ key:'avul', label:'Avulsas', color:'var(--text-3)', items: wfAvul.map(d => ({ id:'d'+d.id, title:d.title, color:(stat[d.status]||stat.todo).c, onClick:() => editDemanda(d) })), onClick:() => this.setState({ screen:'demandas' }) });
-    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map((it, ii) => ({ id:'i'+ii, title:it.title, color:'var(--warn)', onClick:() => this.setState({ screen:'ideias' }) })), onClick:() => this.setState({ screen:'ideias' }) });
+    if (ideias.length) wfGroups.push({ key:'ideias', label:'Ideias', color:'var(--warn)', items: ideias.map((it, ii) => ({ id:'i'+ii, title:it.title, color:'var(--warn)', onClick:() => this.setState({ screen:'mapa', mapaMode:'ideias' }) })), onClick:() => this.setState({ screen:'mapa', mapaMode:'ideias' }) });
 
     const wfCx = 560, wfCy = 380, wfR1 = 210;
     const wfPosOv = s.wfPos || {};
@@ -4122,9 +4125,17 @@ class Component extends DCLogic {
       salPct: salPct,
       isMetas: s.screen === 'metas',
       metas,
-      isIdeias: s.screen === 'ideias',
+      isMapa: s.screen === 'mapa',
+      mapaMode: s.mapaMode || 'graph',
+      isMapaGraph: s.screen === 'mapa' && (s.mapaMode || 'graph') === 'graph',
+      isMapaIdeias: s.screen === 'mapa' && (s.mapaMode || 'graph') === 'ideias',
+      mapaToGraph: () => { this.setState({ mapaMode: 'graph' }); setTimeout(() => this._wfFit(), 60); },
+      mapaToIdeias: () => this.setState({ mapaMode: 'ideias' }),
+      mapaGraphBg: (s.mapaMode || 'graph') === 'graph' ? 'var(--accent)' : 'transparent',
+      mapaGraphColor: (s.mapaMode || 'graph') === 'graph' ? '#fff' : 'var(--text-2)',
+      mapaIdeiasBg: (s.mapaMode || 'graph') === 'ideias' ? 'var(--accent)' : 'transparent',
+      mapaIdeiasColor: (s.mapaMode || 'graph') === 'ideias' ? '#fff' : 'var(--text-2)',
       ideias, ideiasView,
-      isWorkflow: s.screen === 'workflow',
       wfNodes, wfLinks, wfEmpty, wfCountLabel, wfPanX, wfPanY, wfZoom, wfZoomPct,
       wfCanvasDown: (e) => this._wfCanvasDown(e),
       wfWheel: (e) => this._wfWheelImpl(e),
