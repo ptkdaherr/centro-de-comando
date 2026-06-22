@@ -1352,7 +1352,7 @@
                     <div style="position:absolute; left:{{ lk.mx }}px; top:{{ lk.my }}px; width:{{ lk.len }}px; height:0; border-top:1.5px {{ lk.lineStyle }} var(--wire); opacity:{{ lk.op }}; transform:translate(-50%,-50%) rotate({{ lk.ang }}deg); z-index:1; pointer-events:none;"></div>
                   </sc-for>
                   <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
-                    <div onMouseDown="{{ nd.onDown }}" onTouchStart="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; cursor:grab; z-index:2; width:{{ nd.maxW }}; animation:cc-floatN {{ nd.floatDur }} ease-in-out infinite; animation-delay:{{ nd.floatDelay }};">
+                    <div onMouseDown="{{ nd.onDown }}" onTouchStart="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; cursor:grab; z-index:2; width:{{ nd.maxW }}; opacity:{{ nd.nodeOpacity }}; transition:opacity .25s ease; animation:cc-floatN {{ nd.floatDur }} ease-in-out infinite; animation-delay:{{ nd.floatDelay }};">
                       <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; background-image:radial-gradient(circle at 34% 27%, rgba(255,255,255,.6), rgba(255,255,255,0) 46%); box-shadow:{{ nd.glow }}, inset 0 -{{ nd.inset }}px {{ nd.insetBlur }}px rgba(0,0,0,.33), 0 7px 16px rgba(0,0,0,.34); flex:0 0 auto; transition:transform .24s cubic-bezier(.34,1.56,.64,1);" style-hover="transform:scale(1.28)"></div>
                       <div style="text-align:center; max-width:{{ nd.maxW }};">
                         <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }}; text-shadow:0 0 5px var(--bg), 0 0 9px var(--bg), 0 1px 2px var(--bg);">{{ nd.label }}</div>
@@ -1369,6 +1369,30 @@
                 <div style="height:1px; background:var(--border); margin:1px 3px;"></div>
                 <button onClick="{{ wfReset }}" title="Resetar posições e zoom" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:15px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">⟲</button>
               </div>
+              <sc-if value="{{ wfHasFocus }}" hint-placeholder-val="{{ false }}">
+                <div onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" style="position:absolute; top:16px; right:16px; z-index:6; width:248px; max-height:calc(100% - 32px); overflow-y:auto; background:var(--bg); border:1px solid var(--border-2); border-radius:14px; box-shadow:var(--sh-3); padding:15px 16px; animation:cc-fade .16s ease both;">
+                  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                    <div style="min-width:0;">
+                      <div style="font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); display:flex; align-items:center; gap:6px;"><span style="width:8px; height:8px; border-radius:50%; background:{{ wfFocusColor }}; flex:0 0 auto;"></span>{{ wfFocusType }}</div>
+                      <div style="font-size:15px; font-weight:600; margin-top:5px; line-height:1.25;">{{ wfFocusName }}</div>
+                    </div>
+                    <button onClick="{{ wfClearFocus }}" title="Limpar foco" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border:1px solid var(--border); background:var(--surface); color:var(--text-3); border-radius:7px; cursor:pointer;" style-hover="color:var(--text)">{{ iconClose }}</button>
+                  </div>
+                  <div style="font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin:14px 0 7px;">Conexões</div>
+                  <sc-if value="{{ wfFocusHasConns }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                      <sc-for list="{{ wfFocusConns }}" as="cn" hint-placeholder-count="3">
+                        <button onClick="{{ cn.onClick }}" style="display:flex; align-items:center; gap:8px; padding:6px 9px; border:1px solid var(--border); background:var(--surface); border-radius:8px; cursor:pointer; text-align:left; font:inherit; font-size:12px; color:var(--text-2);" style-hover="border-color:var(--accent); color:var(--text)"><span style="width:7px; height:7px; border-radius:50%; background:{{ cn.color }}; flex:0 0 auto;"></span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ cn.label }}</span></button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ wfFocusNoConns }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px; color:var(--text-3);">Sem conexões.</div></sc-if>
+                  <div style="display:flex; gap:7px; margin-top:14px;">
+                    <button onClick="{{ wfFocusAbrir }}" style="flex:1; height:32px; border:none; background:var(--accent); color:#fff; border-radius:8px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-2)">Abrir</button>
+                    <sc-if value="{{ wfFocusIsIdeia }}" hint-placeholder-val="{{ false }}"><button onClick="{{ wfFocusVirar }}" style="flex:1; height:32px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:8px; font:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="border-color:var(--accent)">Virar projeto</button></sc-if>
+                  </div>
+                </div>
+              </sc-if>
               <div onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" class="cc-hide-mob" style="position:absolute; bottom:16px; left:16px; z-index:5; background:var(--surface); border:1px solid var(--border-2); border-radius:11px; padding:10px 12px; box-shadow:var(--sh-2); display:flex; gap:16px;">
                 <sc-for list="{{ wfLegendGroups }}" as="lg" hint-placeholder-count="2">
                   <div>
@@ -2044,7 +2068,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -3483,14 +3507,16 @@ class Component extends DCLogic {
     const wfCx = 560, wfCy = 380, wfR1 = 210;
     const wfPosOv = s.wfPos || {};
     const wfFinal = (id, bx, by) => { const o = wfPosOv[id]; return o ? { x:o.x, y:o.y } : { x:bx, y:by }; };
-    const wfNodes = []; const wfLinks = []; const wfEdges = [];
+    const wfNodes = []; const wfLinks = []; const wfEdges = []; const wfNav = {}; const wfMeta = {};
     // linha = div fino rotacionado (o framework DC não interpola atributos x1/y1 de <line> SVG)
-    const wfLink = (x1, y1, x2, y2, dash, op) => { const dx = x2 - x1, dy = y2 - y1; wfLinks.push({ mx:(x1 + x2) / 2, my:(y1 + y2) / 2, len:Math.sqrt(dx * dx + dy * dy), ang:Math.atan2(dy, dx) * 180 / Math.PI, lineStyle:dash ? 'dashed' : 'solid', op }); };
+    const wfLink = (x1, y1, x2, y2, dash, op, u, v) => { const dx = x2 - x1, dy = y2 - y1; wfLinks.push({ mx:(x1 + x2) / 2, my:(y1 + y2) / 2, len:Math.sqrt(dx * dx + dy * dy), ang:Math.atan2(dy, dx) * 180 / Math.PI, lineStyle:dash ? 'dashed' : 'solid', op, u, v }); };
     // clique navega, mas é suprimido logo após um arraste
     const wfClick = (fn) => () => { if (this._wfSuppressClick) { this._wfSuppressClick = false; return; } fn(); };
+    const wfTypeOf = (id) => id === 'root' ? ['Agência', 'root'] : id.indexOf('g:c') === 0 ? ['Cliente', 'cliente'] : id === 'g:ideias' ? ['Grupo de ideias', 'grupo'] : id === 'g:avul' ? ['Avulsas', 'grupo'] : id.indexOf('l:ideias:') === 0 ? ['Ideia', 'ideia'] : id.indexOf('l:') === 0 ? ['Demanda', 'demanda'] : ['Nó', 'no'];
     const wfPush = (id, x, y, meta, click) => {
       const sz = meta.size || 20;
-      wfNodes.push({ id, x, y, ...meta, onDown:(e) => this._wfNodeDown(e, id, x, y), onClick: wfClick(click),
+      wfNav[id] = click; const _t = wfTypeOf(id); wfMeta[id] = { label: meta.label, color: meta.color, typeLabel: _t[0], type: _t[1] };
+      wfNodes.push({ id, x, y, ...meta, nodeOpacity: '1', onDown:(e) => this._wfNodeDown(e, id, x, y), onClick: wfClick(() => this.setState({ wfFocus: id })),
         inset: Math.max(2, Math.round(sz * 0.16)), insetBlur: Math.max(3, Math.round(sz * 0.26)),
         floatDur: (3.4 + (Math.abs(Math.round(x) + Math.round(y)) % 16) / 10).toFixed(1) + 's',
         floatDelay: ((Math.abs(Math.round(x * 7 + y * 3)) % 24) / 10).toFixed(1) + 's' });
@@ -3504,7 +3530,7 @@ class Component extends DCLogic {
       const gbx = wfCx + Math.cos(ang) * wfR1, gby = wfCy + Math.sin(ang) * wfR1;
       const gp = wfFinal('g:'+g.key, gbx, gby);
       wfPush('g:'+g.key, gp.x, gp.y, { label:g.label, sub:g.items.length+(g.key==='ideias'?' ideias':' demandas'), hasSub:true, color:g.color, size:Math.round(46 + Math.min(g.items.length, 9) * 3.4), glow:'0 0 0 5px '+g.color+'22', labelSize:'12px', labelW:'600', maxW:'120px' }, g.onClick);
-      wfLink(rp.x, rp.y, gp.x, gp.y, false, '.55'); wfEdges.push(['root', 'g:'+g.key]);
+      wfLink(rp.x, rp.y, gp.x, gp.y, false, '.55', 'root', 'g:'+g.key); wfEdges.push(['root', 'g:'+g.key]);
       const m = g.items.length;
       const r2 = 92 + Math.min(m, 6) * 11;
       g.items.forEach((it, j) => {
@@ -3514,11 +3540,24 @@ class Component extends DCLogic {
         const lid = 'l:' + g.key + ':' + it.id;
         const ip = wfFinal(lid, ibx, iby);
         wfPush(lid, ip.x, ip.y, { label:it.title, sub:'', hasSub:false, color:it.color, size:15, glow:'0 0 0 3px '+(it.color)+'1c', labelSize:'10.5px', labelW:'500', maxW:'96px' }, it.onClick);
-        wfLink(gp.x, gp.y, ip.x, ip.y, true, '.4'); wfEdges.push(['g:'+g.key, lid]);
+        wfLink(gp.x, gp.y, ip.x, ip.y, true, '.4', 'g:'+g.key, lid); wfEdges.push(['g:'+g.key, lid]);
       });
     });
     // estrutura do grafo (ids + arestas + posição-base) pro layout em "teia" (force-directed)
     this._wfSim = { ids: wfNodes.map(n => n.id), edges: wfEdges, base: Object.fromEntries(wfNodes.map(n => [n.id, { x: n.x, y: n.y }])) };
+    // foco local (clicar num nó): escurece tudo que não é ele nem vizinho; monta o painel de conexões
+    const wfFocus = s.wfFocus && wfMeta[s.wfFocus] ? s.wfFocus : null;
+    let wfFocusPanel = null;
+    if (wfFocus) {
+      const nb = new Set([wfFocus]);
+      for (const e of wfEdges) { if (e[0] === wfFocus) nb.add(e[1]); if (e[1] === wfFocus) nb.add(e[0]); }
+      wfNodes.forEach(nn => { nn.nodeOpacity = nb.has(nn.id) ? '1' : '.14'; });
+      wfLinks.forEach(ll => { ll.op = (ll.u === wfFocus || ll.v === wfFocus) ? '.78' : '.05'; });
+      const fm = wfMeta[wfFocus];
+      const conns = [...nb].filter(id => id !== wfFocus).map(id => ({ label: (wfMeta[id] || {}).label || id, color: (wfMeta[id] || {}).color || 'var(--text-3)', onClick: () => this.setState({ wfFocus: id }) }));
+      const im = wfFocus.match(/^l:ideias:i(\d+)$/);
+      wfFocusPanel = { name: fm.label, type: fm.typeLabel, color: fm.color, conns, hasConns: conns.length > 0, noConns: conns.length === 0, abrir: wfNav[wfFocus] || (() => {}), isIdeia: !!im, idea: im ? ideias[+im[1]] : null };
+    }
     const wfEmpty = clients.length === 0 && demands.length === 0 && ideias.length === 0;
     const wfCountLabel = (wfNodes.length - 1) + ' nós · ' + clients.length + ' clientes';
     const wfPanX = (s.wfPan || {}).x || 0, wfPanY = (s.wfPan || {}).y || 0, wfZoom = s.wfZoom || 1;
@@ -4197,6 +4236,17 @@ class Component extends DCLogic {
       wfReset: () => { this.setState({ wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1 }); if (s.isMobile) setTimeout(() => { this._wfFit(); this._wfScheduleSave(); }, 30); else this._wfScheduleSave(); },
       wfAutoArrange: () => { this.setState({ wfPos: {} }); setTimeout(() => { this._wfFit(); this._wfScheduleSave(); }, 30); },
       wfForce: () => this._wfForce(),
+      wfHasFocus: !!wfFocusPanel,
+      wfFocusName: wfFocusPanel ? wfFocusPanel.name : '',
+      wfFocusType: wfFocusPanel ? wfFocusPanel.type : '',
+      wfFocusColor: wfFocusPanel ? wfFocusPanel.color : 'var(--accent)',
+      wfFocusConns: wfFocusPanel ? wfFocusPanel.conns : [],
+      wfFocusHasConns: !!(wfFocusPanel && wfFocusPanel.hasConns),
+      wfFocusNoConns: !!(wfFocusPanel && wfFocusPanel.noConns),
+      wfFocusIsIdeia: !!(wfFocusPanel && wfFocusPanel.isIdeia),
+      wfFocusAbrir: () => { if (wfFocusPanel) wfFocusPanel.abrir(); this.setState({ wfFocus: null }); },
+      wfFocusVirar: () => { if (wfFocusPanel && wfFocusPanel.idea) { projetoFromIdeia(wfFocusPanel.idea); this.setState({ wfFocus: null }); } },
+      wfClearFocus: () => this.setState({ wfFocus: null }),
       stopProp: (e) => e.stopPropagation(),
       isAssistente: s.screen === 'assistente',
       chatMessages, chatSuggestions,
