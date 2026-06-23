@@ -137,6 +137,9 @@
     .cc-kpi-money { font-size:18px !important; white-space:nowrap !important; }
     /* botão de menu vai pra esquerda (início) no mobile */
     .cc-navtoggle { order:-1 !important; margin-left:0 !important; margin-right:2px !important; }
+    /* Hero recolhível da aba Demandas: some ao rolar a lista pra baixo, volta ao rolar pra cima/topo */
+    .cc-demand-hero { overflow:hidden; max-height:360px; transition:max-height .32s cubic-bezier(.4,0,.2,1), opacity .2s ease, padding .32s cubic-bezier(.4,0,.2,1), transform .32s cubic-bezier(.4,0,.2,1); }
+    .cc-demand-hero.cc-collapsed { max-height:0 !important; padding-top:0 !important; padding-bottom:0 !important; opacity:0; transform:translateY(-14px); pointer-events:none; }
   }
 </style>
 </helmet>
@@ -496,7 +499,7 @@
         <!-- ======= DEMANDAS (BOARD) ======= -->
         <sc-if value="{{ isDemandas }}" hint-placeholder-val="{{ false }}">
           <div class="cc-screen-flex" style="display:flex; flex-direction:column; height:100%; animation:cc-fade .2s ease both;">
-            <div style="padding:22px 28px 14px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px;">
+            <div class="{{ heroClass }}" style="padding:22px 28px 14px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px;">
               <div>
                 <h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.3px;">Demandas</h1>
                 <p style="margin:6px 0 0; font-size:13px; color:var(--text-2);">{{ demandasCount }} · {{ clientesCount }} · atualizado agora</p>
@@ -2813,9 +2816,12 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.4.1';
+  _appVersion = '0.4.2';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.2', date: 'Junho 2026', items: [
+      'Celular: na aba Demandas, ao rolar a lista pra baixo o cabeçalho recolhe sozinho (mais espaço pras demandas) e volta ao subir.',
+    ] },
     { v: '0.4.1', date: 'Junho 2026', items: [
       'App instalado (.exe): ao encolher a janela, o conteúdo agora se ajusta ao novo tamanho (antes ficava travado no tamanho original).',
     ] },
@@ -3000,6 +3006,23 @@ class Component extends DCLogic {
     window.addEventListener('focus', this._onWindowFocus);
     document.addEventListener('visibilitychange', this._onVisibility);
 
+    // Hero recolhível (mobile, aba Demandas): rolar a lista pra baixo recolhe o cabeçalho,
+    // rolar pra cima / chegar no topo expande. Listener em FASE DE CAPTURA pra pegar o scroll
+    // de qualquer container interno (cada view tem o seu scroller). Só age no mobile + tela Demandas.
+    this._demandScroll = (e) => {
+      if (!this.state.isMobile || this.state.screen !== 'demandas') return;
+      const el = e.target;
+      if (!el || el === document || typeof el.scrollTop !== 'number') return;
+      const st = el.scrollTop;
+      const last = this._demandScrollLast || 0;
+      this._demandScrollLast = st;
+      if (st <= 4) { if (this.state.demandHeroCollapsed) this.setState({ demandHeroCollapsed: false }); return; }
+      const dy = st - last;
+      if (dy > 6 && !this.state.demandHeroCollapsed) this.setState({ demandHeroCollapsed: true });
+      else if (dy < -6 && this.state.demandHeroCollapsed) this.setState({ demandHeroCollapsed: false });
+    };
+    document.addEventListener('scroll', this._demandScroll, true);
+
     fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json().catch(() => ({ ok: false })))
       .then((d) => {
@@ -3019,6 +3042,7 @@ class Component extends DCLogic {
     if (this._sizeRO) { try { this._sizeRO.disconnect(); } catch (e) {} }
     window.removeEventListener('resize', this._scheduleSize);
     if (window.visualViewport) window.visualViewport.removeEventListener('resize', this._scheduleSize);
+    document.removeEventListener('scroll', this._demandScroll, true);
   }
 
   _loadState() {
@@ -3137,7 +3161,7 @@ class Component extends DCLogic {
     return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  go(screen) { this.setState({ screen, drawer: false, navOpen: false }); if (screen === 'mapa') setTimeout(() => this._wfFit(), 90); }
+  go(screen) { this._demandScrollLast = 0; this.setState({ screen, drawer: false, navOpen: false, demandHeroCollapsed: false }); if (screen === 'mapa') setTimeout(() => this._wfFit(), 90); }
 
   themes = {
     'Azul':    { a: '#5285f0', a2: '#3f6fe0', w: 'rgba(82,133,240,.14)' },
@@ -4421,6 +4445,7 @@ class Component extends DCLogic {
       isLembretes: s.screen === 'lembretes',
       lembretesAll, lembretesEmpty, lembretesCount, lembretesCountLabel, lembretesSub,
       isDemandas: s.screen === 'demandas',
+      heroClass: (s.isMobile && s.demandHeroCollapsed) ? 'cc-demand-hero cc-collapsed' : 'cc-demand-hero',
       isSystem: s.screen === 'system',
       isStub: !isBuilt,
       stubTitle: stub ? stub.t : '',
