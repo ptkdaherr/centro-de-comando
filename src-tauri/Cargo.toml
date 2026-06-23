@@ -1,6 +1,6 @@
 [package]
 name = "centro-de-comando"
-version = "0.4.1"
+version = "0.4.2"
 description = "Centro de Comando — ERP/PSA da agência"
 authors = ["Rafael Andrade"]
 edition = "2021"

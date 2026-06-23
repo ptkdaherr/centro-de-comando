@@ -74,12 +74,25 @@ pub fn run() {
 
             Ok(())
         })
-        // fechar a janela só esconde pra bandeja (mantém rodando p/ notificações)
-        .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
+        // tratamento de eventos da janela
+        .on_window_event(|window, event| match event {
+            // fechar a janela só esconde pra bandeja (mantém rodando p/ notificações)
+            WindowEvent::CloseRequested { api, .. } => {
                 let _ = window.hide();
                 api.prevent_close();
             }
+            // Correção do bug do WebView2 em janela SEM bordas (decorations:false):
+            // ao redimensionar a janela, o WebView2 não recalcula sozinho a área de
+            // desenho (bug "won't fix" tauri-apps/tauri#6609) — o conteúdo não encolhe
+            // e sobram faixas pretas. Re-aplicar o tamanho DO WEBVIEW (não da janela)
+            // força o controller a recalcular os bounds; não entra em loop porque
+            // redimensionar o webview não re-emite WindowEvent::Resized.
+            WindowEvent::Resized(size) => {
+                for wv in window.webviews() {
+                    let _ = wv.set_size(*size);
+                }
+            }
+            _ => {}
         })
         .run(tauri::generate_context!())
         .expect("erro ao iniciar o Centro de Comando");

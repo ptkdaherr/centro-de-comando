@@ -2036,15 +2036,15 @@
 
       <!-- PLAYER LO-FI (mini janela arrastável estilo Spotify) -->
       <sc-if value="{{ musicOpen }}" hint-placeholder-val="{{ false }}">
-        <div style="position:fixed; left:{{ musicLeft }}; top:{{ musicTop }}; width:280px; background:var(--bg); border:1px solid var(--border-2); border-radius:16px; box-shadow:var(--sh-3); z-index:60; overflow:hidden; animation:cc-fade .16s ease both;">
-          <div onMouseDown="{{ musicDragDown }}" onTouchStart="{{ musicDragDown }}" style="display:flex; align-items:center; gap:9px; padding:11px 12px; cursor:grab; background:linear-gradient(150deg, var(--accent-weak), transparent); user-select:none; touch-action:none;">
+        <div class="cc-music-panel" style="position:fixed; left:{{ musicLeft }}; top:{{ musicTop }}; width:280px; max-height:calc(var(--vh, 100vh) - 16px); display:flex; flex-direction:column; background:var(--bg); border:1px solid var(--border-2); border-radius:16px; box-shadow:var(--sh-3); z-index:60; overflow:hidden; animation:cc-fade .16s ease both;">
+          <div onMouseDown="{{ musicDragDown }}" onTouchStart="{{ musicDragDown }}" style="flex:0 0 auto; display:flex; align-items:center; gap:9px; padding:11px 12px; cursor:grab; background:linear-gradient(150deg, var(--accent-weak), transparent); user-select:none; touch-action:none;">
             <span style="display:flex; color:var(--accent);">{{ iconMusic }}</span>
             <span style="flex:1; font-size:12px; font-weight:600; letter-spacing:.2px;">Lo-fi · foco</span>
             <button onClick="{{ toggleMusicMin }}" title="{{ musicMinTitle }}" style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer; transform:rotate({{ musicMinRot }}); transition:transform .2s ease;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconChevDown }}</button>
             <button onClick="{{ closeMusic }}" title="Fechar" style="display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:none; background:transparent; color:var(--text-3); border-radius:6px; cursor:pointer;" style-hover="background:var(--crit-weak); color:var(--crit)">{{ iconXsm }}</button>
           </div>
           <sc-if value="{{ musicBodyShown }}" hint-placeholder-val="{{ true }}">
-            <div style="padding:6px 14px 15px;">
+            <div style="padding:6px 14px 15px; overflow-y:auto; flex:1 1 auto; min-height:0;">
               <div style="height:92px; border-radius:12px; background:linear-gradient(135deg, #5285f0, #8a7ff0 55%, #d7796b); display:flex; align-items:flex-end; justify-content:center; gap:5px; padding:16px; margin-bottom:12px; position:relative; overflow:hidden;">
                 <div style="position:absolute; inset:0; background:radial-gradient(120px 80px at 72% 18%, rgba(255,255,255,.28), transparent);"></div>
                 <span style="width:5px; height:30%; border-radius:3px; background:rgba(255,255,255,.9); transform-origin:bottom; animation:cc-eq 1s ease-in-out infinite; animation-delay:0s; opacity:{{ musicEqOpacity }};"></span>
@@ -2643,9 +2643,15 @@ class Component extends DCLogic {
   // posição salva numa janela maior/outro monitor faz o painel abrir fora da tela ("não aparece nada")
   _musicClampPos(p) {
     const w = window.innerWidth || 1200, h = window.innerHeight || 800;
-    const PW = 280, PH = 372, M = 8;
+    const PW = 280, M = 8;
+    // mede a altura REAL do painel (varia: minimizado ~44px, aberto ~372, com a lista de
+    // categorias aberta bem mais) pra encaixar o painel INTEIRO no viewport — sem isso o
+    // player fica cortado pra fora da janela (sobretudo depois de redimensionar o .exe)
+    let PH = 372;
+    try { const el = document.querySelector('.cc-music-panel'); if (el && el.offsetHeight) PH = el.offsetHeight; } catch (e) {}
+    PH = Math.min(PH, h - M * 2);
     const x = Math.min(Math.max(M, (p && typeof p.x === 'number') ? p.x : (w - 300)), Math.max(M, w - PW - M));
-    const y = Math.min(Math.max(M, (p && typeof p.y === 'number') ? p.y : 120), Math.max(M, h - PH));
+    const y = Math.min(Math.max(M, (p && typeof p.y === 'number') ? p.y : 120), Math.max(M, h - PH - M));
     return { x, y };
   }
   // ---- drag-and-drop de demanda por TOQUE (mobile): HTML5 DnD não funciona em touch ----
@@ -2816,9 +2822,12 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.4.2';
+  _appVersion = '0.4.3';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.3', date: 'Junho 2026', items: [
+      'Player de música: agora sempre cabe dentro da janela (antes podia ficar cortado pra fora ao diminuir a janela do app). Em janelas mais baixas o player rola por dentro, então a lista de estações e o campo pra colar link do YouTube ficam sempre acessíveis.',
+    ] },
     { v: '0.4.2', date: 'Junho 2026', items: [
       'Celular: na aba Demandas, ao rolar a lista o cabeçalho recolhe sozinho (mais espaço pras demandas) e reaparece ao voltar pro topo.',
     ] },
@@ -2957,6 +2966,12 @@ class Component extends DCLogic {
       root.style.height = h + 'px';
       de.style.setProperty('--vw', w + 'px');
       de.style.setProperty('--vh', h + 'px');
+      // re-encaixa o player de música na janela nova (senão fica cortado pra fora após o resize)
+      if (this.state.musicOpen) {
+        const np = this._musicClampPos(this.state.musicPos);
+        const cur = this.state.musicPos;
+        if (!cur || cur.x !== np.x || cur.y !== np.y) { this.setState({ musicPos: np }); this._saveAudioPrefs(); }
+      }
     };
     this._scheduleSize = () => {
       if (this._sizeRaf) cancelAnimationFrame(this._sizeRaf);
@@ -4778,7 +4793,7 @@ class Component extends DCLogic {
       musicStationName: s.musicCustom ? (_curCustomName || (s.musicNowTitle || 'Carregando…')) : (this._lofiCats[s.musicCat || 0].emoji + ' ' + this._lofiCats[s.musicCat || 0].name),
       musicStationDesc: s.musicCustom ? 'YouTube · sua estação' : 'YouTube · som ambiente',
       musicPickerOpen: !!s.musicPickerOpen,
-      toggleMusicPicker: () => this.setState({ musicPickerOpen: !s.musicPickerOpen, musicErr: '' }),
+      toggleMusicPicker: () => { this.setState({ musicPickerOpen: !s.musicPickerOpen, musicErr: '' }); setTimeout(() => { if (this.state.musicOpen) { const np = this._musicClampPos(this.state.musicPos); const cur = this.state.musicPos; if (!cur || cur.x !== np.x || cur.y !== np.y) { this.setState({ musicPos: np }); this._saveAudioPrefs(); } } }, 70); },
       musicCatList: this._lofiCats.map((c, i) => { const sel = !s.musicCustom && (s.musicCat || 0) === i; return { label: c.emoji + '  ' + c.name, selBg: sel ? 'var(--accent-weak)' : 'transparent', selColor: sel ? 'var(--accent)' : 'var(--text-2)', onClick: () => { this._musicPlayCat(i); } }; }),
       hasCustomStations: (s.customStations || []).length > 0,
       noCustomStations: (s.customStations || []).length === 0,
