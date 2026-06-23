@@ -2820,7 +2820,7 @@ class Component extends DCLogic {
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
     { v: '0.4.2', date: 'Junho 2026', items: [
-      'Celular: na aba Demandas, ao rolar a lista pra baixo o cabeçalho recolhe sozinho (mais espaço pras demandas) e volta ao subir.',
+      'Celular: na aba Demandas, ao rolar a lista o cabeçalho recolhe sozinho (mais espaço pras demandas) e reaparece ao voltar pro topo.',
     ] },
     { v: '0.4.1', date: 'Junho 2026', items: [
       'App instalado (.exe): ao encolher a janela, o conteúdo agora se ajusta ao novo tamanho (antes ficava travado no tamanho original).',
@@ -3006,20 +3006,38 @@ class Component extends DCLogic {
     window.addEventListener('focus', this._onWindowFocus);
     document.addEventListener('visibilitychange', this._onVisibility);
 
-    // Hero recolhível (mobile, aba Demandas): rolar a lista pra baixo recolhe o cabeçalho,
-    // rolar pra cima / chegar no topo expande. Listener em FASE DE CAPTURA pra pegar o scroll
-    // de qualquer container interno (cada view tem o seu scroller). Só age no mobile + tela Demandas.
+    // Hero recolhível (mobile, aba Demandas): recolhe ao rolar a lista pra baixo, volta perto do topo.
+    // Listener em FASE DE CAPTURA (pega o scroll de qualquer container interno; cada view tem o seu).
+    // Robustez contra os 2 bugs do colapso-no-scroll:
+    //  - OSCILAÇÃO: recolher muda a altura do scroller e re-dispara scroll → loop. Resolvido com
+    //    LIMIAR + banda de histerese larga (recolhe >80, volta <28) + COOLDOWN que ignora os scrolls
+    //    causados pelo próprio relayout/transição.
+    //  - TRAVA: se a lista é curta, recolher faz o conteúdo caber e não dá mais pra rolar de volta
+    //    pra expandir. Resolvido com GUARD de elegibilidade: só recolhe se sobrar rolagem suficiente
+    //    depois de recolher (lista longa). Lista curta nunca recolhe (já tem espaço de sobra).
+    this._heroH = 0;
+    this._setHero = (v) => {
+      if (!!this.state.demandHeroCollapsed === v) return;
+      this.setState({ demandHeroCollapsed: v });
+      this._heroCooldown = true; // ignora os scrolls disparados pelo relayout enquanto a transição roda
+      clearTimeout(this._heroCdT);
+      this._heroCdT = setTimeout(() => { this._heroCooldown = false; }, 420);
+    };
     this._demandScroll = (e) => {
-      if (!this.state.isMobile || this.state.screen !== 'demandas') return;
+      if (!this.state.isMobile || this.state.screen !== 'demandas' || this._heroCooldown) return;
       const el = e.target;
       if (!el || el === document || typeof el.scrollTop !== 'number') return;
-      const st = el.scrollTop;
-      const last = this._demandScrollLast || 0;
-      this._demandScrollLast = st;
-      if (st <= 4) { if (this.state.demandHeroCollapsed) this.setState({ demandHeroCollapsed: false }); return; }
-      const dy = st - last;
-      if (dy > 6 && !this.state.demandHeroCollapsed) this.setState({ demandHeroCollapsed: true });
-      else if (dy < -6 && this.state.demandHeroCollapsed) this.setState({ demandHeroCollapsed: false });
+      if (this._heroRaf) return;
+      this._heroRaf = requestAnimationFrame(() => {
+        this._heroRaf = 0;
+        const st = el.scrollTop;
+        const collapsed = !!this.state.demandHeroCollapsed;
+        if (!collapsed) { const h = document.querySelector('.cc-demand-hero'); if (h && h.offsetHeight) this._heroH = h.offsetHeight; }
+        if (st < 28) { this._setHero(false); return; } // perto do topo → expande
+        const heroH = this._heroH || 200;
+        // só recolhe se, após recolher (scroller cresce heroH), ainda sobrar rolagem (> 48px) — senão trava
+        if (!collapsed && st > 80 && (el.scrollHeight - el.clientHeight - heroH) > 48) this._setHero(true);
+      });
     };
     document.addEventListener('scroll', this._demandScroll, true);
 
@@ -3043,6 +3061,8 @@ class Component extends DCLogic {
     window.removeEventListener('resize', this._scheduleSize);
     if (window.visualViewport) window.visualViewport.removeEventListener('resize', this._scheduleSize);
     document.removeEventListener('scroll', this._demandScroll, true);
+    clearTimeout(this._heroCdT);
+    if (this._heroRaf) cancelAnimationFrame(this._heroRaf);
   }
 
   _loadState() {
@@ -3161,7 +3181,7 @@ class Component extends DCLogic {
     return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  go(screen) { this._demandScrollLast = 0; this.setState({ screen, drawer: false, navOpen: false, demandHeroCollapsed: false }); if (screen === 'mapa') setTimeout(() => this._wfFit(), 90); }
+  go(screen) { this._heroCooldown = false; clearTimeout(this._heroCdT); this.setState({ screen, drawer: false, navOpen: false, demandHeroCollapsed: false }); if (screen === 'mapa') setTimeout(() => this._wfFit(), 90); }
 
   themes = {
     'Azul':    { a: '#5285f0', a2: '#3f6fe0', w: 'rgba(82,133,240,.14)' },
