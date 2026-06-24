@@ -39,6 +39,11 @@ pub fn run() {
                 .inner_size(1280.0, 820.0)
                 .min_inner_size(940.0, 600.0)
                 .decorations(false) // sem barra nativa: a barra própria do app (frameless) é a única
+                // janela transparente (fundo opaco do app por cima): contorno documentado pro bug do
+                // WebView2 em janela sem bordas que NÃO recomputa a área de desenho no resize
+                // (tauri#6609/#9053/#10053, won't-fix). Com a transparência o WebView2 passa a acompanhar
+                // o redimensionamento de forma confiável — o `set_size` manual no Resized era instável.
+                .transparent(true)
                 .center()
                 .build()?;
 
@@ -74,25 +79,14 @@ pub fn run() {
 
             Ok(())
         })
-        // tratamento de eventos da janela
-        .on_window_event(|window, event| match event {
-            // fechar a janela só esconde pra bandeja (mantém rodando p/ notificações)
-            WindowEvent::CloseRequested { api, .. } => {
+        // fechar a janela só esconde pra bandeja (mantém rodando p/ notificações).
+        // O resize do conteúdo é tratado pela janela transparente (.transparent(true) acima),
+        // não mais por um handler de Resized com set_size (que era instável — vide tauri#10053).
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
                 let _ = window.hide();
                 api.prevent_close();
             }
-            // Correção do bug do WebView2 em janela SEM bordas (decorations:false):
-            // ao redimensionar a janela, o WebView2 não recalcula sozinho a área de
-            // desenho (bug "won't fix" tauri-apps/tauri#6609) — o conteúdo não encolhe
-            // e sobram faixas pretas. Re-aplicar o tamanho DO WEBVIEW (não da janela)
-            // força o controller a recalcular os bounds; não entra em loop porque
-            // redimensionar o webview não re-emite WindowEvent::Resized.
-            WindowEvent::Resized(size) => {
-                for wv in window.webviews() {
-                    let _ = wv.set_size(*size);
-                }
-            }
-            _ => {}
         })
         .run(tauri::generate_context!())
         .expect("erro ao iniciar o Centro de Comando");
