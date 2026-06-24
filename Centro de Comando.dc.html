@@ -1369,7 +1369,7 @@
                   <sc-for list="{{ wfNodes }}" as="nd" hint-placeholder-count="0">
                     <div onMouseDown="{{ nd.onDown }}" onTouchStart="{{ nd.onDown }}" onClick="{{ nd.onClick }}" style="position:absolute; left:{{ nd.x }}px; top:{{ nd.y }}px; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; cursor:grab; z-index:2; width:{{ nd.maxW }}; opacity:{{ nd.nodeOpacity }}; transition:opacity .25s ease; animation:cc-floatN {{ nd.floatDur }} ease-in-out infinite; animation-delay:{{ nd.floatDelay }};">
                       <div style="width:{{ nd.size }}px; height:{{ nd.size }}px; border-radius:50%; background:{{ nd.color }}; background-image:radial-gradient(circle at 34% 27%, rgba(255,255,255,.6), rgba(255,255,255,0) 46%); box-shadow:{{ nd.glow }}, inset 0 -{{ nd.inset }}px {{ nd.insetBlur }}px rgba(0,0,0,.33), 0 7px 16px rgba(0,0,0,.34); flex:0 0 auto; transition:transform .24s cubic-bezier(.34,1.56,.64,1);" style-hover="transform:scale(1.28)"></div>
-                      <div style="text-align:center; max-width:{{ nd.maxW }};">
+                      <div style="text-align:center; max-width:{{ nd.maxW }}; opacity:{{ wfLabelOpacity }}; transition:opacity .2s ease;">
                         <div style="font-size:{{ nd.labelSize }}; font-weight:{{ nd.labelW }}; color:var(--text); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:{{ nd.maxW }}; text-shadow:0 0 5px var(--bg), 0 0 9px var(--bg), 0 1px 2px var(--bg);">{{ nd.label }}</div>
                         <sc-if value="{{ nd.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px; color:var(--text-3); margin-top:2px; text-shadow:0 0 5px var(--bg), 0 0 8px var(--bg);">{{ nd.sub }}</div></sc-if>
                       </div>
@@ -1383,6 +1383,45 @@
                 <button onClick="{{ wfZoomOut }}" title="Afastar" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:21px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">−</button>
                 <div style="height:1px; background:var(--border); margin:1px 3px;"></div>
                 <button onClick="{{ wfReset }}" title="Resetar posições e zoom" style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-2); border-radius:7px; cursor:pointer; font-size:15px; line-height:1;" style-hover="background:var(--surface-2); color:var(--text)">⟲</button>
+              </div>
+              <!-- Painel de controles (estilo Obsidian: Filtros / Forças / Tela) — desktop only -->
+              <div class="cc-hide-mob" onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" style="position:absolute; top:16px; left:16px; z-index:6; display:flex; flex-direction:column; gap:9px; align-items:flex-start;">
+                <button onClick="{{ wfToggleCtrl }}" title="Controles do grafo" style="display:flex; align-items:center; gap:7px; height:32px; padding:0 13px; border:1px solid var(--border-2); background:{{ wfCtrlBg }}; color:{{ wfCtrlColor }}; border-radius:9px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--sh-1);" style-hover="color:var(--text); border-color:var(--accent)">{{ iconControls }}<span>Controles</span></button>
+                <sc-if value="{{ wfCtrlOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:250px; max-height:calc(100% - 72px); overflow-y:auto; background:var(--bg); border:1px solid var(--border-2); border-radius:14px; box-shadow:var(--sh-3); padding:15px 16px; animation:cc-fade .16s ease both; display:flex; flex-direction:column; gap:17px;">
+                    <div>
+                      <div style="font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin-bottom:9px;">Filtros</div>
+                      <div style="position:relative; margin-bottom:10px;">
+                        <input type="text" value="{{ wfSearch }}" onInput="{{ wfSetSearch }}" placeholder="Buscar nó…" style="width:100%; box-sizing:border-box; height:32px; padding:0 30px 0 11px; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:8px; font:inherit; font-size:12.5px; outline:none;" />
+                        <sc-if value="{{ wfHasSearch }}" hint-placeholder-val="{{ false }}"><button onClick="{{ wfClearSearch }}" title="Limpar" style="position:absolute; top:50%; right:6px; transform:translateY(-50%); width:20px; height:20px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--text-3); border-radius:5px; cursor:pointer; font-size:15px; line-height:1;" style-hover="color:var(--text)">×</button></sc-if>
+                      </div>
+                      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <sc-for list="{{ wfTypePills }}" as="tp" hint-placeholder-count="3">
+                          <button onClick="{{ tp.onClick }}" style="display:inline-flex; align-items:center; gap:6px; height:27px; padding:0 10px; border:1px solid {{ tp.brd }}; background:{{ tp.bg }}; color:{{ tp.color }}; border-radius:7px; font:inherit; font-size:11.5px; font-weight:500; cursor:pointer;"><span style="width:7px; height:7px; border-radius:50%; background:{{ tp.dot }}; flex:0 0 auto;"></span>{{ tp.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin-bottom:10px;">Forças</div>
+                      <div style="display:flex; flex-direction:column; gap:11px;">
+                        <sc-for list="{{ wfForceCtrls }}" as="fc" hint-placeholder-count="4">
+                          <div>
+                            <div style="font-size:11px; color:var(--text-2); margin-bottom:5px;">{{ fc.label }}</div>
+                            <input type="range" min="{{ fc.min }}" max="{{ fc.max }}" step="{{ fc.step }}" value="{{ fc.value }}" onInput="{{ fc.onInput }}" style="width:100%; accent-color:var(--accent); cursor:pointer;" />
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size:10px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--text-3); margin-bottom:9px;">Tela</div>
+                      <div style="display:flex; flex-direction:column; gap:6px;">
+                        <sc-for list="{{ wfDisplayPills }}" as="dp" hint-placeholder-count="2">
+                          <button onClick="{{ dp.onClick }}" style="display:flex; align-items:center; justify-content:flex-start; gap:8px; min-height:30px; padding:6px 11px; border:1px solid {{ dp.brd }}; background:{{ dp.bg }}; color:{{ dp.color }}; border-radius:8px; font:inherit; font-size:11.5px; font-weight:500; cursor:pointer; text-align:left; line-height:1.3;"><span>{{ dp.label }}</span></button>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
               </div>
               <sc-if value="{{ wfHasFocus }}" hint-placeholder-val="{{ false }}">
                 <div onMouseDown="{{ stopProp }}" onTouchStart="{{ stopProp }}" style="position:absolute; top:16px; right:16px; z-index:6; width:248px; max-height:calc(100% - 32px); overflow-y:auto; background:var(--bg); border:1px solid var(--border-2); border-radius:14px; box-shadow:var(--sh-3); padding:15px 16px; animation:cc-fade .16s ease both;">
@@ -2328,6 +2367,8 @@ class Component extends DCLogic {
   // layout em "teia" (force-directed): repulsão entre todos os nós + molas nas arestas; salva em wfPos
   _wfForce() {
     const sim = this._wfSim; if (!sim || sim.ids.length < 2) return;
+    const st = this.state; // parâmetros ajustáveis pelo painel de Forças (estilo Obsidian)
+    const REPEL = st.wfRepel || 11000, LINKD = (st.wfLinkDist != null ? st.wfLinkDist : 120), LINKS = (st.wfLinkStr != null ? st.wfLinkStr : 0.05), GRAV = (st.wfGravity != null ? st.wfGravity : 0.006);
     const ids = sim.ids, n = ids.length, center = { x: 560, y: 380 };
     const pos = {}; ids.forEach(id => { const b = sim.base[id]; pos[id] = { x: b.x, y: b.y }; });
     for (let it = 0; it < 300; it++) {
@@ -2336,19 +2377,19 @@ class Component extends DCLogic {
         const ia = ids[a], ib = ids[b];
         let dx = pos[ia].x - pos[ib].x, dy = pos[ia].y - pos[ib].y;
         let d2 = dx * dx + dy * dy; if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = 1; }
-        const d = Math.sqrt(d2), f = 11000 / d2;
+        const d = Math.sqrt(d2), f = REPEL / d2;
         fx[ia] += (dx / d) * f; fy[ia] += (dy / d) * f; fx[ib] -= (dx / d) * f; fy[ib] -= (dy / d) * f;
       }
       for (const e of sim.edges) {
         const u = e[0], v = e[1];
         let dx = pos[v].x - pos[u].x, dy = pos[v].y - pos[u].y;
-        const d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - 120) * 0.05;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - LINKD) * LINKS;
         fx[u] += (dx / d) * f; fy[u] += (dy / d) * f; fx[v] -= (dx / d) * f; fy[v] -= (dy / d) * f;
       }
       ids.forEach(id => {
         if (id === 'root') { pos[id].x += (center.x - pos[id].x) * 0.25; pos[id].y += (center.y - pos[id].y) * 0.25; return; }
-        pos[id].x += Math.max(-28, Math.min(28, fx[id])) * 0.85 + (center.x - pos[id].x) * 0.006;
-        pos[id].y += Math.max(-28, Math.min(28, fy[id])) * 0.85 + (center.y - pos[id].y) * 0.006;
+        pos[id].x += Math.max(-28, Math.min(28, fx[id])) * 0.85 + (center.x - pos[id].x) * GRAV;
+        pos[id].y += Math.max(-28, Math.min(28, fy[id])) * 0.85 + (center.y - pos[id].y) * GRAV;
       });
     }
     let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
@@ -2370,9 +2411,11 @@ class Component extends DCLogic {
     this.setState({ wfZoom: nz, wfPan: { x: cx - ((cx - pan.x) / zoom) * nz, y: cy - ((cy - pan.y) / zoom) * nz } });
     this._wfScheduleSave();
   }
-  _wfSaveNow() { try { const s = this.state; localStorage.setItem('cdc-wf', JSON.stringify({ pos: s.wfPos || {}, pan: s.wfPan || { x: 0, y: 0 }, zoom: s.wfZoom || 1 })); } catch (e) {} }
+  _wfSaveNow() { try { const s = this.state; localStorage.setItem('cdc-wf', JSON.stringify({ pos: s.wfPos || {}, pan: s.wfPan || { x: 0, y: 0 }, zoom: s.wfZoom || 1, repel: s.wfRepel, linkDist: s.wfLinkDist, linkStr: s.wfLinkStr, gravity: s.wfGravity, fadeLabels: s.wfFadeLabels, sizeByDeg: s.wfSizeByDeg })); } catch (e) {} }
   _wfScheduleSave() { clearTimeout(this._wfSaveT); this._wfSaveT = setTimeout(() => this._wfSaveNow(), 250); }
-  _loadWfView() { try { const raw = localStorage.getItem('cdc-wf'); if (raw) { const v = JSON.parse(raw); this.setState({ wfPos: v.pos || {}, wfPan: v.pan || { x: 0, y: 0 }, wfZoom: v.zoom || 1 }); } } catch (e) {} }
+  // re-roda a física (debounce) ao mexer nos sliders de Forças — sensação "ao vivo" estilo Obsidian
+  _wfForceDebounced() { clearTimeout(this._wfForceT); this._wfForceT = setTimeout(() => this._wfForce(), 130); }
+  _loadWfView() { try { const raw = localStorage.getItem('cdc-wf'); if (raw) { const v = JSON.parse(raw); const ns = { wfPos: v.pos || {}, wfPan: v.pan || { x: 0, y: 0 }, wfZoom: v.zoom || 1 }; if (v.repel != null) ns.wfRepel = v.repel; if (v.linkDist != null) ns.wfLinkDist = v.linkDist; if (v.linkStr != null) ns.wfLinkStr = v.linkStr; if (v.gravity != null) ns.wfGravity = v.gravity; if (v.fadeLabels != null) ns.wfFadeLabels = v.fadeLabels; if (v.sizeByDeg != null) ns.wfSizeByDeg = v.sizeByDeg; this.setState(ns); } } catch (e) {} }
 
   // ===================== BLUEPRINT (canvas editável de ideias) =====================
   // Whiteboard livre: cards de texto que o usuário cria, arrasta e conecta manualmente
@@ -2822,9 +2865,13 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.4.4';
+  _appVersion = '0.4.5';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.5', date: 'Junho 2026', items: [
+      'Mapa mental (Cérebro): novo painel "Controles" (estilo Obsidian) — busca pra acender um nó e escurecer o resto, sliders de Forças (repulsão, distância e força das ligações, gravidade) pra moldar a teia ao vivo, e filtros por tipo (Clientes/Demandas/Ideias).',
+      'Mapa mental: os rótulos esmaecem ao afastar o zoom (menos poluição) e os nós com mais conexões ficam maiores — dá pra ligar/desligar em "Tela".',
+    ] },
     { v: '0.4.4', date: 'Junho 2026', items: [
       'App instalado (.exe): nas abas Demandas e Mapa mental o conteúdo não "passa mais pra direita" ao redimensionar a janela — agora respeita sempre a largura da janela (a coluna "Entregue" do kanban e os controles do mapa não saem mais pra fora da tela).',
     ] },
@@ -3910,16 +3957,26 @@ class Component extends DCLogic {
     });
     // estrutura do grafo (ids + arestas + posição-base) pro layout em "teia" (force-directed)
     this._wfSim = { ids: wfNodes.map(n => n.id), edges: wfEdges, base: Object.fromEntries(wfNodes.map(n => [n.id, { x: n.x, y: n.y }])) };
+    // grau (nº de conexões) de cada nó — alimenta o "tamanho por conexões" (estilo Obsidian)
+    const wfDeg = {}; wfEdges.forEach(e => { wfDeg[e[0]] = (wfDeg[e[0]] || 0) + 1; wfDeg[e[1]] = (wfDeg[e[1]] || 0) + 1; });
+    if (s.wfSizeByDeg !== false) { wfNodes.forEach(nn => { const dg = wfDeg[nn.id] || 0; if (dg > 1) nn.size = Math.round(nn.size * (1 + Math.min(dg - 1, 14) * 0.05)); }); }
+    // classifica o nó por tipo (pros toggles Clientes/Demandas/Ideias do painel)
+    const wfKind = (id) => id === 'root' ? 'root' : (id.indexOf('g:c') === 0 ? 'cli' : ((id === 'g:ideias' || id.indexOf('l:ideias:') === 0) ? 'ide' : 'dem'));
     // foco local (clicar num nó): escurece tudo que não é ele nem vizinho; monta o painel de conexões
     const wfFocus = s.wfFocus && wfMeta[s.wfFocus] ? s.wfFocus : null;
     const wfFilter = s.wfFilter || null; // 'st:<status>' ou 'cat:<categoria>' (clicar na legenda)
+    const wfQuery = (s.wfSearch || '').trim().toLowerCase(); // busca textual do painel
+    const showCli = s.wfShowClientes !== false, showDem = s.wfShowDemandas !== false, showIde = s.wfShowIdeias !== false;
     let nb = null;
     if (wfFocus) { nb = new Set([wfFocus]); for (const e of wfEdges) { if (e[0] === wfFocus) nb.add(e[1]); if (e[1] === wfFocus) nb.add(e[0]); } }
-    if (wfFocus || wfFilter) {
+    if (wfFocus || wfFilter || wfQuery || !showCli || !showDem || !showIde) {
       wfNodes.forEach(nn => {
         let op = 1;
-        if (nb && !nb.has(nn.id)) op = 0.14;                          // foco: escurece não-vizinhos
-        if (wfFilter && nn.fk && nn.fk !== wfFilter) op = Math.min(op, 0.1); // filtro: escurece folhas que não batem
+        if (nb && !nb.has(nn.id)) op = Math.min(op, 0.14);                  // foco: escurece não-vizinhos
+        if (wfFilter && nn.fk && nn.fk !== wfFilter) op = Math.min(op, 0.1); // filtro da legenda
+        if (wfQuery && (nn.label || '').toLowerCase().indexOf(wfQuery) === -1) op = Math.min(op, 0.1); // busca
+        const k = wfKind(nn.id);                                            // toggles de tipo
+        if ((k === 'cli' && !showCli) || (k === 'dem' && !showDem) || (k === 'ide' && !showIde)) op = Math.min(op, 0.05);
         nn.nodeOpacity = String(op);
       });
       wfLinks.forEach(ll => { if (wfFocus) ll.op = (ll.u === wfFocus || ll.v === wfFocus) ? '.78' : '.05'; });
@@ -3935,6 +3992,26 @@ class Component extends DCLogic {
     const wfCountLabel = (wfNodes.length - 1) + ' nós · ' + clients.length + ' clientes';
     const wfPanX = (s.wfPan || {}).x || 0, wfPanY = (s.wfPan || {}).y || 0, wfZoom = s.wfZoom || 1;
     const wfZoomPct = Math.round(wfZoom * 100) + '%';
+    // fade dos rótulos conforme o zoom (estilo Obsidian) — desligado no mobile (lá os rótulos ficam sempre visíveis)
+    const wfFade = (s.wfFadeLabels !== false) && !s.isMobile;
+    const wfLabelOpacity = wfFade ? Math.max(0, Math.min(1, (wfZoom - 0.5) / 0.32)).toFixed(2) : '1';
+    // pills de toggle do painel de controles (Filtros por tipo + opções de Tela)
+    const wfPill = (label, on, dot, onClick) => ({ label, dot: dot || '', dotShow: !!dot, bg: on ? 'var(--accent-weak)' : 'var(--surface)', color: on ? 'var(--text)' : 'var(--text-3)', brd: on ? 'var(--accent)' : 'var(--border-2)', onClick });
+    const wfTypePills = [
+      wfPill('Clientes', showCli, 'var(--info)', () => this.setState({ wfShowClientes: !showCli })),
+      wfPill('Demandas', showDem, 'var(--ok)', () => this.setState({ wfShowDemandas: !showDem })),
+      wfPill('Ideias', showIde, 'var(--warn)', () => this.setState({ wfShowIdeias: !showIde })),
+    ];
+    const wfDisplayPills = [
+      wfPill('Esmaecer rótulos ao afastar', s.wfFadeLabels !== false, '', () => { this.setState({ wfFadeLabels: !(s.wfFadeLabels !== false) }); this._wfScheduleSave(); }),
+      wfPill('Tamanho por conexões', s.wfSizeByDeg !== false, '', () => { this.setState({ wfSizeByDeg: !(s.wfSizeByDeg !== false) }); this._wfScheduleSave(); }),
+    ];
+    const wfForceCtrls = [
+      { label: 'Repulsão', min: '2000', max: '28000', step: '1000', value: String(s.wfRepel || 11000), onInput: (e) => { this.setState({ wfRepel: +e.target.value }); this._wfForceDebounced(); this._wfScheduleSave(); } },
+      { label: 'Distância das ligações', min: '40', max: '280', step: '10', value: String(s.wfLinkDist != null ? s.wfLinkDist : 120), onInput: (e) => { this.setState({ wfLinkDist: +e.target.value }); this._wfForceDebounced(); this._wfScheduleSave(); } },
+      { label: 'Força das ligações', min: '0.01', max: '0.16', step: '0.005', value: String(s.wfLinkStr != null ? s.wfLinkStr : 0.05), onInput: (e) => { this.setState({ wfLinkStr: +e.target.value }); this._wfForceDebounced(); this._wfScheduleSave(); } },
+      { label: 'Gravidade central', min: '0', max: '0.03', step: '0.002', value: String(s.wfGravity != null ? s.wfGravity : 0.006), onInput: (e) => { this.setState({ wfGravity: +e.target.value }); this._wfForceDebounced(); this._wfScheduleSave(); } },
+    ];
 
     // ---- BLUEPRINT (canvas editável) ----
     const bpRawNodes = s.bpNodes || [], bpRawEdges = s.bpEdges || [], bpConnectFrom = s.bpConnectFrom || null;
@@ -4666,7 +4743,18 @@ class Component extends DCLogic {
       bpWheel: (e) => this._bpWheel(e),
       bpClearConnect: () => this.setState({ bpConnectFrom: null }),
       ideias, ideiasView,
-      wfNodes, wfLinks, wfEmpty, wfCountLabel, wfPanX, wfPanY, wfZoom, wfZoomPct,
+      wfNodes, wfLinks, wfEmpty, wfCountLabel, wfPanX, wfPanY, wfZoom, wfZoomPct, wfLabelOpacity,
+      // painel de controles estilo Obsidian (desktop): Filtros / Forças / Tela
+      wfCtrlOpen: !!s.wfCtrlOpen,
+      wfCtrlColor: s.wfCtrlOpen ? 'var(--accent)' : 'var(--text-2)',
+      wfCtrlBg: s.wfCtrlOpen ? 'var(--accent-weak)' : 'var(--surface)',
+      wfToggleCtrl: () => this.setState({ wfCtrlOpen: !s.wfCtrlOpen, wfFocus: null }),
+      iconControls: this.icon('filter', 14, 1.8),
+      wfSearch: s.wfSearch || '',
+      wfSetSearch: (e) => this.setState({ wfSearch: e.target.value }),
+      wfClearSearch: () => this.setState({ wfSearch: '' }),
+      wfHasSearch: !!(s.wfSearch || '').trim(),
+      wfTypePills, wfDisplayPills, wfForceCtrls,
       wfLegendGroups: (() => {
         const cur = s.wfFilter || null;
         const mk = (label, color, fk) => { const active = cur === fk, dim = cur && cur !== fk; return { label, color, dimOp: dim ? '.4' : '1', labelColor: active ? 'var(--text)' : 'var(--text-2)', onClick: () => this.setState({ wfFilter: active ? null : fk }) }; };
