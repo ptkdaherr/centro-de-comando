@@ -144,7 +144,7 @@
 </style>
 </helmet>
 
-<div ref="{{ rootRef }}" data-theme-root="true" style="--accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); font-family:'Geist',system-ui,sans-serif; color:var(--text); position:fixed; top:0; left:0; right:0; bottom:0; padding:0; background:var(--bg); display:flex;">
+<div ref="{{ rootRef }}" data-theme-root="true" style="--accent:#5285f0; --accent-2:#3f6fe0; --accent-weak:rgba(82,133,240,.14); font-family:'Geist',system-ui,sans-serif; color:var(--text); position:fixed; top:0; left:0; right:0; bottom:0; max-width:100%; max-height:100%; overflow:hidden; padding:0; background:var(--bg); display:flex;">
 
   <!-- RESIZE (janela frameless do .exe) — bordas invisíveis pra redimensionar -->
   <sc-if value="{{ showWinControls }}" hint-placeholder-val="{{ false }}">
@@ -2822,9 +2822,12 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.4.3';
+  _appVersion = '0.4.4';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.4', date: 'Junho 2026', items: [
+      'App instalado (.exe): nas abas Demandas e Mapa mental o conteúdo não "passa mais pra direita" ao redimensionar a janela — agora respeita sempre a largura da janela (a coluna "Entregue" do kanban e os controles do mapa não saem mais pra fora da tela).',
+    ] },
     { v: '0.4.3', date: 'Junho 2026', items: [
       'Player de música: agora sempre cabe dentro da janela (antes podia ficar cortado pra fora ao diminuir a janela do app). Em janelas mais baixas o player rola por dentro, então a lista de estações e o campo pra colar link do YouTube ficam sempre acessíveis.',
     ] },
@@ -2959,9 +2962,15 @@ class Component extends DCLogic {
       const root = this._root || document.querySelector('[data-theme-root]');
       if (!root) return;
       const de = document.documentElement;
-      const w = Math.round((window.visualViewport && window.visualViewport.width) || de.clientWidth || window.innerWidth);
-      const h = Math.round((window.visualViewport && window.visualViewport.height) || de.clientHeight || window.innerHeight);
+      let w = Math.round((window.visualViewport && window.visualViewport.width) || de.clientWidth || window.innerWidth);
+      let h = Math.round((window.visualViewport && window.visualViewport.height) || de.clientHeight || window.innerHeight);
       if (!w || !h) return;
+      // NUNCA exceder o viewport real: no .exe (WebView2 transparente) a medida pode vir MAIOR
+      // que a janela durante/depois do resize, e aí as telas full-bleed (Demandas/Mapa) "passavam
+      // pra direita" (coluna "Entregue"/controles de zoom empurrados pra fora). clientWidth/Height
+      // do <html> é o viewport de layout e não infla com filho overflow → teto seguro.
+      if (de.clientWidth) w = Math.min(w, de.clientWidth);
+      if (de.clientHeight) h = Math.min(h, de.clientHeight);
       root.style.width = w + 'px';
       root.style.height = h + 'px';
       de.style.setProperty('--vw', w + 'px');
