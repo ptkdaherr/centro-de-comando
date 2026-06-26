@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { exec } from 'node:child_process';
 import {
   initDb, getState, saveState, logAction, updateActionStatus, listActions,
-  createUser, getUserByUsername, getUserById, setUserGeminiKey, userCount,
+  createUser, getUserByUsername, getUserById, setUserGeminiKey, setUserPassword, userCount,
 } from './db.mjs';
 import {
   hashPassword, verifyPassword, createSession, getSessionUserId, destroySession,
@@ -207,6 +207,21 @@ async function handleApi(req, res, url) {
     if (key && key.length < 20) return sendJson(res, 400, { error: 'essa chave parece curta demais — confira e cole de novo' });
     await setUserGeminiKey(uid, key);
     return sendJson(res, 200, { ok: true, geminiConfigured: !!key });
+  }
+
+  // trocar a própria senha (precisa da senha atual; invalida nada além — a sessão atual segue válida)
+  if (url === '/api/account/password' && req.method === 'POST') {
+    const uid = await authUserId(req, res); if (!uid) return;
+    let body;
+    try { body = await readJsonBody(req); } catch { return sendJson(res, 400, { error: 'corpo inválido' }); }
+    const current = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+    const next = typeof body.newPassword === 'string' ? body.newPassword : '';
+    if (next.length < 6) return sendJson(res, 400, { error: 'a nova senha precisa ter pelo menos 6 caracteres' });
+    const user = await getUserById(uid);
+    if (!user || !verifyPassword(current, user.password_hash)) return sendJson(res, 403, { error: 'senha atual incorreta' });
+    if (verifyPassword(next, user.password_hash)) return sendJson(res, 400, { error: 'a nova senha precisa ser diferente da atual' });
+    await setUserPassword(uid, hashPassword(next));
+    return sendJson(res, 200, { ok: true });
   }
 
   if (url === '/api/chat' && req.method === 'POST') {

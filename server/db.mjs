@@ -101,6 +101,9 @@ export async function getUserById(id) {
 export async function setUserGeminiKey(id, key) {
   await db.execute({ sql: 'UPDATE users SET gemini_key = ? WHERE id = ?', args: [key || '', id] });
 }
+export async function setUserPassword(id, passwordHash) {
+  await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [passwordHash, id] });
+}
 export async function userCount() {
   const r = await db.execute('SELECT COUNT(*) AS n FROM users');
   return Number(r.rows[0].n);
