@@ -2040,12 +2040,22 @@
       <!-- EDITAR PERFIL -->
       <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">
         <div onClick="{{ closeProfile }}" style="position:absolute; inset:0; background:rgba(5,6,7,.6); backdrop-filter:blur(3px); z-index:55; animation:cc-scrim .18s ease both;"></div>
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(380px,90%); background:var(--bg); border:1px solid var(--border-2); border-radius:18px; box-shadow:var(--sh-3); z-index:56; overflow:hidden; animation:cc-pop .28s cubic-bezier(.4,0,.2,1) both;">
-          <div style="padding:22px 24px 20px;">
-            <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:5px;">Perfil</div>
-            <h2 style="margin:0 0 18px; font-size:19px; font-weight:600;">Editar perfil</h2>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(620px,94%); max-height:88%; display:flex; flex-direction:column; background:var(--bg); border:1px solid var(--border-2); border-radius:18px; box-shadow:var(--sh-3); z-index:56; overflow:hidden; animation:cc-pop .28s cubic-bezier(.4,0,.2,1) both;">
+          <!-- header fixo -->
+          <div style="flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:17px 22px; border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:3px;">Configurações</div>
+              <h2 style="margin:0; font-size:18px; font-weight:600; letter-spacing:-.02em;">Perfil &amp; conta</h2>
+            </div>
+            <button onClick="{{ closeProfile }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); border-radius:9px; cursor:pointer;" style-hover="background:var(--surface-2); color:var(--text)">{{ iconClose }}</button>
+          </div>
+
+          <!-- corpo rolável -->
+          <div style="flex:1 1 auto; overflow-y:auto; padding:20px 22px;">
+
+            <!-- IDENTIDADE -->
             <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px;">
-              <div style="width:72px; height:72px; border-radius:20px; overflow:hidden; background:linear-gradient(150deg,#3a4252,#272d38); border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; flex:0 0 auto;">
+              <div style="width:76px; height:76px; border-radius:20px; overflow:hidden; background:linear-gradient(150deg,var(--surface-3),var(--surface-2)); border:1px solid var(--border-2); display:flex; align-items:center; justify-content:center; font-size:25px; font-weight:700; color:var(--text); flex:0 0 auto;">
                 <sc-if value="{{ hasProfileAvatarPreview }}" hint-placeholder-val="{{ false }}"><img src="{{ profileAvatarPreview }}" style="width:100%; height:100%; object-fit:cover;" /></sc-if>
                 <sc-if value="{{ noProfileAvatarPreview }}" hint-placeholder-val="{{ true }}"><span>{{ userInitials }}</span></sc-if>
               </div>
@@ -2054,13 +2064,86 @@
                 <sc-if value="{{ hasProfileAvatarPreview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ removeProfileAvatar }}" style="border:none; background:transparent; color:var(--text-3); font:inherit; font-size:12px; cursor:pointer; padding:0;" style-hover="color:var(--crit)">Remover foto</button></sc-if>
               </div>
             </div>
-            <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Seu nome</label>
-            <input value="{{ profileNameInput }}" onInput="{{ profileNameChange }}" placeholder="Ex: Rafael" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
-            <div style="font-size:11.5px; color:var(--text-3); margin-top:8px;">É assim que o app vai te chamar (ex: “Bom dia, Rafael”).</div>
+            <div class="cc-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Seu nome</label>
+                <input value="{{ profileNameInput }}" onInput="{{ profileNameChange }}" placeholder="Ex: Rafael Souza" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+              </div>
+              <div>
+                <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Como te chamar</label>
+                <input value="{{ pfNick }}" onInput="{{ pfNickChange }}" placeholder="Ex: Rafa" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+              </div>
+            </div>
+            <div style="font-size:11.5px; color:var(--text-3); margin-top:8px;">O apelido é como o app vai te saudar (ex: “Bom dia, Rafa”).</div>
 
-            <!-- TROCAR SENHA -->
-            <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
-              <label style="display:block; font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:11px;">Trocar senha</label>
+            <!-- SOBRE VOCÊ -->
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+              <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:13px;">Sobre você</div>
+              <div class="cc-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Profissão / função</label>
+                  <input value="{{ pfRole }}" onInput="{{ pfRoleChange }}" placeholder="Ex: Social media" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Cidade</label>
+                  <input value="{{ pfCity }}" onInput="{{ pfCityChange }}" placeholder="Ex: São Paulo, SP" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+              </div>
+              <div style="margin-top:13px;">
+                <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Bio</label>
+                <textarea value="{{ pfBio }}" onInput="{{ pfBioChange }}" placeholder="Uma linha sobre você ou seu trabalho…" style="width:100%; min-height:74px; padding:11px 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:13.5px; line-height:1.5; resize:vertical; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)"></textarea>
+              </div>
+            </div>
+
+            <!-- NEGÓCIO -->
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+              <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:13px;">Negócio</div>
+              <div class="cc-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Marca / empresa</label>
+                  <input value="{{ pfBrand }}" onInput="{{ pfBrandChange }}" placeholder="Ex: Estúdio Lumen" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Área de atuação</label>
+                  <input value="{{ pfArea }}" onInput="{{ pfAreaChange }}" placeholder="Ex: Marketing digital" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+              </div>
+            </div>
+
+            <!-- CONTATO & LINKS -->
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+              <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:13px;">
+                <span style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent);">Contato &amp; links</span>
+                <span style="font-size:10.5px; color:var(--text-3);">opcional</span>
+              </div>
+              <div class="cc-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Email</label>
+                  <input type="email" value="{{ pfEmail }}" onInput="{{ pfEmailChange }}" placeholder="voce@email.com" autocapitalize="none" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">WhatsApp</label>
+                  <input type="tel" value="{{ pfPhone }}" onInput="{{ pfPhoneChange }}" placeholder="(11) 90000-0000" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+              </div>
+              <div class="cc-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:13px;">
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Instagram</label>
+                  <input value="{{ pfInsta }}" onInput="{{ pfInstaChange }}" placeholder="@seuusuario" autocapitalize="none" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+                <div>
+                  <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Site / portfólio</label>
+                  <input value="{{ pfSite }}" onInput="{{ pfSiteChange }}" placeholder="seusite.com" autocapitalize="none" style="width:100%; height:42px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:14px; outline:none;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
+                </div>
+              </div>
+            </div>
+
+            <!-- CONTA & SEGURANÇA -->
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+              <div style="font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); margin-bottom:13px;">Conta &amp; segurança</div>
+              <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:7px;">Usuário de login</label>
+              <div style="display:flex; align-items:center; gap:9px; height:42px; padding:0 13px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; font-family:'Geist Mono',ui-monospace,monospace; font-size:13.5px; margin-bottom:15px;"><span style="color:var(--text);">{{ username }}</span><span style="margin-left:auto; font-size:11px; color:var(--text-3); font-family:'Geist',sans-serif;">não editável</span></div>
+              <label style="display:block; font-size:11.5px; font-weight:500; color:var(--text-2); margin-bottom:9px;">Trocar senha</label>
               <input type="password" value="{{ pwCur }}" onInput="{{ pwCurChange }}" placeholder="Senha atual" autocomplete="current-password" style="width:100%; height:40px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:13.5px; outline:none; margin-bottom:9px;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
               <input type="password" value="{{ pwNew }}" onInput="{{ pwNewChange }}" placeholder="Nova senha (mín. 6 caracteres)" autocomplete="new-password" style="width:100%; height:40px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:13.5px; outline:none; margin-bottom:9px;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
               <input type="password" value="{{ pwNew2 }}" onInput="{{ pwNew2Change }}" placeholder="Repita a nova senha" autocomplete="new-password" onKeyDown="{{ pwKeyDown }}" style="width:100%; height:40px; padding:0 13px; background:var(--surface); border:1px solid var(--border-2); border-radius:10px; color:var(--text); font:inherit; font-size:13.5px; outline:none; margin-bottom:0;" style-focus="border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-weak)" />
@@ -2069,9 +2152,11 @@
               </sc-if>
               <button onClick="{{ changePassword }}" style="width:100%; height:40px; margin-top:12px; border:1px solid var(--border-2); background:var(--surface-2); color:var(--text); border-radius:10px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;" style-hover="border-color:var(--accent); color:var(--accent)" style-active="transform:scale(.98)">{{ pwBtnLabel }}</button>
             </div>
+
           </div>
-          <div style="display:flex; gap:10px; padding:0 24px 22px;">
-            <button onClick="{{ saveProfile }}" style="flex:1; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.97)">Salvar</button>
+          <!-- footer fixo -->
+          <div style="flex:0 0 auto; display:flex; gap:10px; padding:15px 22px; border-top:1px solid var(--border);">
+            <button onClick="{{ saveProfile }}" style="flex:1; height:42px; border:none; background:var(--accent); color:#fff; border-radius:10px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 2px 12px rgba(82,133,240,.35);" style-hover="background:var(--accent-2)" style-active="transform:scale(.97)">Salvar alterações</button>
             <button onClick="{{ closeProfile }}" style="height:42px; padding:0 18px; border:1px solid var(--border-2); background:var(--surface); color:var(--text-2); border-radius:10px; font:inherit; font-size:13px; cursor:pointer;" style-hover="color:var(--text)">Cancelar</button>
           </div>
         </div>
@@ -2238,7 +2323,7 @@ class Component extends DCLogic {
     { id:12, title:'Arte rodada anterior', clientId:2, status:'done', type:'image', due:'12 jun', flag:null },
   ];
 
-  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfFilter: null, bpNodes: [], bpEdges: [], bpPan: { x: 0, y: 0 }, bpZoom: 1, bpConnectFrom: null, bpEditId: null, bpFront: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '', pwCur: '', pwNew: '', pwNew2: '', pwBusy: false, pwMsg: '', pwMsgType: '' };
+  state = { screen: 'inicio', collapsed: false, navOpen: false, isMobile: false, soundOn: true, sfxVol: 70, sfxPanelOpen: false, themePanelOpen: false, toneLight: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').light; return v == null ? 50 : v; } catch (e) { return 50; } })(), toneDark: (() => { try { const v = JSON.parse(localStorage.getItem('cdc-tone') || '{}').dark; return v == null ? 50 : v; } catch (e) { return 50; } })(), musicOpen: false, musicPlaying: false, musicMin: false, musicCat: 0, musicCustom: null, customStations: [], musicNowTitle: '', musicTime: 0, musicDuration: 0, musicSeeking: false, musicVol: 65, musicPos: null, musicPickerOpen: false, musicCustomUrl: '', musicErr: '', drawer: false, drawerMode: 'demanda', drawerEditId: null, toast: null, boardView: 'cliente', activeClient: 0, calView: 'month', calOffset: 0, drawerTypeActive: [false,true,false,false,false,false,false,false], drawerPriority: 'media', drawerChecklist: [false], drawerChecklistLabels: ['Aprovação do cliente'], hideMoney: (() => { try { return localStorage.getItem('cdc-hideMoney') === '1'; } catch (e) { return false; } })(), notifSeen: (() => { try { return JSON.parse(localStorage.getItem('cdc-notif-seen') || '{}'); } catch (e) { return {}; } })(), novidadesOpen: false, seenVersion: (() => { try { return localStorage.getItem('cdc-seen-version') || ''; } catch (e) { return ''; } })(), chatInput: '', chatExtra: [], chatLoading: false, showAiHistory: false, aiHistoryItems: [], mapaMode: 'graph', wfFocus: null, wfFilter: null, bpNodes: [], bpEdges: [], bpPan: { x: 0, y: 0 }, bpZoom: 1, bpConnectFrom: null, bpEditId: null, bpFront: null, wfNodesExtra: [], wfPos: {}, wfPan: { x: 0, y: 0 }, wfZoom: 1, clients: null, prospectos: null, demands: null, ideias: null, lancamentos: null, reminders: null, profile: null, profileOpen: false, profileNameInput: '', profileAvatarInput: null, notifOpen: false, reminderTitle: '', reminderWhen: '', drawerDemandTitle: '', drawerDemandClientId: '', clienteNome: '', clienteTipo: 'fixo', clienteValor: '', clientePagDia: '5', clienteServico: '', clienteAvatar: null, prospectoNome: '', prospectoSegmento: '', prospectoObs: '', lancDesc: '', lancTipo: 'receita', lancValor: '', lancData: '', ideiaTitulo: '', ideiaCategoria: 'Pessoal', ideiaObs: '', searchOpen: false, searchQuery: '', authChecked: false, authed: false, loginUsername: '', loginPassword: '', loginCode: '', loginError: '', username: '', authMode: 'login', authBusy: false, geminiConfigured: false, geminiKeyInput: '', geminiSaving: false, geminiCfgError: '', pwCur: '', pwNew: '', pwNew2: '', pwBusy: false, pwMsg: '', pwMsgType: '', pfNick: '', pfRole: '', pfCity: '', pfBio: '', pfBrand: '', pfArea: '', pfEmail: '', pfPhone: '', pfInsta: '', pfSite: '' };
 
   _loadConfig() {
     fetch('/api/config', { credentials: 'include' })
@@ -3061,11 +3146,16 @@ class Component extends DCLogic {
   }
   // ---- recorte circular de foto (cliente/perfil): pan + zoom, exporta quadrado 160px ----
   _cropV = 260; // tamanho do círculo de recorte (px)
-  _appVersion = '0.4.7';
+  _appVersion = '0.4.8';
   // changelog mostrado na tela de Novidades — adicionar uma entrada no topo a cada atualização
   _changelog = [
+    { v: '0.4.8', date: 'Junho 2026', items: [
+      'Novo painel "Perfil & conta": clique no seu nome/avatar no rodapé pra abrir um menu completo, com foto, apelido (como o app te chama), profissão, cidade, bio, marca/empresa, área de atuação e seus contatos/links (email, WhatsApp, Instagram, site) — tudo opcional.',
+      'O apelido vira a saudação do app (ex: "Bom dia, Rafa").',
+      'Trocar senha agora fica na seção "Conta & segurança" desse mesmo painel.',
+    ] },
     { v: '0.4.7', date: 'Junho 2026', items: [
-      'Trocar senha: agora dá pra mudar sua senha direto no app — abra "Editar perfil" (clique no seu nome/avatar no rodapé) e use a seção "Trocar senha". Pede a senha atual por segurança.',
+      'Trocar senha: agora dá pra mudar sua senha direto no app, pedindo a senha atual por segurança.',
     ] },
     { v: '0.4.6', date: 'Junho 2026', items: [
       'Mapa mental (Cérebro): física AO VIVO — ao arrastar uma bolinha, as outras reagem em tempo real (repulsão + molas) e a teia se reacomoda sozinha ao soltar, igual ao Obsidian.',
@@ -4946,10 +5036,20 @@ class Component extends DCLogic {
       hasUserAvatar: !!(s.profile && s.profile.avatar),
       noUserAvatar: !(s.profile && s.profile.avatar),
       userDisplayName: (((s.profile && s.profile.name) || '').trim()) || (s.username || ''),
-      greetName: ', ' + (((((s.profile && s.profile.name) || '').trim()) || (s.username || 'você')).split(' ')[0] || 'você'),
+      greetName: ', ' + ((((s.profile && (s.profile.nick || s.profile.name)) || '').trim() || (s.username || 'você')).split(' ')[0] || 'você'),
       profileOpen: !!s.profileOpen,
-      openProfile: () => this.setState({ profileOpen: true, profileNameInput: (((s.profile && s.profile.name) || '').trim()) || (s.username || ''), profileAvatarInput: (s.profile && s.profile.avatar) || null, pwCur: '', pwNew: '', pwNew2: '', pwBusy: false, pwMsg: '', pwMsgType: '' }),
+      openProfile: () => { const p = s.profile || {}; this.setState({ profileOpen: true, profileNameInput: ((p.name || '').trim()) || (s.username || ''), profileAvatarInput: p.avatar || null, pfNick: p.nick || '', pfRole: p.role || '', pfCity: p.city || '', pfBio: p.bio || '', pfBrand: p.brand || '', pfArea: p.area || '', pfEmail: p.email || '', pfPhone: p.phone || '', pfInsta: p.insta || '', pfSite: p.site || '', pwCur: '', pwNew: '', pwNew2: '', pwBusy: false, pwMsg: '', pwMsgType: '' }); },
       closeProfile: () => this.setState({ profileOpen: false }),
+      pfNick: s.pfNick || '', pfNickChange: (e) => this.setState({ pfNick: e.target.value }),
+      pfRole: s.pfRole || '', pfRoleChange: (e) => this.setState({ pfRole: e.target.value }),
+      pfCity: s.pfCity || '', pfCityChange: (e) => this.setState({ pfCity: e.target.value }),
+      pfBio: s.pfBio || '', pfBioChange: (e) => this.setState({ pfBio: e.target.value }),
+      pfBrand: s.pfBrand || '', pfBrandChange: (e) => this.setState({ pfBrand: e.target.value }),
+      pfArea: s.pfArea || '', pfAreaChange: (e) => this.setState({ pfArea: e.target.value }),
+      pfEmail: s.pfEmail || '', pfEmailChange: (e) => this.setState({ pfEmail: e.target.value }),
+      pfPhone: s.pfPhone || '', pfPhoneChange: (e) => this.setState({ pfPhone: e.target.value }),
+      pfInsta: s.pfInsta || '', pfInstaChange: (e) => this.setState({ pfInsta: e.target.value }),
+      pfSite: s.pfSite || '', pfSiteChange: (e) => this.setState({ pfSite: e.target.value }),
       pwCur: s.pwCur || '', pwNew: s.pwNew || '', pwNew2: s.pwNew2 || '',
       pwCurChange: (e) => this.setState({ pwCur: e.target.value, pwMsg: '' }),
       pwNewChange: (e) => this.setState({ pwNew: e.target.value, pwMsg: '' }),
@@ -4968,7 +5068,7 @@ class Component extends DCLogic {
       hasProfileAvatarPreview: !!s.profileAvatarInput,
       noProfileAvatarPreview: !s.profileAvatarInput,
       removeProfileAvatar: () => this.setState({ profileAvatarInput: null }),
-      saveProfile: () => { this.setState({ profile: { name: (s.profileNameInput || '').trim(), avatar: s.profileAvatarInput || null }, profileOpen: false, toast: 'Perfil salvo' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000); },
+      saveProfile: () => { const p = s.profile || {}; this.setState({ profile: { ...p, name: (s.profileNameInput || '').trim(), avatar: s.profileAvatarInput || null, nick: (s.pfNick || '').trim(), role: (s.pfRole || '').trim(), city: (s.pfCity || '').trim(), bio: (s.pfBio || '').trim(), brand: (s.pfBrand || '').trim(), area: (s.pfArea || '').trim(), email: (s.pfEmail || '').trim(), phone: (s.pfPhone || '').trim(), insta: (s.pfInsta || '').trim(), site: (s.pfSite || '').trim() }, profileOpen: false, toast: 'Perfil salvo' }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2000); },
       iconLogout: this.icon('logout', 15, 1.8),
       appVersion: this._appVersion,
       hasNewVersion: s.seenVersion !== this._appVersion,
